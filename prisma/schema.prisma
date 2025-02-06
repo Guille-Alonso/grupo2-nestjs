@@ -1,0 +1,157 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum Estado {
+  PENDIENTE
+  COMPLETADO
+  CANCELADO
+}
+
+model Usuario {
+  id          String @id @default(uuid())
+  nombre      String
+  email       String @unique
+  contrasena  String
+  rol         Role   @default(USER)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isDeleted Boolean  @default(false)
+
+  perfil  Perfil?
+  carrito Carrito?
+}
+
+model Perfil {
+  id        String @id @default(uuid())
+  direccion String
+  telefono  String
+  foto      String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isDeleted Boolean  @default(false)
+
+  usuarioId String  @unique
+  usuario   Usuario @relation(fields: [usuarioId], references: [id])
+}
+
+model Producto {
+  id          String @id @default(uuid())
+  nombre      String
+  descripcion String
+  precio      Float
+  stock       Int
+
+  barcode String
+  sku     String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isDeleted Boolean  @default(false)
+
+  imagenes      Imagen?
+  categorias    ProductoCategoria[]
+  lineaProducto LineaProducto[]
+}
+
+model Imagen {
+  id        String   @id @default(uuid())
+  principal String
+  coleccion String[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isDeleted Boolean  @default(false)
+
+  productoId String   @unique
+  producto   Producto @relation(fields: [productoId], references: [id])
+}
+
+model Categoria {
+  id     String @id @default(uuid())
+  nombre String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isDeleted Boolean  @default(false)
+
+  productos ProductoCategoria[]
+}
+
+model ProductoCategoria {
+  productoId  String
+  categoriaId String
+
+  producto  Producto  @relation(fields: [productoId], references: [id])
+  categoria Categoria @relation(fields: [categoriaId], references: [id])
+
+  @@id([productoId, categoriaId])
+}
+
+model Carrito {
+  id     String @id @default(uuid())
+  estado Estado
+  //total se calcula
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isDeleted Boolean  @default(false)
+
+  usuarioId String  @unique
+  usuario   Usuario @relation(fields: [usuarioId], references: [id])
+
+  productos LineaProducto[]
+}
+
+model LineaProducto {
+  id       String @id @default(uuid())
+  cantidad Int
+  //subtotal se calcula
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isDeleted Boolean  @default(false)
+
+  productoId String
+  producto   Producto @relation(fields: [productoId], references: [id])
+  carritoId  String
+  carrito    Carrito  @relation(fields: [carritoId], references: [id])
+}
+
+model Reporte {
+  id        String @id @default(uuid())
+  contenido String
+  tipo      String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isDeleted Boolean  @default(false)
+}
+
+//Creo que la compra no es necesaria
+model Compra {
+  id        String @id @default(uuid())
+  estado    Estado
+  total     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isDeleted Boolean  @default(false)
+}
