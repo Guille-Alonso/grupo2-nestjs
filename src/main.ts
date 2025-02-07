@@ -1,5 +1,9 @@
-import { NestFactory } from '@nestjs/core';
+import { NestApplication, NestFactory, Reflector } from '@nestjs/core';
+import { ClassSerializerInterceptor, Logger, ValidationPipe } from '@nestjs/common';
 import { AppModule } from './modules/app/app.module';
+import { LogguerInterceptor } from './common/interceptors/logguer.interceptor';
+import { corsOptions } from './common/config/cors.config';
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-
-=======
->>>>>>> origin/dev
 const env = process.env;
 export enum RoleEnum {
   SUPERADMIN = 'SUPERADMIN',
@@ -17,22 +13,6 @@ export const messagingConfig = {
   },
 };
 
-<<<<<<< HEAD
-  export const awsConfig = {
-    client: {
-      accessKeyId: env.AWS_ACCESS_KEY_ID,
-      secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
-      region: env.AWS_REGION,
-    },
-    s3: {
-      bucket: env.AWS_BUCKET,
-    },
-    timeout:{
-      connectionTimeOut:env.AWS_CONNECTION_TIMEOUT,
-      socketTimeOut:env.AWS_SOCKET_TIMEOUT,
-    }
-  } as const;
-=======
 export const awsConfig = {
   client: {
     accessKeyId: env.AWS_ACCESS_KEY_ID,
@@ -43,4 +23,3 @@ export const awsConfig = {
     bucket: env.AWS_BUCKET,
   },
 } as const;
->>>>>>> origin/dev

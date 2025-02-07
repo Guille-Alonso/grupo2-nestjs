@@ -1,12 +1,9 @@
-<<<<<<< HEAD
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
-=======
->>>>>>> origin/dev
 generator client {
   provider = "prisma-client-js"
 }
@@ -17,51 +14,52 @@ datasource db {
 }
 
 enum Role {
-<<<<<<< HEAD
   ADMIN
   USER
 }
 
-enum Estado {
+enum State {
   PENDIENTE
   COMPLETADO
   CANCELADO
 }
 
-model Usuario {
+model User {
   id          String @id @default(uuid())
-  nombre      String
+  name      String
   email       String @unique
-  contrasena  String
+  password    String
   rol         Role   @default(USER)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   isDeleted Boolean  @default(false)
 
-  perfil  Perfil?
-  carrito Carrito?
+  profile    Profile?
+  cart Cart?
+  reports Report[]
+  purchases Purchase[]
 }
 
-model Perfil {
+model Profile {
   id        String @id @default(uuid())
-  direccion String
-  telefono  String
-  foto      String
+  address   String
+  phone     String
+  photo      String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   isDeleted Boolean  @default(false)
 
-  usuarioId String  @unique
-  usuario   Usuario @relation(fields: [usuarioId], references: [id])
+  userId String  @unique
+  user   User @relation(fields: [userId], references: [id])
 }
 
-model Producto {
+model Product {
   id          String @id @default(uuid())
-  nombre      String
-  descripcion String
-  precio      Float
+  name      String
+  description String
+  price      Float
   stock       Int
 
   barcode String
@@ -71,115 +69,109 @@ model Producto {
   updatedAt DateTime @updatedAt
   isDeleted Boolean  @default(false)
 
-  imagenes      Imagen?
-  categorias    ProductoCategoria[]
-  lineaProducto LineaProducto[]
+  images      Image?
+  categorys   ProductOnCategory[]
+  cartLine CartLine[]
+  purchases ProductPurchase[]
+
 }
 
-model Imagen {
+model Image {
   id        String   @id @default(uuid())
-  principal String
-  coleccion String[]
+  head String
+  colection String[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   isDeleted Boolean  @default(false)
 
-  productoId String   @unique
-  producto   Producto @relation(fields: [productoId], references: [id])
+  productId String   @unique
+  product   Product @relation(fields: [productId], references: [id])
 }
 
-model Categoria {
+model Category {
   id     String @id @default(uuid())
-  nombre String
+  name String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   isDeleted Boolean  @default(false)
 
-  productos ProductoCategoria[]
+  products ProductOnCategory[]
 }
 
-model ProductoCategoria {
-  productoId  String
-  categoriaId String
+model ProductOnCategory {
+  productId  String
+  categoryId String
 
-  producto  Producto  @relation(fields: [productoId], references: [id])
-  categoria Categoria @relation(fields: [categoriaId], references: [id])
+  product  Product  @relation(fields: [productId], references: [id])
+  Category Category @relation(fields: [categoryId], references: [id])
 
-  @@id([productoId, categoriaId])
+  @@id([productId, categoryId])
 }
 
-model Carrito {
+model Cart {
   id     String @id @default(uuid())
-  estado Estado
+  state State
   //total se calcula
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   isDeleted Boolean  @default(false)
 
-  usuarioId String  @unique
-  usuario   Usuario @relation(fields: [usuarioId], references: [id])
+  userId String  @unique
+  user   User @relation(fields: [userId], references: [id])
 
-  productos LineaProducto[]
+  cartLines CartLine[]
 }
 
-model LineaProducto {
+model CartLine {
   id       String @id @default(uuid())
-  cantidad Int
+  amount Int
   //subtotal se calcula
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   isDeleted Boolean  @default(false)
 
-  productoId String
-  producto   Producto @relation(fields: [productoId], references: [id])
-  carritoId  String
-  carrito    Carrito  @relation(fields: [carritoId], references: [id])
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  cartId  String
+  cart    Cart  @relation(fields: [cartId], references: [id])
 }
 
-model Reporte {
+model Report {
   id        String @id @default(uuid())
-  contenido String
-  tipo      String
+  content String
+  type      String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   isDeleted Boolean  @default(false)
+
+  userId String  @unique
+  user   User @relation(fields: [userId], references: [id])
 }
 
 //Creo que la compra no es necesaria
-model Compra {
+model Purchase {
   id        String @id @default(uuid())
-  estado    Estado
-  total     Float
+  State     State
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   isDeleted Boolean  @default(false)
+
+  userId String  @unique
+  user   User @relation(fields: [userId], references: [id])
+  products ProductPurchase[]
 }
-=======
-  SUPERADMIN
-  USER
+
+model ProductPurchase {
+  productId  String
+  purchaseId String
+
+  product  Product  @relation(fields: [productId], references: [id])
+  Purchase Purchase @relation(fields: [purchaseId], references: [id])
+
+  @@id([productId, purchaseId])
 }
-
-model User {
-  id        String     @default(uuid()) @id
-  lastName  String 
-  name      String
-  email     String     @unique
-  address   String 
-  phone     String
-  role      Role       @default(USER)
-  password  String
-
-  isActive Boolean      @default(true)
-
-  isDeleted  Boolean   @default(false)
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-
-  
-}
->>>>>>> origin/dev
