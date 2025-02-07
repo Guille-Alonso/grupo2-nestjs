@@ -15,4 +15,7 @@ export class PaginationArgs {
   @IsOptional()
   @IsString()
   search?: string;
+
+  startDate?: Date;
+  endDate?: Date;
 }
