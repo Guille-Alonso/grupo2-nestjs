@@ -1,9 +1,12 @@
+<<<<<<< HEAD
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
+=======
+>>>>>>> origin/dev
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,6 +17,7 @@ datasource db {
 }
 
 enum Role {
+<<<<<<< HEAD
   ADMIN
   USER
 }
@@ -155,3 +159,27 @@ model Compra {
   updatedAt DateTime @updatedAt
   isDeleted Boolean  @default(false)
 }
+=======
+  SUPERADMIN
+  USER
+}
+
+model User {
+  id        String     @default(uuid()) @id
+  lastName  String 
+  name      String
+  email     String     @unique
+  address   String 
+  phone     String
+  role      Role       @default(USER)
+  password  String
+
+  isActive Boolean      @default(true)
+
+  isDeleted  Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  
+}
+>>>>>>> origin/dev

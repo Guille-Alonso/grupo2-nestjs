@@ -5,7 +5,11 @@ import {
   NestInterceptor,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+<<<<<<< HEAD
 import { catchError, tap, throwError } from 'rxjs';
+=======
+import { tap } from 'rxjs';
+>>>>>>> origin/dev
 
 @Injectable()
 export class LogguerInterceptor implements NestInterceptor {
@@ -34,6 +38,7 @@ export class LogguerInterceptor implements NestInterceptor {
         );
         console.log('Response:', data);
       }),
+<<<<<<< HEAD
       catchError((error) => {
         const date = new Date();
         const formatDate = date.toLocaleString('es-AR', {
@@ -54,6 +59,8 @@ export class LogguerInterceptor implements NestInterceptor {
         console.log('Response:', error);
         return throwError(() => error);
       }),
+=======
+>>>>>>> origin/dev
     );
   }
 }
