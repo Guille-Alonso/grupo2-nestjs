@@ -14,7 +14,7 @@ datasource db {
 }
 
 enum Role {
-  ADMIN
+  SUPERADMIN
   USER
 }
 
@@ -25,41 +25,41 @@ enum State {
 }
 
 model User {
-  id          String @id @default(uuid())
-  name      String
-  email       String @unique
-  password    String
-  rol         Role   @default(USER)
+  id       String @id @default(uuid())
+  name     String
+  email    String @unique
+  password String
+  rol      Role   @default(USER)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   isDeleted Boolean  @default(false)
 
-  profile    Profile?
-  cart Cart?
-  reports Report[]
+  profile   Profile?
+  cart      Cart?
+  reports   Report[]
   purchases Purchase[]
 }
 
 model Profile {
-  id        String @id @default(uuid())
-  address   String
-  phone     String
-  photo      String
+  id      String @id @default(uuid())
+  address String
+  phone   String
+  photo   String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   isDeleted Boolean  @default(false)
 
-  userId String  @unique
-  user   User @relation(fields: [userId], references: [id])
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
 }
 
 model Product {
   id          String @id @default(uuid())
-  name      String
+  name        String
   description String
-  price      Float
+  price       Float
   stock       Int
 
   barcode String
@@ -69,29 +69,27 @@ model Product {
   updatedAt DateTime @updatedAt
   isDeleted Boolean  @default(false)
 
-  images      Image?
-  categorys   ProductOnCategory[]
-  cartLine CartLine[]
+  images    Image?
+  categorys ProductOnCategory[]
+  cartLine  CartLine[]
   purchases ProductPurchase[]
-
 }
 
 model Image {
   id        String   @id @default(uuid())
-  head String
   colection String[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   isDeleted Boolean  @default(false)
 
-  productId String   @unique
+  productId String  @unique
   product   Product @relation(fields: [productId], references: [id])
 }
 
 model Category {
-  id     String @id @default(uuid())
-  name String
+  id   String @id @default(uuid())
+  name String 
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -105,13 +103,13 @@ model ProductOnCategory {
   categoryId String
 
   product  Product  @relation(fields: [productId], references: [id])
-  Category Category @relation(fields: [categoryId], references: [id])
+  category Category @relation(fields: [categoryId], references: [id])
 
   @@id([productId, categoryId])
 }
 
 model Cart {
-  id     String @id @default(uuid())
+  id    String @id @default(uuid())
   state State
   //total se calcula
 
@@ -119,14 +117,14 @@ model Cart {
   updatedAt DateTime @updatedAt
   isDeleted Boolean  @default(false)
 
-  userId String  @unique
-  user   User @relation(fields: [userId], references: [id])
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
 
   cartLines CartLine[]
 }
 
 model CartLine {
-  id       String @id @default(uuid())
+  id     String @id @default(uuid())
   amount Int
   //subtotal se calcula
 
@@ -136,33 +134,33 @@ model CartLine {
 
   productId String
   product   Product @relation(fields: [productId], references: [id])
-  cartId  String
-  cart    Cart  @relation(fields: [cartId], references: [id])
+  cartId    String
+  cart      Cart    @relation(fields: [cartId], references: [id])
 }
 
 model Report {
-  id        String @id @default(uuid())
+  id      String @id @default(uuid())
   content String
-  type      String
+  type    String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   isDeleted Boolean  @default(false)
 
-  userId String  @unique
-  user   User @relation(fields: [userId], references: [id])
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
 }
 
 //Creo que la compra no es necesaria
 model Purchase {
-  id        String @id @default(uuid())
+  id        String   @id @default(uuid())
   State     State
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   isDeleted Boolean  @default(false)
 
-  userId String  @unique
-  user   User @relation(fields: [userId], references: [id])
+  userId   String            @unique
+  user     User              @relation(fields: [userId], references: [id])
   products ProductPurchase[]
 }
 
@@ -171,7 +169,7 @@ model ProductPurchase {
   purchaseId String
 
   product  Product  @relation(fields: [productId], references: [id])
-  Purchase Purchase @relation(fields: [purchaseId], references: [id])
+  purchase Purchase @relation(fields: [purchaseId], references: [id])
 
   @@id([productId, purchaseId])
 }

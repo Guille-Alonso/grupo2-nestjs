@@ -1,19 +1,22 @@
 import { NestApplication, NestFactory, Reflector } from '@nestjs/core';
-import { ClassSerializerInterceptor, Logger, ValidationPipe } from '@nestjs/common';
+import { ClassSerializerInterceptor, Logger} from '@nestjs/common';
 import { AppModule } from './modules/app/app.module';
 import { LogguerInterceptor } from './common/interceptors/logguer.interceptor';
-import { corsOptions } from './common/config/cors.config';
+import { corsOptions } from './config/cors.config';
 import { ConfigService } from '@nestjs/config';
+import { I18nValidationPipe } from 'nestjs-i18n';
+import { setupSwagger } from './config/swagger.config';
+import { ValidationsErrorExceptionFilter } from './common/middlewares';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors(corsOptions);
   app.setGlobalPrefix('api/v0');
   app.useGlobalPipes(
-    new ValidationPipe({
+    new I18nValidationPipe({
       whitelist: true,
       forbidNonWhitelisted: true,
-    })
+    }),
   );
 
   app.useGlobalInterceptors(
@@ -23,11 +26,14 @@ async function bootstrap() {
     })
   )
 
+  setupSwagger(app);
+
   const configService = app.get(ConfigService);
 
   const PORT = configService.get<number>('PORT');
   const NODE_ENV = configService.get<string>('NODE_ENV');
 
+  app.useGlobalFilters(new ValidationsErrorExceptionFilter());
   app.useGlobalInterceptors(new LogguerInterceptor());
   
   await app.listen(PORT, () => {

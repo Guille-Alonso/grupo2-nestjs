@@ -1,5 +1,12 @@
 {
     "isNotEmpty": "{property} cannot be empty",
     "isString": "{property} must be a string",
-    "isEmail": "must be a valid email address"
+    "isEmail": "must be a valid email address",
+    "isNumber": "{property} must be a number",
+    "isPositive": "{property} must be a positive number",
+    "isInt": "{property} must be an integer",
+    "numberCode": "{property} must be a string of 13 characters",
+    "length": "{property} must be {constraint1} characters long",
+    "maxLength": "{property} cannot be longer than {constraint1} characters",
+    "isUrl": "{property} must be a valid URL"
 }

@@ -2,8 +2,9 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
-import { envValidationSchema } from 'src/common/config/env-validation.config';
+import { envValidationSchema } from 'src/config/env-validation.config';
 import { PrismaModule } from '../prisma/prisma.module';
+import { ProductsModule } from '../products/products.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -11,7 +12,8 @@ import { PrismaModule } from '../prisma/prisma.module';
       envFilePath: ['.env'],
       validationSchema: envValidationSchema,
     }),
-    PrismaModule
+    PrismaModule,
+    ProductsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
