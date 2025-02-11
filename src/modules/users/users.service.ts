@@ -9,6 +9,9 @@ import { Prisma } from '@prisma/client';
 import { getPaginationFilter } from 'src/utils/pagination/pagination.utils';
 import { I18nService } from 'nestjs-i18n';
 import { Paginate } from 'src/utils/parsing';
+import { hashPassword } from 'src/utils/encryption';
+import { MessagingService } from '../messanging/messanging.service';
+import { messagingConfig } from 'src/common/constants';
 
 @Injectable()
 export class UsersService {
@@ -17,14 +20,40 @@ export class UsersService {
     private readonly awsService: AwsService,
     private readonly excelService: ExcelService,
     private readonly i18n: I18nService,
+    private messagingService: MessagingService,
   ) {}
 
-  create(newUser: CreateUserDto) {
-    const user = this.prisma.user.create({
-      data: newUser,
-    });
-    return user;
-  }
+    async create(user: CreateUserDto) {
+      try {
+        const findUser = await this.prisma.user.findUnique({
+          where: {
+            email: user.email,
+          },
+        });
+  
+        if (findUser) {
+          throw new Error('Email ya registrado.');
+        }
+  
+        await this.prisma.user.create({
+          data: {
+            ...user,
+            password: await hashPassword(user.password),
+          },
+        });
+
+        this.messagingService.sendRegisterUserEmail({
+          from: messagingConfig.emailSender,
+          to: user.email,
+        });
+
+        return {
+          message: 'Se creo correctamente',
+        };
+      } catch (error) {
+        throw new Error(error);
+      }
+    }
 
   findAll() {
     const users = this.prisma.user.findMany({
