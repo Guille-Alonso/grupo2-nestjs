@@ -9,21 +9,11 @@ export class CategoriesService {
 
   async create(createCategoryDto: CreateCategoryDto) {
     try {
-      const { productIds, ...categoryData } = createCategoryDto;
+      
       const category = await this.prisma.category.create({
         data: {
-          ...categoryData,
-          isDeleted: false,
-          products: productIds
-            ? {
-                create: productIds.map((id) => ({
-                  product: { connect: { id } },
-                })),
-              }
-            : undefined,
-        },
-        include: { products: true },
-      });
+          name: createCategoryDto.name,
+      }});
       return category;
     } catch (error) {
       throw new Error(error);

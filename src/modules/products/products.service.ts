@@ -8,6 +8,7 @@ import { FilterProductsDto } from './dto/filter-product.dto';
 import { PaginationService } from 'src/utils/pagination/pagination.service';
 import { PaginationDto } from 'src/utils/pagination/dto/pagination.dto';
 import { Prisma } from '@prisma/client';
+import { ExcelColumn } from 'src/common/interfaces';
 @Injectable()
 export class ProductsService {
   constructor(
@@ -55,8 +56,15 @@ export class ProductsService {
         );
 
       const [data, total] = await Promise.all([
-        this.prisma.user.findMany({ skip, take, orderBy }),
-        this.prisma.user.count(),
+        this.prisma.product.findMany({
+          where: {
+            isDeleted: false,
+          },
+          skip,
+          take,
+          orderBy,
+        }),
+        this.prisma.product.count(),
       ]);
 
       return this.paginationService.formatPaginatedResponse(
@@ -214,16 +222,65 @@ export class ProductsService {
   }
 
   async uploadProducts(buffer: Buffer) {
-    const products = await this.excelService.readExcel(buffer);
+    try {
+      const products = await this.excelService.readExcel(buffer);
 
-    for (let index = 0; index < products.length; index++) {
-      const product = products[index];
-      const productNew = {
-        ...product,
-        price: parseFloat(product.price),
-      };
-      await this.prisma.product.create({ data: productNew });
+      for (let index = 0; index < products.length; index++) {
+        const product = products[index];
+        const productNew = {
+          ...product,
+          price: parseFloat(product.price),
+        };
+        await this.create(productNew as CreateProductDto);
+        //await this.prisma.product.create({ data: productNew });
+      }
+      return { message: 'Productos creados correctamente' };
+    } catch (error) {
+      throw new Error(error);
     }
-    return { message: 'Productos creados correctamente' };
+  }
+
+  async exportToExcel(res: Response) {
+    try {
+      const products = await this.findAll( { page: 1, pageSize: 1000 });
+      
+      const columns: ExcelColumn[] = [
+        { header: 'Name', key: 'name' },
+        { header: 'Description', key: 'description' },
+        { header: 'Price', key: 'price' },
+        { header: 'Stock', key: 'stock' },
+        { header: 'Barcode', key: 'barcode' },
+        { header: 'SKU', key: 'sku' },
+        { header: 'Categorys', key: 'categorys' },
+        { header: 'Images', key: 'images' },
+      ];
+      const workbook = await this.excelService.generateExcel(
+        products.data,
+        columns,
+        'Productos',
+      );
+      const buffer = await Buffer.from(await workbook.xlsx.writeBuffer());
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const file: Express.Multer.File = {
+      fieldname: 'file',
+      originalname: 'productos.xlsx',
+      encoding: '7bit',
+      mimetype:
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      size: buffer.length,
+      buffer: buffer,
+      destination: '',
+      filename: '',
+      path: '',
+      stream: null,
+    };
+    /*const { url } = await this.awsService.uploadFile(file, 'excel');
+    await this.prisma.report.create({
+      data: { content: url, type: 'Usuario' },
+    });*/
+    await this.excelService.exportToResponse(res, workbook, 'productos.xlsx');
+    } catch (error) {
+      throw new Error(error);
+    }
   }
 }

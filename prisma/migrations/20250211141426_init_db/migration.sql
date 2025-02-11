@@ -51,7 +51,6 @@ CREATE TABLE "Product" (
 -- CreateTable
 CREATE TABLE "Image" (
     "id" TEXT NOT NULL,
-    "head" TEXT NOT NULL,
     "colection" TEXT[],
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,

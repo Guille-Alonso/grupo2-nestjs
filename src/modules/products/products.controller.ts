@@ -1,13 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseInterceptors, UploadedFile, Res } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiCustomOperation } from 'src/common/decorators/swagger.decorator';
-import { RoleEnum } from 'src/common/constants';
-import { Roles } from 'src/common/decorators/roles.decorators';
-import { JwtAuthGuard } from 'src/modules/auth/guards/jwt.guard';
-import { RolesGuard } from 'src/modules/auth/guards/roles.guard';
+//import { RoleEnum } from 'src/common/constants';
+//import { Roles } from 'src/common/decorators/roles.decorators';
+//import { JwtAuthGuard } from 'src/modules/auth/guards/jwt.guard';
+//import { RolesGuard } from 'src/modules/auth/guards/roles.guard';
 import { FilterProductsDto } from './dto/filter-product.dto';
 import { PaginationDto } from 'src/utils/pagination/dto/pagination.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -25,18 +25,16 @@ export class ProductsController {
     responseStatus: 201,
     responseDescription: 'Product created',
   })
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(RoleEnum.SUPERADMIN)
+ // @UseGuards(JwtAuthGuard, RolesGuard)
+  //@Roles(RoleEnum.SUPERADMIN)
   @Post()
   create(@Body() createProductDto: CreateProductDto) {
     return this.productsService.create(createProductDto);
   }
 
   @ApiOperation({ summary: 'Get all products' })
-  @ApiBody({ type: CreateProductDto })
   @ApiCustomOperation({
     summary: 'Get all products',
-    bodyType: CreateProductDto,
     responseStatus: 200,
     responseDescription: 'Products found',
   })
@@ -103,13 +101,18 @@ export class ProductsController {
   assignCategoriesToProduct(@Param('id') productId: string, @Body('categoryIds') categoryIds: string[]) {
     return this.productsService.assignCategoriesToProduct(productId, categoryIds);
   }
-
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(RoleEnum.SUPERADMIN)
+  @ApiOperation({ summary: 'Upload a excel file' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' }}}})
   @Post('upload/excel')
   @UseInterceptors(FileInterceptor('file'))
   async uploadUsers(@UploadedFile() file: Express.Multer.File) {
     const data = await this.productsService.uploadProducts(file.buffer);
     return data;
+  }
+
+  @Get('export/excel')
+  async exportToExcel(@Res() res: Response) {
+    return this.productsService.exportToExcel(res);
   }
 }

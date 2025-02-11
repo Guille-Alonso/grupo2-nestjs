@@ -6,6 +6,4 @@ export class CreateCategoryDto {
   @IsString()
   @IsNotEmpty()
   name: string;
-
-  productIds?: string[];
 }
