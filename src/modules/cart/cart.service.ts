@@ -22,7 +22,7 @@ export class CartService {
             email:true,
           }
         },
-        cartLines:{
+        cartLine:{
           select:{
             unit_price:true,
             total_price:true,
@@ -44,12 +44,12 @@ export class CartService {
 
   async create(cart: CreateCartDto) {
     let subtotal= 0;
-
+    console.log(cart);
     for (const product of cart.cartLine){
-      const total = product.quantiy * product.unit_price;
+      const total = product.quantity * product.unit_price;
       subtotal = subtotal + total
     }
-
+    console.log(subtotal);
 
     const newCart = await this.prisma.$transaction(async (tx)=>{
       const carrito = await tx.cart.create({
@@ -58,13 +58,16 @@ export class CartService {
           totalAmount:subtotal
         }
       });
+      
+      
       for (const product of cart.cartLine){
-        let totalPrice = product.quantiy *product.unit_price;
+        console.log("dentro del for__->",carrito.id);
+        let totalPrice = product.quantity *product.unit_price;
         await tx.cartLine.create({
           data:{
             cartId: carrito.id,
             productId: product.productId,
-            quantity: product.quantiy,
+            quantity: product.quantity,
             unit_price: product.unit_price,
             total_price: totalPrice
           }

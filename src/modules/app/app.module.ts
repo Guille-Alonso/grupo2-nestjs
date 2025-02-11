@@ -6,6 +6,7 @@ import { envValidationSchema } from 'src/config/env-validation.config';
 import { PrismaModule } from '../prisma/prisma.module';
 import { ProductsModule } from '../products/products.module';
 import { CartModule } from '../cart/cart.module';
+import I18nModuleConfig from 'src/config/i18n.config';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -13,6 +14,7 @@ import { CartModule } from '../cart/cart.module';
       envFilePath: ['.env'],
       validationSchema: envValidationSchema,
     }),
+    I18nModuleConfig(),
     PrismaModule,
     ProductsModule,
     CartModule

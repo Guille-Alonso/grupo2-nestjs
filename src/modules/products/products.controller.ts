@@ -25,8 +25,8 @@ export class ProductsController {
     responseStatus: 201,
     responseDescription: 'Product created',
   })
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(RoleEnum.SUPERADMIN)
+  //@UseGuards(JwtAuthGuard, RolesGuard)
+  //@Roles(RoleEnum.SUPERADMIN)
   @Post()
   create(@Body() createProductDto: CreateProductDto) {
     return this.productsService.create(createProductDto);
