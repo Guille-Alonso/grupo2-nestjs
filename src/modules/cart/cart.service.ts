@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CreateCartDto } from './dto/create-cart.dto';
 import { PrismaService } from '../prisma/prisma.service';
+import { Message } from 'node-mailjet';
 
 
 @Injectable()
@@ -44,7 +45,7 @@ export class CartService {
 
   async create(cart: CreateCartDto) {
     let subtotal= 0;
-    console.log(cart);
+    
     for (const product of cart.cartLine){
       const total = product.quantity * product.unit_price;
       subtotal = subtotal + total
@@ -61,7 +62,15 @@ export class CartService {
       
       
       for (const product of cart.cartLine){
-        console.log("dentro del for__->",carrito.id);
+        const extiste = await tx.product.findUnique({
+          where:{
+            id: product.productId
+          }
+        })
+        if(!extiste){
+          return {Message: "producto no exite"}
+          
+        }
         let totalPrice = product.quantity *product.unit_price;
         await tx.cartLine.create({
           data:{
@@ -73,18 +82,19 @@ export class CartService {
           }
         })
       }
-      return newCart
+      return carrito
     })
-    const datita = this.recoverCartData(newCart.id);
-    return datita
+    
+    return {Message: 'carrito', newCart}
   }
 
   findAll() {
-    return `This action returns all cart`;
+    return "a";
   }
 
   findOne(id: string) {
-    return `This action returns a #${id} cart`;
+    const datita =this.recoverCartData(id); 
+    return datita;
   }
 
   update(id: String, updateCartDto: CreateCartDto) {
