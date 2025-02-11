@@ -19,9 +19,9 @@ enum Role {
 }
 
 enum State {
-  PENDIENTE
-  COMPLETADO
-  CANCELADO
+  PENDING
+  CONFIRMED
+  CANCELLED
 }
 
 model User {
@@ -36,7 +36,7 @@ model User {
   isDeleted Boolean  @default(false)
 
   profile   Profile?
-  cart      Cart?
+  cart      Cart[]
   reports   Report[]
   purchases Purchase[]
 }
@@ -110,24 +110,25 @@ model ProductOnCategory {
 
 model Cart {
   id    String @id @default(uuid())
-  state State
-  //total se calcula
-
+  state State @default(PENDING)
+  //cartBranch
+  totalAmount Float
+  //cartBranch
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   isDeleted Boolean  @default(false)
-
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id])
-
+  user User @relation(fields: [userId], references: [id])
+  userId String
   cartLines CartLine[]
 }
 
 model CartLine {
   id     String @id @default(uuid())
-  amount Int
-  //subtotal se calcula
-
+  //cartBranch
+  unit_price Float
+  total_price Float
+  quantity Int
+  //cartBranch
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   isDeleted Boolean  @default(false)
@@ -167,7 +168,6 @@ model Purchase {
 model ProductPurchase {
   productId  String
   purchaseId String
-
   product  Product  @relation(fields: [productId], references: [id])
   purchase Purchase @relation(fields: [purchaseId], references: [id])
 

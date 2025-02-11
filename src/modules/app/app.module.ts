@@ -5,6 +5,7 @@ import { ConfigModule } from '@nestjs/config';
 import { envValidationSchema } from 'src/config/env-validation.config';
 import { PrismaModule } from '../prisma/prisma.module';
 import { ProductsModule } from '../products/products.module';
+import { CartModule } from '../cart/cart.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -14,6 +15,7 @@ import { ProductsModule } from '../products/products.module';
     }),
     PrismaModule,
     ProductsModule,
+    CartModule
   ],
   controllers: [AppController],
   providers: [AppService],
