@@ -1,7 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { CreateCartDto } from './dto/create-cart.dto';
 import { PrismaService } from '../prisma/prisma.service';
-import { Message } from 'node-mailjet';
 
 
 
@@ -145,50 +144,57 @@ export class CartService {
   }
 
   async comfirmCart(id: string) {
-    try{
-      
-      const confCart = this.prisma.$transaction(async (tx)=>{
-          const carrito = await tx.cart.findUnique({
-            where:{
-              id,
-              state:"PENDING"
-            },
-            include:{cartLine:{include:{product:true}}}
-          })
+    try {
+        const confCart = await this.prisma.$transaction(async (tx) => {
+            const carrito = await tx.cart.findUnique({
+                where: { id, state: "PENDING" },
+                include: { cartLine: { include: { product: true } } },
+            });
 
-          if(!carrito){
-            throw new Error('cart no find')
-          }
-          await tx.cart.update({
-          where:{
-            id
-          },
-          data:{
-            state:"CONFIRMED"
-          }
-        })
-       
-        const productCart = carrito.cartLine; 
+            if (!carrito) {
+                throw new Error('cart no find'); 
+            }
 
-       for (const line of productCart) {
-        await tx.product.update({ 
-      where: { id: line.product.id },
-      data: {
-        stock: {
-          decrement: line.quantity
+            const productCart = carrito.cartLine;
+
+            for (const line of productCart) {
+                const productStock = await tx.product.findUnique({
+                    where: { id: line.product.id },
+                    select: { stock: true },
+                });
+
+                if (productStock.stock < line.quantity || productStock.stock == 0) {
+                    throw new Error('producto ' + line.product.name + ' sin stock'); 
+                }
+
+                await tx.product.update({
+                    where: { id: line.product.id },
+                    data: { stock: { decrement: line.quantity } },
+                });
+            }
+
+            await tx.cart.update({
+                where: { id },
+                data: { state: "CONFIRMED" },
+            });
+
+            return carrito; 
+        });
+
+        return { Message: 'carrito confirmado', confCart }; 
+
+    } catch (e) {
+        if (e.message === 'cart no find') {
+            throw new NotFoundException(e.message); 
+        } else if (e.message.startsWith('producto ')) {
+            throw new BadRequestException(e.message);
+        } else {
+            Logger.error(e); 
+            throw new InternalServerErrorException('Error interno del servidor');
         }
-      }
-    });
-     }
-
-      return {confCart}
-      })
-
-    }catch(e){
-      throw new Error(e.message)
     }
-  }
-
+}
+  
   async remove(id: string) {
    try{
     const carrito = await this.prisma.cart.findUnique({

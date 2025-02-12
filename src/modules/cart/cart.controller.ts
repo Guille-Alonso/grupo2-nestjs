@@ -22,12 +22,12 @@ export class CartController {
     return this.cartService.findOne(id);
   }
 
-  @Patch(':id')
+  @Patch('confirm/:id')
   update(@Param('id') id: string) {
     return this.cartService.comfirmCart(id);
   }
 
-  @Delete(':id')
+  @Delete('cancel/:id')
   remove(@Param('id') id: string) {
     return this.cartService.remove(id);
   }
