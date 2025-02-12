@@ -1,4 +1,16 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseInterceptors, UploadedFile, Res } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseInterceptors,
+  UploadedFile,
+  Res,
+  Query,
+} from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -8,9 +20,9 @@ import { ApiCustomOperation } from 'src/common/decorators/swagger.decorator';
 //import { Roles } from 'src/common/decorators/roles.decorators';
 //import { JwtAuthGuard } from 'src/modules/auth/guards/jwt.guard';
 //import { RolesGuard } from 'src/modules/auth/guards/roles.guard';
-import { FilterProductsDto } from './dto/filter-product.dto';
 import { PaginationDto } from 'src/utils/pagination/dto/pagination.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { FilterProductsDto } from './dto/filter-product.dto';
 
 @ApiTags('products')
 @Controller('products')
@@ -25,7 +37,7 @@ export class ProductsController {
     responseStatus: 201,
     responseDescription: 'Product created',
   })
- // @UseGuards(JwtAuthGuard, RolesGuard)
+  // @UseGuards(JwtAuthGuard, RolesGuard)
   //@Roles(RoleEnum.SUPERADMIN)
   @Post()
   create(@Body() createProductDto: CreateProductDto) {
@@ -44,10 +56,8 @@ export class ProductsController {
   }
 
   @ApiOperation({ summary: 'Get a product' })
-  @ApiBody({ type: CreateProductDto })
   @ApiCustomOperation({
     summary: 'Get a product',
-    bodyType: CreateProductDto,
     responseStatus: 200,
     responseDescription: 'Product found',
   })
@@ -57,7 +67,7 @@ export class ProductsController {
   }
 
   @ApiOperation({ summary: 'Update a product' })
-  @ApiBody({ type: CreateProductDto })
+  @ApiBody({ type: UpdateProductDto })
   @ApiCustomOperation({
     summary: 'Update a product',
     bodyType: CreateProductDto,
@@ -70,10 +80,8 @@ export class ProductsController {
   }
 
   @ApiOperation({ summary: 'Delete a product' })
-  @ApiBody({ type: CreateProductDto })
   @ApiCustomOperation({
     summary: 'Delete a product',
-    bodyType: CreateProductDto,
     responseStatus: 200,
     responseDescription: 'Product deleted',
   })
@@ -82,31 +90,46 @@ export class ProductsController {
     return this.productsService.remove(id);
   }
 
-  @ApiOperation({ summary: 'filter products by category, name, price or sku' })
-  @ApiBody({ type: FilterProductsDto })
-  @ApiCustomOperation({
-    summary: 'filter products by category, name, price or sku',
-    bodyType: FilterProductsDto,
-    responseStatus: 200,
-    responseDescription: 'Products found',
-  })
-  @Get('/filter')
-  filterProducts(@Query() filterDto: FilterProductsDto, @Query() paginationDto: PaginationDto) {
-    return this.productsService.filterProducts(filterDto, paginationDto);
+  @ApiOperation({ summary: 'Filter products' })
+  @Post('filter')
+  filter(@Query() filter: FilterProductsDto) {
+    return this.productsService.filterProducts(filter);
   }
 
   @ApiOperation({ summary: 'Assign categories to a product' })
-  @ApiBody({ schema: { type: 'object', properties: { categoryIds: { type: 'array', example: ['1a', '2b'] } } } })
-  @Patch('assign-categories/:id')
-  assignCategoriesToProduct(@Param('id') productId: string, @Body('categoryIds') categoryIds: string[]) {
-    return this.productsService.assignCategoriesToProduct(productId, categoryIds);
+  @ApiBody({schema: {type: 'object', properties: {names: {type: 'array', items: {type: 'string'}, example: ['Electronics', 'Computers']}}}})
+  @Patch('assign-categories/:productId')
+  assignCategoriesToProduct(
+    @Param('productId') productId: string,
+    @Body('names') names: string[],
+  ) {
+    return this.productsService.assignCategoriesToProduct(
+      productId,
+      names,
+    );
   }
+
+  @ApiOperation({ summary: 'Upload images to a product' })
+  @ApiBody({schema: {type: 'object', properties: {images: {type: 'array', items: {type: 'string'}, example: ['https://example.com/image1.jpg', 'https://example.com/image2.jpg']}}}})
+  @Patch('upload-images/:productId')
+  uploadImages(
+    @Param('productId') productId: string,
+    @Body('images') images: string[],
+  ) {
+    return this.productsService.uploadImages(productId, images);
+  }
+
   @ApiOperation({ summary: 'Upload a excel file' })
   @ApiConsumes('multipart/form-data')
-  @ApiBody({schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' }}}})
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: { file: { type: 'string', format: 'binary' } },
+    },
+  })
   @Post('upload/excel')
   @UseInterceptors(FileInterceptor('file'))
-  async uploadUsers(@UploadedFile() file: Express.Multer.File) {
+  async uploadProducts(@UploadedFile() file: Express.Multer.File) {
     const data = await this.productsService.uploadProducts(file.buffer);
     return data;
   }

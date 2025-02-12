@@ -4,11 +4,11 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { ExcelService } from 'src/modules/excel/excel.service';
 //import { I18nService } from 'nestjs-i18n';
-import { FilterProductsDto } from './dto/filter-product.dto';
 import { PaginationService } from 'src/utils/pagination/pagination.service';
 import { PaginationDto } from 'src/utils/pagination/dto/pagination.dto';
 import { Prisma } from '@prisma/client';
 import { ExcelColumn } from 'src/common/interfaces';
+import { FilterProductsDto } from './dto/filter-product.dto';
 @Injectable()
 export class ProductsService {
   constructor(
@@ -84,6 +84,7 @@ export class ProductsService {
         where: {
           id,
         },
+        include: { categorys: { include: { category: true } }, images: true },
       });
       return product;
     } catch (error) {
@@ -93,7 +94,7 @@ export class ProductsService {
 
   async update(id: string, updateProductDto: UpdateProductDto) {
     try {
-      const { images, ...productData } = updateProductDto;
+      const { categoryIds, images, ...productData } = updateProductDto;
       const updatedProduct = await this.prisma.product.update({
         where: {
           id,
@@ -101,11 +102,19 @@ export class ProductsService {
         data: {
           ...productData,
           images: {
-            create: {
+            update: {
               colection: images,
             },
           },
+          categorys: categoryIds
+            ? {
+                create: categoryIds.map((id) => ({
+                  category: { connect: { id } },
+                })),
+              }
+            : undefined,
         },
+        include: { categorys: true },
       });
       return updatedProduct;
     } catch (error) {
@@ -129,12 +138,18 @@ export class ProductsService {
     }
   }
 
-  async filterProducts(
-    filterDto: FilterProductsDto,
-    paginationDto: PaginationDto,
-  ) {
-    const { name, sku, minPrice, maxPrice, category } = filterDto;
-    const { page, pageSize, sortBy, sortOrder } = paginationDto;
+  async filterProducts(query: FilterProductsDto) {
+    const {
+      name,
+      sku,
+      minPrice,
+      maxPrice,
+      category,
+      page,
+      pageSize,
+      sortBy,
+      sortOrder,
+    } = query;
     const { skip, take, orderBy } = this.paginationService.getPaginationParams(
       page,
       pageSize,
@@ -187,18 +202,46 @@ export class ProductsService {
       pageSize,
     );
   }
-
-  async assignCategoriesToProduct(productId: string, categoryIds: string[]) {
+  async assignCategoriesToProduct(productId: string, names: string[]) {
     try {
-      return await this.prisma.product.update({
-        where: { id: productId },
-        data: {
-          categorys: {
-            connect: categoryIds.map((categoryId) => ({
-              productId_categoryId: { productId, categoryId }, // Ajusta según el nombre de la clave compuesta
-            })),
-          },
+      const categorys = await this.prisma.category.findMany({
+        where: {
+          name: { in: names },
         },
+        select: {
+          id: true,
+        },
+      });
+
+      const existingCategoryIds = categorys.map((p) => p.id);
+
+      const productCategories = await this.prisma.productOnCategory.findMany({
+        where: {
+          productId: productId,
+          categoryId: { in: existingCategoryIds },
+        },
+        select: { categoryId: true },
+      });
+
+      const assignedCategoryIds = productCategories.map((pc) => pc.categoryId);
+      const newCategoryIds = existingCategoryIds.filter(
+        (id) => !assignedCategoryIds.includes(id),
+      );
+
+      if (newCategoryIds.length === 0) {
+        return { message: 'Todas las categorías ya están asignadas' };
+      }
+
+      await this.prisma.productOnCategory.createMany({
+        data: newCategoryIds.map((categoryId) => ({
+          productId,
+          categoryId,
+        })),
+        skipDuplicates: true, // Evita errores si alguna relación ya existe
+      });
+
+      return await this.prisma.product.findUnique({
+        where: { id: productId },
         include: { categorys: { include: { category: true } } },
       });
     } catch (error) {
@@ -207,11 +250,26 @@ export class ProductsService {
   }
   async uploadImages(productId: string, images: string[]) {
     try {
+      const assignedImages = await this.prisma.image.findMany({
+        where: {
+          productId: productId,
+        },
+        select: { colection: true },
+      });
+
+      const colection = assignedImages[0].colection;
+
+      const newColection = images.filter((item) => !colection.includes(item));
+
+      if (newColection.length === 0) {
+        return { message: 'Todas las categorías ya están asignadas' };
+      }
+
       await this.prisma.image.update({
         where: { productId },
         data: {
           colection: {
-            push: images,
+            push: newColection,
           },
         },
       });
@@ -242,8 +300,8 @@ export class ProductsService {
 
   async exportToExcel(res: Response) {
     try {
-      const products = await this.findAll( { page: 1, pageSize: 1000 });
-      
+      const products = await this.findAll({ page: 1, pageSize: 1000 });
+
       const columns: ExcelColumn[] = [
         { header: 'Name', key: 'name' },
         { header: 'Description', key: 'description' },
@@ -260,25 +318,25 @@ export class ProductsService {
         'Productos',
       );
       const buffer = await Buffer.from(await workbook.xlsx.writeBuffer());
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const file: Express.Multer.File = {
-      fieldname: 'file',
-      originalname: 'productos.xlsx',
-      encoding: '7bit',
-      mimetype:
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      size: buffer.length,
-      buffer: buffer,
-      destination: '',
-      filename: '',
-      path: '',
-      stream: null,
-    };
-    /*const { url } = await this.awsService.uploadFile(file, 'excel');
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const file: Express.Multer.File = {
+        fieldname: 'file',
+        originalname: 'productos.xlsx',
+        encoding: '7bit',
+        mimetype:
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        size: buffer.length,
+        buffer: buffer,
+        destination: '',
+        filename: '',
+        path: '',
+        stream: null,
+      };
+      /*const { url } = await this.awsService.uploadFile(file, 'excel');
     await this.prisma.report.create({
       data: { content: url, type: 'Usuario' },
     });*/
-    await this.excelService.exportToResponse(res, workbook, 'productos.xlsx');
+      await this.excelService.exportToResponse(res, workbook, 'productos.xlsx');
     } catch (error) {
       throw new Error(error);
     }
