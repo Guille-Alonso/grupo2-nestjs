@@ -150,7 +150,8 @@ export class CartService {
       const confCart = this.prisma.$transaction(async (tx)=>{
           const carrito = await tx.cart.findUnique({
             where:{
-              id
+              id,
+              state:"PENDING"
             },
             include:{cartLine:{include:{product:true}}}
           })
@@ -158,7 +159,7 @@ export class CartService {
           if(!carrito){
             throw new Error('cart no find')
           }
-          const carritoNew =await tx.cart.update({
+          await tx.cart.update({
           where:{
             id
           },
@@ -188,7 +189,30 @@ export class CartService {
     }
   }
 
-  remove(id: string) {
-    return `This action removes a #${id} cart`;
+  async remove(id: string) {
+   try{
+    const carrito = await this.prisma.cart.findUnique({
+      where:{
+        id,
+        state:"PENDING",
+      },
+    })
+
+    if(!carrito){
+      throw new Error('cart confirm')
+    }
+    await this.prisma.cart.update({
+    where:{
+      id,
+      state:"PENDING"
+    },
+    data:{
+      state:"CANCELLED"
+    }
+  })
+  return {Message: 'carrito cancelado'}
+   }catch(e){
+    throw new Error(e.message)
+   }
   }
 }
