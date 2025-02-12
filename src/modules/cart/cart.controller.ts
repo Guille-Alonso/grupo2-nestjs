@@ -23,8 +23,8 @@ export class CartController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCartDto: CreateCartDto) {
-    return this.cartService.update(id, updateCartDto);
+  update(@Param('id') id: string) {
+    return this.cartService.comfirmCart(id);
   }
 
   @Delete(':id')

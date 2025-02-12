@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { Message } from 'node-mailjet';
 
 
+
 @Injectable()
 export class CartService {
   constructor(private readonly prisma: PrismaService){}
@@ -44,64 +45,150 @@ export class CartService {
 
 
   async create(cart: CreateCartDto) {
-    let subtotal= 0;
-    
-    for (const product of cart.cartLine){
-      const total = product.quantity * product.unit_price;
-      subtotal = subtotal + total
-    }
-    console.log(subtotal);
+    try{
 
-    const newCart = await this.prisma.$transaction(async (tx)=>{
-      const carrito = await tx.cart.create({
-        data:{
-          userId: cart.userId,
-          totalAmount:subtotal
-        }
-      });
-      
+      let subtotal= 0;
       
       for (const product of cart.cartLine){
-        const extiste = await tx.product.findUnique({
-          where:{
-            id: product.productId
-          }
-        })
-        if(!extiste){
-          return {Message: "producto no exite"}
-          
-        }
-        let totalPrice = product.quantity *product.unit_price;
-        await tx.cartLine.create({
-          data:{
-            cartId: carrito.id,
-            productId: product.productId,
-            quantity: product.quantity,
-            unit_price: product.unit_price,
-            total_price: totalPrice
-          }
-        })
+        const total = product.quantity * product.unit_price;
+        subtotal = subtotal + total
       }
-      return carrito
-    })
-    
-    return {Message: 'carrito', newCart}
+      console.log(subtotal);
+  
+      const newCart = await this.prisma.$transaction(async (tx)=>{
+        const carrito = await tx.cart.create({
+          data:{
+            userId: cart.userId,
+            totalAmount:subtotal
+          }
+        });
+        
+        
+        for (const product of cart.cartLine){
+          const exist = await tx.product.findUnique({
+            where:{
+              id: product.productId
+            }
+          })
+          if(!exist){
+            
+            throw new Error('no products exist')
+            
+          }
+          let totalPrice = product.quantity *product.unit_price;
+          await tx.cartLine.create({
+            data:{
+              cartId: carrito.id,
+              productId: product.productId,
+              quantity: product.quantity,
+              unit_price: product.unit_price,
+              total_price: totalPrice
+            }
+          })
+        }
+        return carrito
+      })
+      
+      return {Message: 'carrito', newCart}
+    }catch(e){
+      throw new Error(e.message)
+    }
   }
 
-  findAll() {
-    return "a";
+  async findAll() {
+    try{
+      const datacart = await this.prisma.cart.findMany({
+        where:{
+            
+              isDeleted:false
+            },
+            select:{
+              id: true,
+              totalAmount:true,
+               user:{
+                select:{
+                  name:true,
+                  email:true,
+                }
+              },
+              cartLine:{
+                select:{
+                  quantity:true,
+                  unit_price:true,
+                  total_price:true,
+                  product:{
+                    select:{
+                      name:true,
+                      description:true,
+                    }
+                  }
+                }
+              }
+            }
+          })
+          if(!datacart){
+            throw new Error('no se encontraron datos')
+          }
+          return datacart
+    }catch(e){
+      throw new Error(e.message)
+    }
   }
 
   findOne(id: string) {
-    const datita =this.recoverCartData(id); 
-    return datita;
+    try{
+      const datita =this.recoverCartData(id); 
+      return datita;
+    }catch(e){
+      throw new Error(e)
+    }
   }
 
-  update(id: String, updateCartDto: CreateCartDto) {
-    return `This action updates a #${id} cart`;
+  async comfirmCart(id: string) {
+    try{
+      
+      const confCart = this.prisma.$transaction(async (tx)=>{
+          const carrito = await tx.cart.findUnique({
+            where:{
+              id
+            },
+            include:{cartLine:{include:{product:true}}}
+          })
+
+          if(!carrito){
+            throw new Error('cart no find')
+          }
+          const carritoNew =await tx.cart.update({
+          where:{
+            id
+          },
+          data:{
+            state:"CONFIRMED"
+          }
+        })
+       
+        const productCart = carrito.cartLine; 
+
+       for (const line of productCart) {
+        await tx.product.update({ 
+      where: { id: line.product.id },
+      data: {
+        stock: {
+          decrement: line.quantity
+        }
+      }
+    });
+     }
+
+      return {confCart}
+      })
+
+    }catch(e){
+      throw new Error(e.message)
+    }
   }
 
-  remove(id: String) {
+  remove(id: string) {
     return `This action removes a #${id} cart`;
   }
 }
