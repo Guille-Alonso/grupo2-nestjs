@@ -29,8 +29,6 @@ model User {
   lastName  String 
   name      String
   email     String     @unique
-  address   String 
-  phone     String
   role      Role       @default(USER)
   password  String
 

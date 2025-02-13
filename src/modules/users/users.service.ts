@@ -149,7 +149,7 @@ export class UsersService {
         where: {
           id,
         },
-        data: { ...updateUserDto, address: url },
+        data: { ...updateUserDto },
       })
       .catch(async () => {
         await this.awsService.deleteFile(key);
@@ -158,7 +158,7 @@ export class UsersService {
           where: {
             id,
           },
-          data: { address: '' },
+          data: { },
         });
       });
     return user;

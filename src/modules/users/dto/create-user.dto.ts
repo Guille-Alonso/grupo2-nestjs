@@ -43,23 +43,12 @@ export class CreateUserDto {
     description: 'User address',
     example: 'San juan 400',
   })
-  @IsString({ message: 'La dirección debe ser una cadena' })
-  @IsNotEmpty({ message: 'El dirección no puede estar vacio' })
-  @MinLength(10, { message: 'La dirección debe tener al menos 10 caracteres' })
-  @MaxLength(100, {
-    message: 'La dirección no puede exceder los 100 caracteres',
-  })
-  address: string;
+
 
   @ApiProperty({
     description: 'User phone',
     example: '3813123123',
   })
-  @IsString({ message: 'El teléfono debe ser una cadena' })
-  @IsNotEmpty({ message: 'El teléfono no puede estar vacio' })
-  @MinLength(9, { message: 'El teléfono debe tener al menos 9 dígitos' })
-  @MaxLength(15, { message: 'El teléfono no puede exceder los 15 dígitos' })
-  phone: string;
 
   @ApiProperty({
     description: 'User password',

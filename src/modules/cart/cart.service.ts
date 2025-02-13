@@ -94,7 +94,9 @@ export class CartService {
     }
   }
 
-  async findAll() {
+  async findAll(id:string) {
+    console.log(id);
+    
     try{
       const datacart = await this.prisma.cart.findMany({
         where:{
