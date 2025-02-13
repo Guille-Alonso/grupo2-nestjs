@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateImageDto } from './dto/create-image.dto';
 import { UpdateImageDto } from './dto/update-image.dto';
 import { PrismaService } from '../prisma/prisma.service';
-import { PaginationDto } from 'src/utils/pagination/dto/pagination.dto';
+import { PaginationDto2 } from 'src/utils/pagination/dto/pagination.dto';
 import { PaginationService } from 'src/utils/pagination/pagination.service';
 
 @Injectable()
@@ -23,7 +23,7 @@ export class ImagesService {
     }
   }
 
-  async findAll(paginationDto: PaginationDto) {
+  async findAll(paginationDto: PaginationDto2) {
     try {
       const { page, pageSize, sortBy, sortOrder } = paginationDto;
       const { skip, take, orderBy } =

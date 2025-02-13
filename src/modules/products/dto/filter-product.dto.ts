@@ -1,9 +1,9 @@
 import { IsOptional, IsString, IsNumber, Min } from 'class-validator';
 import { ApiProperty, PartialType } from '@nestjs/swagger';
-import { PaginationDto } from 'src/utils/pagination/dto/pagination.dto';
+import { PaginationDto2 } from 'src/utils/pagination/dto/pagination.dto';
 import { i18nValidationMessage } from 'nestjs-i18n';
 
-export class FilterProductsDto extends PartialType(PaginationDto) {
+export class FilterProductsDto extends PartialType(PaginationDto2) {
   @ApiProperty({
     description: 'Product name',
     example: 'Product 1',

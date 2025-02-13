@@ -21,7 +21,7 @@ import { RoleEnum } from 'src/common/constants';
 import { Roles } from 'src/common/decorators/roles.decorators';
 import { JwtAuthGuard } from 'src/modules/auth/guards/jwt.guard';
 import { RolesGuard } from 'src/modules/auth/guards/roles.guard';
-import { PaginationDto } from 'src/utils/pagination/dto/pagination.dto';
+import { PaginationDto2 } from 'src/utils/pagination/dto/pagination.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FilterProductsDto } from './dto/filter-product.dto';
 
@@ -54,8 +54,8 @@ export class ProductsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(RoleEnum.USER)
   @Get()
-  findAll(@Query() paginationDto: PaginationDto) {
-    return this.productsService.findAll(paginationDto);
+  findAll(@Query() paginationDto2: PaginationDto2) {
+    return this.productsService.findAll(paginationDto2);
   }
 
   @ApiOperation({ summary: 'Get a product' })

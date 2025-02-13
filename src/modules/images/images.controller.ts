@@ -12,7 +12,7 @@ import {
 import { ImagesService } from './images.service';
 import { CreateImageDto } from './dto/create-image.dto';
 import { UpdateImageDto } from './dto/update-image.dto';
-import { PaginationDto } from 'src/utils/pagination/dto/pagination.dto';
+import { PaginationDto2 } from 'src/utils/pagination/dto/pagination.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from 'src/common/decorators/roles.decorators';
@@ -32,8 +32,8 @@ export class ImagesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(RoleEnum.SUPERADMIN)
   @Get()
-  findAll(@Query() paginationDto: PaginationDto) {
-    return this.imagesService.findAll(paginationDto);
+  findAll(@Query() paginationDto2: PaginationDto2) {
+    return this.imagesService.findAll(paginationDto2);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

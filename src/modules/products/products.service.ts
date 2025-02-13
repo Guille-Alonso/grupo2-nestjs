@@ -5,7 +5,7 @@ import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { ExcelService } from 'src/modules/excel/excel.service';
 import { I18nService } from 'nestjs-i18n';
 import { PaginationService } from 'src/utils/pagination/pagination.service';
-import { PaginationDto } from 'src/utils/pagination/dto/pagination.dto';
+import { PaginationDto2 } from 'src/utils/pagination/dto/pagination.dto';
 import { Prisma } from '@prisma/client';
 import { ExcelColumn } from 'src/common/interfaces';
 import { FilterProductsDto } from './dto/filter-product.dto';
@@ -45,9 +45,9 @@ export class ProductsService {
     }
   }
 
-  async findAll(paginationDto: PaginationDto) {
+  async findAll(paginationDto2: PaginationDto2) {
     try {
-      const { page, pageSize, sortBy, sortOrder } = paginationDto;
+      const { page, pageSize, sortBy, sortOrder } = paginationDto2;
       const { skip, take, orderBy } =
         this.paginationService.getPaginationParams(
           page,

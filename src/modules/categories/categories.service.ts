@@ -3,7 +3,7 @@ import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { PaginationService } from 'src/utils/pagination/pagination.service';
-import { PaginationDto } from 'src/utils/pagination/dto/pagination.dto';
+import { PaginationDto2 } from 'src/utils/pagination/dto/pagination.dto';
 
 @Injectable()
 export class CategoriesService {
@@ -25,7 +25,7 @@ export class CategoriesService {
     }
   }
 
-  async findAll(paginationDto: PaginationDto) {
+  async findAll(paginationDto: PaginationDto2) {
     try {
       const { page, pageSize, sortBy, sortOrder } = paginationDto;
       const { skip, take, orderBy } =

@@ -13,7 +13,7 @@ import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { PaginationDto } from 'src/utils/pagination/dto/pagination.dto';
+import { PaginationDto2 } from 'src/utils/pagination/dto/pagination.dto';
 import { Roles } from 'src/common/decorators/roles.decorators';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -36,8 +36,8 @@ export class CategoriesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(RoleEnum.SUPERADMIN)
   @Get()
-  findAll(@Query() paginationDto: PaginationDto) {
-    return this.categoriesService.findAll(paginationDto);
+  findAll(@Query() paginationDto2: PaginationDto2) {
+    return this.categoriesService.findAll(paginationDto2);
   }
 
   @ApiOperation({ summary: 'Get one category by id' })
