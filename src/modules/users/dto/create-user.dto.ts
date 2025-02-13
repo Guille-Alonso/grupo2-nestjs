@@ -3,6 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import {
   IsEmail,
+  IsEnum,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -40,17 +41,6 @@ export class CreateUserDto {
   email: string;
 
   @ApiProperty({
-    description: 'User address',
-    example: 'San juan 400',
-  })
-
-
-  @ApiProperty({
-    description: 'User phone',
-    example: '3813123123',
-  })
-
-  @ApiProperty({
     description: 'User password',
     example: 'Pass1234',
   })
@@ -61,10 +51,11 @@ export class CreateUserDto {
 
   @ApiProperty({
     description: 'User role',
-    example: 'user',
+    example: 'USER',
   })
   @IsOptional()
-  @IsString()
+  @IsString({ message: 'El rol debe ser una cadena' })
+  @IsEnum(Role, { message: 'El rol debe ser uno de los siguientes: SUPERADMIN, USER' })
   role: Role;
 }
 

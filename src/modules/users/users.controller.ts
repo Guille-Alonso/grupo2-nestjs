@@ -25,6 +25,7 @@ import { Roles } from 'src/common/decorators/roles.decorators';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(RoleEnum.USER)
+
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}

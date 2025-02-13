@@ -1,17 +1,18 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException, ConflictException, InternalServerErrorException, HttpStatus } from '@nestjs/common';
 import { CreateUserDto, UpdateUserDto } from './dto/create-user.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { AwsService } from '../aws/aws.service';
 import { ExcelColumn } from 'src/common/interfaces';
 import { ExcelService } from '../excel/excel.service';
 import { PaginationDto } from 'src/utils/pagination/dto/pagination.dto';
-import { Prisma } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
 import { getPaginationFilter } from 'src/utils/pagination/pagination.utils';
 import { I18nService } from 'nestjs-i18n';
 import { Paginate } from 'src/utils/parsing';
 import { hashPassword } from 'src/utils/encryption';
 import { MessagingService } from '../messanging/messanging.service';
 import { messagingConfig } from 'src/common/constants';
+import CustomError from 'src/utils/custom.error';
 
 @Injectable()
 export class UsersService {
@@ -23,45 +24,128 @@ export class UsersService {
     private messagingService: MessagingService,
   ) {}
 
-    async create(user: CreateUserDto) {
-      try {
-        const findUser = await this.prisma.user.findUnique({
-          where: {
-            email: user.email,
-          },
-        });
-  
-        if (findUser) {
-          throw new Error('Email ya registrado.');
-        }
-  
-        await this.prisma.user.create({
-          data: {
-            ...user,
-            password: await hashPassword(user.password),
-          },
-        });
 
-        this.messagingService.sendRegisterUserEmail({
+  // async create(user: CreateUserDto) {
+  //   try {
+  //     // Validación de entrada
+  //     if (!user.email || !user.password || !user.name) {
+  //       throw new BadRequestException('Todos los campos son obligatorios.');
+  //     }
+
+  //     // Verificar si el usuario ya existe
+  //     const existingUser = await this.prisma.user.findUnique({
+  //       where: { email: user.email },
+  //     });
+
+  //     if (existingUser) {
+  //       throw new ConflictException('El email ya está registrado.');
+  //     }
+
+  //     // Hash de la contraseña
+  //     const hashedPassword = await hashPassword(user.password);
+
+  //     // Crear el usuario en la base de datos
+  //     const newUser = await this.prisma.user.create({
+  //       data: {
+  //         ...user,
+  //         password: hashedPassword,
+  //       },
+  //     });
+
+  //     // Enviar correo de confirmación
+  //     try {
+  //       await this.messagingService.sendRegisterUserEmail({
+  //         from: messagingConfig.emailSender,
+  //         to: user.email,
+  //       });
+  //     } catch (emailError) {
+  //       console.error('Error al enviar el correo:', emailError);
+  //     }
+
+  //     return {
+  //       message: 'Usuario creado correctamente',
+  //       userId: newUser.id,
+  //     };
+  //   } catch (error) {
+  //     if (error instanceof BadRequestException || error instanceof ConflictException) {
+  //       throw error;
+  //     }
+
+  //     console.error('Error interno en la creación del usuario:', error);
+  //     throw new InternalServerErrorException('Error al crear el usuario. Inténtelo más tarde.');
+  //   }
+  // }
+
+  async create(user: CreateUserDto) {
+    try {
+ 
+      if (!user.email || !user.password || !user.name || !user.lastName) {
+        throw new CustomError('Todos los campos son obligatorios.', HttpStatus.BAD_REQUEST); // 400
+      }
+  
+      const existingUser = await this.prisma.user.findUnique({
+        where: { email: user.email },
+      });
+  
+      if (existingUser) {
+        throw new CustomError('El email ya está registrado.', HttpStatus.CONFLICT); // 409
+      }
+      
+      const hashedPassword = await hashPassword(user.password);
+  
+      const newUser = await this.prisma.user.create({
+        data: {
+          ...user,
+          password: hashedPassword,
+        },
+      });
+  
+      try {
+        await this.messagingService.sendRegisterUserEmail({
           from: messagingConfig.emailSender,
           to: user.email,
         });
-
-        return {
-          message: 'Se creo correctamente',
-        };
-      } catch (error) {
-        throw new Error(error);
+      } catch (emailError) {
+    
+        throw new CustomError(
+          'Hubo un error al intentar enviar el correo de registro. Usuario creado correctamente.',
+          HttpStatus.CREATED, // 201
+        );
       }
+
+      return {
+        message: 'Usuario creado correctamente',
+        userId: newUser.id,
+      };
+      
+    } catch (error) {
+    
+      if (error instanceof CustomError) {
+        throw error;
+      }
+  
+      throw new CustomError(
+        error.message || 'Error al crear el usuario. Inténtelo más tarde.',
+        HttpStatus.INTERNAL_SERVER_ERROR, // 500
+      );
     }
+  }
 
   findAll() {
-    const users = this.prisma.user.findMany({
-      where: {
-        isDeleted: false,
-      },
-    });
-    return users;
+    try {
+      const users = this.prisma.user.findMany({
+        where: {
+          isDeleted: false,
+        },
+      });
+      return users;
+      
+    } catch (error) {
+      throw new CustomError(
+        error.message || 'Error al obtener usuarios. Inténtelo más tarde.',
+        HttpStatus.INTERNAL_SERVER_ERROR, // 500
+      );
+    }
   }
 
   async findAllUserWithPagination(pagination: PaginationDto) {
