@@ -2,10 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { CreateImageDto } from './dto/create-image.dto';
 import { UpdateImageDto } from './dto/update-image.dto';
 import { PrismaService } from '../prisma/prisma.service';
+import { PaginationDto } from 'src/utils/pagination/dto/pagination.dto';
+import { PaginationService } from 'src/utils/pagination/pagination.service';
 
 @Injectable()
 export class ImagesService {
-  constructor( private readonly prisma: PrismaService,) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly paginationService: PaginationService,
+  ) {}
   async create(createImageDto: CreateImageDto) {
     try {
       const image = await this.prisma.image.create({
@@ -18,19 +23,80 @@ export class ImagesService {
     }
   }
 
-  findAll() {
-    return `This action returns all images`;
+  async findAll(paginationDto: PaginationDto) {
+    try {
+      const { page, pageSize, sortBy, sortOrder } = paginationDto;
+      const { skip, take, orderBy } =
+        this.paginationService.getPaginationParams(
+          page,
+          pageSize,
+          sortBy,
+          sortOrder,
+        );
+
+      const [data, total] = await Promise.all([
+        this.prisma.image.findMany({
+          where: {
+            isDeleted: false,
+          },
+          skip,
+          take,
+          orderBy,
+        }),
+        this.prisma.image.count(),
+      ]);
+
+      return this.paginationService.formatPaginatedResponse(
+        data,
+        total,
+        page,
+        pageSize,
+      );
+    } catch (error) {
+      throw new Error(error);
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} image`;
+  async findOne(id: string) {
+    try {
+      const image = await this.prisma.product.findUnique({
+        where: {
+          id,
+        },
+      });
+      return image;
+    } catch (error) {
+      throw new Error(error);
+    }
   }
 
-  update(id: number, updateImageDto: UpdateImageDto) {
-    return `This action updates a #${id} on ${updateImageDto} image`;
+  async update(id: string, updateImageDto: UpdateImageDto) {
+    try {
+      const image = await this.prisma.image.update({
+        where: {
+          id,
+        },
+        data: updateImageDto,
+      });
+      return image;
+    } catch (error) {
+      throw new Error(error);
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} image`;
+  async remove(id: string) {
+    try {
+      const deleteImage = await this.prisma.product.update({
+        where: {
+          id,
+        },
+        data: {
+          isDeleted: true,
+        },
+      });
+      return deleteImage;
+    } catch (error) {
+      throw new Error(error);
+    }
   }
 }

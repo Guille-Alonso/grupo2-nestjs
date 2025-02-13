@@ -3,7 +3,7 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { ExcelService } from 'src/modules/excel/excel.service';
-//import { I18nService } from 'nestjs-i18n';
+import { I18nService } from 'nestjs-i18n';
 import { PaginationService } from 'src/utils/pagination/pagination.service';
 import { PaginationDto } from 'src/utils/pagination/dto/pagination.dto';
 import { Prisma } from '@prisma/client';
@@ -14,7 +14,7 @@ export class ProductsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly excelService: ExcelService,
-    //private readonly i18n: I18nService,
+    private readonly i18n: I18nService,
     private readonly paginationService: PaginationService,
   ) {}
   async create(newProduct: CreateProductDto) {
@@ -38,9 +38,10 @@ export class ProductsService {
         },
         include: { categorys: true },
       });
-      return product;
+      return {message: this.i18n.t('messages.productCreated'),product};
     } catch (error) {
-      throw new Error(error);
+      const message=  this.i18n.t('messages.productNotCreated')+error;
+      throw new Error(message);
     }
   }
 
@@ -74,7 +75,8 @@ export class ProductsService {
         pageSize,
       );
     } catch (error) {
-      throw new Error(error);
+      const message=  this.i18n.t('messages.productsNotFound')+error;
+      throw new Error(message);
     }
   }
 
@@ -88,7 +90,8 @@ export class ProductsService {
       });
       return product;
     } catch (error) {
-      throw new Error(error);
+      const message=  this.i18n.t('messages.productNotFound')+error;
+      throw new Error(message);
     }
   }
 
@@ -116,9 +119,10 @@ export class ProductsService {
         },
         include: { categorys: true },
       });
-      return updatedProduct;
+      return{message: this.i18n.t('messages.productUpdated'),updatedProduct};
     } catch (error) {
-      throw new Error(error);
+      const message=  this.i18n.t('messages.productNotCreated')+error;
+      throw new Error(message);
     }
   }
 
@@ -132,13 +136,15 @@ export class ProductsService {
           isDeleted: true,
         },
       });
-      return deleteProduct;
+      return {message: this.i18n.t('messages.productDeleted'),deleteProduct};
     } catch (error) {
-      throw new Error(error);
+      const message=  this.i18n.t('messages.productNotDeleted')+error;
+      throw new Error(message);
     }
   }
 
   async filterProducts(query: FilterProductsDto) {
+    try{
     const {
       name,
       sku,
@@ -180,6 +186,7 @@ export class ProductsService {
           }
         : undefined,
     };
+    
 
     const [data, total] = await Promise.all([
       this.prisma.product.findMany({
@@ -201,7 +208,11 @@ export class ProductsService {
       page,
       pageSize,
     );
+  }catch (error) {
+    const message=  this.i18n.t('messages.productsNotFound')+error;
+    throw new Error(message);
   }
+}
   async assignCategoriesToProduct(productId: string, names: string[]) {
     try {
       const categorys = await this.prisma.category.findMany({
@@ -229,7 +240,7 @@ export class ProductsService {
       );
 
       if (newCategoryIds.length === 0) {
-        return { message: 'Todas las categorías ya están asignadas' };
+        return { message: this.i18n.t('messages.notNewCategorys') };
       }
 
       await this.prisma.productOnCategory.createMany({
@@ -237,15 +248,16 @@ export class ProductsService {
           productId,
           categoryId,
         })),
-        skipDuplicates: true, // Evita errores si alguna relación ya existe
+        skipDuplicates: true,
       });
 
-      return await this.prisma.product.findUnique({
+      return{message: this.i18n.t('messages.categorysAssigned'),product: await this.prisma.product.findUnique({
         where: { id: productId },
         include: { categorys: { include: { category: true } } },
-      });
+      })};
     } catch (error) {
-      throw new Error(error.message);
+      const message=  this.i18n.t('messages.categorysNotAssigned')+error;
+      throw new Error(message);
     }
   }
   async uploadImages(productId: string, images: string[]) {
@@ -262,7 +274,7 @@ export class ProductsService {
       const newColection = images.filter((item) => !colection.includes(item));
 
       if (newColection.length === 0) {
-        return { message: 'Todas las categorías ya están asignadas' };
+        return { message: this.i18n.t('messages.notNewImages') };
       }
 
       await this.prisma.image.update({
@@ -273,9 +285,10 @@ export class ProductsService {
           },
         },
       });
-      return { message: 'Imagenes creadas correctamente' };
+      return { message: this.i18n.t('messages.imagesUploaded') };
     } catch (error) {
-      throw new Error(error);
+      const message=  this.i18n.t('messages.imagesNotUploaded')+error;
+      throw new Error(message);
     }
   }
 
@@ -292,15 +305,21 @@ export class ProductsService {
         await this.create(productNew as CreateProductDto);
         //await this.prisma.product.create({ data: productNew });
       }
-      return { message: 'Productos creados correctamente' };
+      return { message: this.i18n.t('messages.productsUploaded') };
     } catch (error) {
-      throw new Error(error);
+      const message=  this.i18n.t('messages.productsNotUploaded')+error;
+      throw new Error(message);
     }
   }
 
   async exportToExcel(res: Response) {
     try {
-      const products = await this.findAll({ page: 1, pageSize: 1000 });
+      const products = await this.prisma.product.findMany({
+        where: {
+          isDeleted: false,
+        },
+        include: { categorys: { include: { category: true } }, images: true },
+      });
 
       const columns: ExcelColumn[] = [
         { header: 'Name', key: 'name' },
@@ -313,7 +332,7 @@ export class ProductsService {
         { header: 'Images', key: 'images' },
       ];
       const workbook = await this.excelService.generateExcel(
-        products.data,
+        products,
         columns,
         'Productos',
       );
@@ -337,8 +356,10 @@ export class ProductsService {
       data: { content: url, type: 'Usuario' },
     });*/
       await this.excelService.exportToResponse(res, workbook, 'productos.xlsx');
+      return { message: this.i18n.t('messages.productsExported') };
     } catch (error) {
-      throw new Error(error);
+      const message=  this.i18n.t('messages.productsNotExported')+error;
+      throw new Error(message);
     }
   }
 }

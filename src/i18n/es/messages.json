@@ -1,0 +1,20 @@
+{
+    "productCreated": "Producto creado con exito",
+    "productNotCreated": "Ubo un error al crear el producto: ",
+    "productUpdated": "Producto actualizado con exito",
+    "productNotUpdated": "Ubo un error al actualizar el producto: ",
+    "productDeleted": "Producto eliminado con exito",
+    "productNotDeleted": "Ubo un error al eliminar el producto: ",
+    "categorysAssigned": "Categorias asignadas con exito",
+    "categorysNotAssigned": "Ubo un error al asignar las categorias: ",
+    "imagesUploaded": "Imagenes cargadas con exito",
+    "imagesNotUploaded": "Ubo un error al cargar las imagenes: ",
+    "productNotFound": "Producto no encontrado",
+    "productsNotFound": "No se encontraron productos",
+    "notNewCategorys": "Todas las categorías ya fueron asignadas",
+    "notNewImages": "Todas las imagenes ya fueron asignadas",
+    "productsUploaded": "Productos cargados con exito",
+    "productsNotUploaded": "Ubo un error al cargar el los datos desde el exel: ",
+    "productsExported": "Productos exportados con exito",
+    "productsNotExported": "Ubo un error al exportar los productos: "
+}
