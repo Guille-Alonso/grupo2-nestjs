@@ -1,5 +1,7 @@
 import { Logger } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { JwtPayload } from 'src/common/interfaces';
 
 export const hashPassword = async (password: string): Promise<string> => {
   try {
@@ -18,3 +20,9 @@ export const comparePassword = async (providedPassword: string, hashedPassword: 
     throw error;
   }
 };
+
+  export const createTokens = async (payload: JwtPayload, jwtService: JwtService) => {
+    return {
+      accessToken: await jwtService.signAsync(payload),
+    };
+  }

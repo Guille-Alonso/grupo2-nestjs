@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common';
+import { InternalServerErrorException, Logger } from '@nestjs/common';
 import { Client } from 'node-mailjet';
 import { Email, EmailService } from '../messanging.types';
 import { messagingConfig } from 'src/common/constants';
@@ -41,6 +41,7 @@ export class MailjetService implements EmailService {
       })
       .catch((err) => {
         this.logger.error('Error sending email', err.stack);
+        throw err;
       });
   }
 }

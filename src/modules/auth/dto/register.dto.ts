@@ -1,17 +1,13 @@
-import { PartialType } from '@nestjs/mapped-types';
 import { ApiProperty } from '@nestjs/swagger';
-import { Role } from '@prisma/client';
 import {
   IsEmail,
-  IsEnum,
   IsNotEmpty,
-  IsOptional,
   IsString,
   MaxLength,
   MinLength,
 } from 'class-validator';
 
-export class CreateUserDto {
+export class RegisterUserDto {
   @ApiProperty({
     description: 'User name',
     example: 'joe',
@@ -49,14 +45,4 @@ export class CreateUserDto {
   @MinLength(8)
   password: string;
 
-  @ApiProperty({
-    description: 'User role',
-    example: 'USER',
-  })
-  @IsOptional()
-  @IsString({ message: 'El rol debe ser una cadena' })
-  @IsEnum(Role, { message: 'El rol debe ser uno de los siguientes: SUPERADMIN, USER' })
-  role: Role;
 }
-
-export class UpdateUserDto extends PartialType(CreateUserDto) {}
