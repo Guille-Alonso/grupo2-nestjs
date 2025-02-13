@@ -57,6 +57,8 @@ export class UsersController {
     return this.usersService.findOne(id);
   }
 
+  // @UseGuards(JwtAuthGuard, RolesGuard)
+  // @Roles(RoleEnum.SUPERADMIN)
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.usersService.update(id, updateUserDto);

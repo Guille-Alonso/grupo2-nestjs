@@ -24,7 +24,6 @@ export class UsersService {
     private messagingService: MessagingService,
   ) {}
 
-
   // async create(user: CreateUserDto) {
   //   try {
   //     // Validación de entrada
@@ -82,9 +81,9 @@ export class UsersService {
       if (!user.email || !user.password || !user.name || !user.lastName) {
         throw new CustomError('Todos los campos son obligatorios.', HttpStatus.BAD_REQUEST); // 400
       }
-  
+      const email = user.email.toLowerCase();
       const existingUser = await this.prisma.user.findUnique({
-        where: { email: user.email },
+        where: { email },
       });
   
       if (existingUser) {
@@ -96,6 +95,7 @@ export class UsersService {
       const newUser = await this.prisma.user.create({
         data: {
           ...user,
+          email,
           password: hashedPassword,
         },
       });
@@ -103,7 +103,7 @@ export class UsersService {
       try {
         await this.messagingService.sendRegisterUserEmail({
           from: messagingConfig.emailSender,
-          to: user.email,
+          to: email,
         });
       } catch (emailError) {
     
@@ -131,16 +131,28 @@ export class UsersService {
     }
   }
 
-  findAll() {
+  async findAll() {
     try {
-      const users = this.prisma.user.findMany({
+      const users = await this.prisma.user.findMany({
         where: {
           isDeleted: false,
         },
       });
+
+      if (!Array.isArray(users) || users.length === 0) {
+        throw new CustomError(
+          'No se encontraron usuarios.',
+          HttpStatus.NOT_FOUND, // 404
+        );
+      }      
+
       return users;
       
     } catch (error) {
+      if (error instanceof CustomError) {
+        throw error;
+      }
+  
       throw new CustomError(
         error.message || 'Error al obtener usuarios. Inténtelo más tarde.',
         HttpStatus.INTERNAL_SERVER_ERROR, // 500
@@ -149,77 +161,201 @@ export class UsersService {
   }
 
   async findAllUserWithPagination(pagination: PaginationDto) {
-    const { search } = pagination;
+    try {
+      const { search } = pagination;
 
-    const where: Prisma.UserWhereInput = {
-      isDeleted: false,
-      ...(search && {
-        OR: [
-          {
-            name: {
-              contains: search,
-              mode: 'insensitive',
+      const where: Prisma.UserWhereInput = {
+        isDeleted: false,
+        ...(search && {
+          OR: [
+            {
+              name: {
+                contains: search,
+                mode: 'insensitive',
+              },
             },
-          },
-          {
-            email: {
-              contains: search,
-              mode: 'insensitive',
+            {
+              email: {
+                contains: search,
+                mode: 'insensitive',
+              },
             },
+          ],
+        }),
+      };
+  
+      const baseQuery = {
+        where,
+        ...getPaginationFilter(pagination),
+      };
+  
+      const total = await this.prisma.user.count({ where });
+
+      if (total === 0) {
+        throw new CustomError(
+          'No se encontraron usuarios que coincidan con el criterio de búsqueda.',
+          HttpStatus.NOT_FOUND, // 404
+        );
+      }
+
+      const dataUsers = await this.prisma.user.findMany(baseQuery);
+
+      if (!Array.isArray(dataUsers) || dataUsers.length === 0) {
+        throw new CustomError(
+          'No se encontraron usuarios.',
+          HttpStatus.NOT_FOUND, // 404
+        );
+      }
+      
+  
+      const res = Paginate(dataUsers, total, pagination);
+
+      // const userName = 'Joe';
+      // const message = this.i18n.t('messages.welcome', {
+      //   args: { name: userName },
+      // });
+   
+      return res;
+
+    } catch (error) {
+      if (error instanceof CustomError) {
+        throw error;
+      }
+  
+      throw new CustomError(
+        error.message || 'Error al obtener usuarios. Inténtelo más tarde.',
+        HttpStatus.INTERNAL_SERVER_ERROR, // 500
+      );
+    }
+  
+  }
+
+  async findOne(id: string) {
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: {
+          id,
+        },
+      });
+  
+      if(!user){
+        throw new CustomError(
+          'Usuario no encontrado.',
+          HttpStatus.NOT_FOUND, // 404
+        );
+      }
+      return user;
+    } catch (error) {
+      if (error instanceof CustomError) {
+        throw error;
+      }
+  
+      throw new CustomError(
+        error.message || 'Error al buscar el usuario. Inténtelo más tarde.',
+        HttpStatus.INTERNAL_SERVER_ERROR, // 500
+      );
+    }
+   
+  }
+
+  async update(id: string, updateUserDto: UpdateUserDto) {
+    try {
+      
+      const existingUser = await this.prisma.user.findUnique({
+        where: { id },
+      });
+  
+      if (!existingUser) {
+        throw new CustomError('Usuario no encontrado.', HttpStatus.NOT_FOUND);
+      }
+
+      if (updateUserDto.email) {
+        const email = updateUserDto.email.toLowerCase();
+        const userExists = await this.prisma.user.findUnique({
+          where: { email },
+        });
+
+        if (userExists && userExists.id !== id) {
+          throw new CustomError(
+            'El email ya está registrado.',
+            HttpStatus.CONFLICT, // 409
+          );
+        }
+
+        const updatedUser = await this.prisma.user.update({
+          where: { id },
+          data: {
+            ...updateUserDto,
+            email,
           },
-        ],
-      }),
-    };
+        });
 
-    const baseQuery = {
-      where,
-      ...getPaginationFilter(pagination),
-    };
+        return {
+          message: 'Usuario modificado correctamente',
+          user: updatedUser,
+        };
+      } else {
+        const updatedUser = await this.prisma.user.update({
+          where: { id },
+          data: updateUserDto,
+        });
 
-    const total = await this.prisma.user.count({ where });
-    const dataUsers = await this.prisma.user.findMany(baseQuery);
+        return {
+          message: 'Usuario modificado correctamente',
+          user: updatedUser,
+        };
+      }
 
-    const res = Paginate(dataUsers, total, pagination);
-    const userName = 'Joe';
-    const message = this.i18n.t('messages.welcome', {
-      args: { name: userName },
-    });
-    console.log('message', message);
-    return res;
+    } catch (error) {
+      if (error instanceof CustomError) {
+        throw error;
+      }
+  
+      throw new CustomError(
+        error.message || 'Error al actualizar el usuario. Inténtelo más tarde.',
+        HttpStatus.INTERNAL_SERVER_ERROR, // 500
+      );
+    }
   }
 
-  findOne(id: string) {
-    const user = this.prisma.user.findUnique({
-      where: {
-        id,
-      },
-    });
-    return user;
+  async remove(id: string) {
+    try {
+      
+      const existingUser = await this.prisma.user.findUnique({
+        where: { id },
+      });
+  
+      if (!existingUser) {
+        throw new CustomError('Usuario no encontrado.', HttpStatus.NOT_FOUND);
+      }
+
+      const deletedUser = await this.prisma.user.update({
+        where: {
+          id,
+        },
+        data: {
+          isDeleted: true,
+        },
+      });
+
+      return {
+        message: 'Usuario eliminado correctamente',
+        user: deletedUser,
+      };
+
+    } catch (error) {
+      if (error instanceof CustomError) {
+        throw error;
+      }
+  
+      throw new CustomError(
+        error.message || 'Error al eliminar el usuario. Inténtelo más tarde.',
+        HttpStatus.INTERNAL_SERVER_ERROR, // 500
+      );
+    }
   }
 
-  update(id: string, updateUserDto: UpdateUserDto) {
-    const updatedUser = this.prisma.user.update({
-      where: {
-        id,
-      },
-      data: updateUserDto,
-    });
-
-    return updatedUser;
-  }
-
-  remove(id: string) {
-    const deletedUser = this.prisma.user.update({
-      where: {
-        id,
-      },
-      data: {
-        isDeleted: true,
-      },
-    });
-    return deletedUser;
-  }
-
+  // FALTA VALIDAR
   async updateUser(
     id: string,
     updateUserDto: UpdateUserDto,
