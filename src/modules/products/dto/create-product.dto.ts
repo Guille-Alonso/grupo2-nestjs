@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsInt, IsNotEmpty, IsNumber, IsPositive, IsString, IsUrl, Length, Matches, MaxLength } from 'class-validator';
+import { IsArray, IsInt, IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString, IsUrl, Length, Matches, MaxLength } from 'class-validator';
 import { i18nValidationMessage } from 'nestjs-i18n';
 
 export class CreateProductDto {
@@ -44,7 +44,7 @@ export class CreateProductDto {
   })
   stock: number;
 
-  @ApiProperty({ description: 'Barcode of the product', example: '1234567890' })
+  @ApiProperty({ description: 'Barcode of the product', example: '123456789' })
   @IsNotEmpty({
     message: i18nValidationMessage('onErrorResumeNext.isNotEmpty'),
   })
@@ -72,16 +72,13 @@ export class CreateProductDto {
   sku: string;
 
   @ApiProperty({ description: 'Images of the product', example: 'image1.jpg,image2.jpg' })
-  @IsNotEmpty({
-    message: i18nValidationMessage('onErrorResumeNext.isNotEmpty'),
-  })
-  @IsUrl({},{
-    message: i18nValidationMessage('onErrorResumeNext.isUrl'),})
-  images?: string[];
+ // @IsNotEmpty({message: i18nValidationMessage('onErrorResumeNext.isNotEmpty'),})
+  //@IsUrl({},{ message: i18nValidationMessage('onErrorResumeNext.isUrl'),})
+  @IsOptional()
+   images?: string[];
 
   @ApiProperty({ description: 'Category ids of the product', example: '1,2,3' })
-  @IsArray( {
-    message: i18nValidationMessage('onErrorResumeNext.isString'),
-  })
+  //@IsArray( {message: i18nValidationMessage('onErrorResumeNext.isString'), })
+  @IsOptional()
   categoryIds?: string[];
 }

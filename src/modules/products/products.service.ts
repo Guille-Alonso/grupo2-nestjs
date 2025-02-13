@@ -3,19 +3,22 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { ExcelService } from 'src/modules/excel/excel.service';
-//import { I18nService } from 'nestjs-i18n';
+import { I18nService } from 'nestjs-i18n';
 import { FilterProductsDto } from './dto/filter-product.dto';
 import { PaginationService } from 'src/utils/pagination/pagination.service';
 import { PaginationDto } from 'src/utils/pagination/dto/pagination.dto';
 import { Prisma } from '@prisma/client';
+
 @Injectable()
 export class ProductsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly excelService: ExcelService,
-    //private readonly i18n: I18nService,
+    private readonly i18n: I18nService,
     private readonly paginationService: PaginationService,
   ) {}
+
+
   async create(newProduct: CreateProductDto) {
     try {
       const { categoryIds, images, ...productData } = newProduct;
@@ -55,8 +58,8 @@ export class ProductsService {
         );
 
       const [data, total] = await Promise.all([
-        this.prisma.user.findMany({ skip, take, orderBy }),
-        this.prisma.user.count(),
+        this.prisma.product.findMany({ skip, take, orderBy }),
+        this.prisma.product.count(),
       ]);
 
       return this.paginationService.formatPaginatedResponse(

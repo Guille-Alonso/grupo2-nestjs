@@ -49,7 +49,12 @@ export class CartService {
       let subtotal= 0;
       
       for (const product of cart.cartLine){
-        const total = product.quantity * product.unit_price;
+        const prod = await this.prisma.product.findUnique({
+          where:{
+            id: product.productId
+          }
+        })
+        const total = product.quantity * prod.price;
         subtotal = subtotal + total
       }
       console.log(subtotal);
@@ -74,13 +79,13 @@ export class CartService {
             throw new Error('no products exist')
             
           }
-          let totalPrice = product.quantity *product.unit_price;
+          let totalPrice = product.quantity * exist.price;
           await tx.cartLine.create({
             data:{
               cartId: carrito.id,
               productId: product.productId,
               quantity: product.quantity,
-              unit_price: product.unit_price,
+              unit_price: exist.price,
               total_price: totalPrice
             }
           })
@@ -94,18 +99,54 @@ export class CartService {
     }
   }
 
-  async findAll(id:string) {
-    console.log(id);
+  async findAll(userId) {
     
     try{
       const datacart = await this.prisma.cart.findMany({
         where:{
-            
+              userId,
               isDeleted:false
             },
             select:{
               id: true,
               totalAmount:true,
+               user:{
+                select:{
+                  name:true,
+                  email:true,
+                }
+              },
+              cartLine:{
+                select:{
+                  quantity:true,
+                  unit_price:true,
+                  total_price:true,
+                  product:{
+                    select:{
+                      name:true,
+                      description:true,
+                    }
+                  }
+                }
+              }
+            }
+          })
+          if(!datacart){
+            throw new Error('no se encontraron datos')
+          }
+          return datacart
+    }catch(e){
+      throw new Error(e.message)
+    }
+  }
+
+  async findAllAdmin(){
+    try{
+      const datacart = await this.prisma.cart.findMany({
+            select:{
+              id: true,
+              totalAmount:true,
+              state:true,
                user:{
                 select:{
                   name:true,

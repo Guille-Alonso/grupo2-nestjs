@@ -7,10 +7,7 @@ export class CreaterCartLineDTO {
  @IsPositive()
  @IsNumber()
  quantity: number;
-
- @IsPositive()
- @IsNumber()
- unit_price:number;
+ 
  @IsNotEmpty()
  @IsString() 
  productId: string;   

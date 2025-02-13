@@ -1,8 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Req, UseGuards } from '@nestjs/common';
 import { CartService } from './cart.service';
 import { CreateCartDto } from './dto/create-cart.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { RoleEnum } from 'src/common/constants';
+import { Roles } from 'src/common/decorators/roles.decorators';
 
-
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(RoleEnum.USER)
 @Controller('cart')
 export class CartController {
   constructor(private readonly cartService: CartService) {}
@@ -13,10 +18,14 @@ export class CartController {
   }
 
   @Get()
-  findAll(@Req() req:any) {
-
-    const userId = req.userId.id;
+  findAll(@Req() req) {
+    const {userId}= req.user;
     return this.cartService.findAll(userId);
+  }
+  @Roles(RoleEnum.SUPERADMIN)
+  @Get("allCart")
+  findAllAdmin(){
+    return this.cartService.findAllAdmin();
   }
 
   @Get(':id')
