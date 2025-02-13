@@ -1,22 +1,23 @@
 import { Injectable } from '@nestjs/common';
-//import { CreateUserDto } from '../users/dto/create-user.dto';
+import { CreateUserDto } from '../users/dto/create-user.dto';
 import { PrismaService } from '../prisma/prisma.service';
-//import { LoginAuthDto } from './dto/login.dto';
+import { LoginAuthDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
-//import { JwtPayload } from 'src/common/interfaces';
-//import { comparePassword, hashPassword } from 'src/utils/encryption';
-//import { messagingConfig } from 'src/common/constants';
-//import { MessagingService } from '../messanging/messanging.service';
-//import { RecoverPasswordDto, ResetPasswordDto } from './dto/auth.dto';
+import { JwtPayload } from 'src/common/interfaces';
+import { comparePassword, hashPassword } from 'src/utils/encryption';
+import { MessagingService } from '../messanging/messanging.service';
+import { messagingConfig } from 'src/common/constants';
+import { RecoverPasswordDto, ResetPasswordDto } from './dto/auth.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
-    //private readonly messagingService: MessagingService,
+    private messagingService: MessagingService,
   ) {}
-  /*async register(user: CreateUserDto) {
+
+  async register(user: CreateUserDto) {
     try {
       const findUser = await this.prisma.user.findUnique({
         where: {
@@ -34,20 +35,19 @@ export class AuthService {
           password: await hashPassword(user.password),
         },
       });
-      await this.messagingService.sendRegisterUserEmail({
-        to: user.email,
+      this.messagingService.sendRegisterUserEmail({
         from: messagingConfig.emailSender,
-      })
-
+        to: user.email,
+      });
       return {
         message: 'Se creo correctamente',
       };
     } catch (error) {
       throw new Error(error);
     }
-  }*/
+  }
 
-  /*async login(credentials: LoginAuthDto) {
+  async login(credentials: LoginAuthDto) {
     try {
       const { email, password } = credentials;
       const findUser = await this.prisma.user.findUnique({
@@ -60,7 +60,10 @@ export class AuthService {
         throw new Error('Credenciales invalidas.');
       }
 
-      const isCorrectPassword = await comparePassword(password, findUser.password);
+      const isCorrectPassword = await comparePassword(
+        password,
+        findUser.password,
+      );
 
       if (!isCorrectPassword) {
         throw new Error('Credenciales invalidas.');
@@ -81,7 +84,8 @@ export class AuthService {
     } catch (error) {
       throw new Error(error);
     }
-  
+  }
+
   async recoveryPassword(recoverDto: RecoverPasswordDto) {
     const { email } = recoverDto;
     const findUser = await this.prisma.user.findUnique({
@@ -133,5 +137,5 @@ export class AuthService {
     return {
       accessToken: await this.jwtService.signAsync(payload),
     };
-  }}*/
+  }
 }

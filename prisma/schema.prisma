@@ -19,24 +19,29 @@ enum Role {
 }
 
 enum State {
-  PENDIENTE
-  COMPLETADO
-  CANCELADO
+  PENDING
+  CONFIRMED
+  CANCELLED
 }
 
 model User {
-  id       String @id @default(uuid())
-  name     String
-  email    String @unique
-  password String
-  rol      Role   @default(USER)
+  id        String     @default(uuid()) @id
+  lastName  String 
+  name      String
+  email     String     @unique
+  address   String 
+  phone     String
+  role      Role       @default(USER)
+  password  String
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  isDeleted Boolean  @default(false)
+  isActive Boolean      @default(true)
+
+  isDeleted  Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   profile   Profile?
-  cart      Cart?
+  cart      Cart[]
   reports   Report[]
   purchases Purchase[]
 }
@@ -71,7 +76,7 @@ model Product {
 
   images    Image?
   categorys ProductOnCategory[]
-  cartLine  CartLine[]
+  cartLines  CartLine[]
   purchases ProductPurchase[]
 }
 
@@ -110,32 +115,32 @@ model ProductOnCategory {
 
 model Cart {
   id    String @id @default(uuid())
-  state State
-  //total se calcula
-
+  state State @default(PENDING)
+  //cartBranch
+  totalAmount Float
+  //cartBranch
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   isDeleted Boolean  @default(false)
-
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id])
-
-  cartLines CartLine[]
+  user User @relation(fields: [userId], references: [id])
+  userId String
+  cartLine CartLine[]
 }
 
 model CartLine {
   id     String @id @default(uuid())
-  amount Int
-  //subtotal se calcula
-
+  //cartBranch
+  unit_price Float
+  total_price Float
+  quantity Int
+  //cartBranch
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   isDeleted Boolean  @default(false)
-
-  productId String
   product   Product @relation(fields: [productId], references: [id])
-  cartId    String
+  productId String
   cart      Cart    @relation(fields: [cartId], references: [id])
+  cartId    String
 }
 
 model Report {
@@ -167,7 +172,6 @@ model Purchase {
 model ProductPurchase {
   productId  String
   purchaseId String
-
   product  Product  @relation(fields: [productId], references: [id])
   purchase Purchase @relation(fields: [purchaseId], references: [id])
 
