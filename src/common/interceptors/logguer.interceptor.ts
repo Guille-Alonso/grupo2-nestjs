@@ -51,7 +51,10 @@ export class LogguerInterceptor implements NestInterceptor {
           response.statusCode,
           formatDate,
         );
-        console.log('Response:', error);
+        console.log('Response:', error.response,
+           '\n Status:',error.status,
+           '\n Options:',error.options,
+           '\n Errors:',error.errors);
         return throwError(() => error);
       }),
     );

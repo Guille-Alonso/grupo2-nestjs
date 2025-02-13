@@ -67,6 +67,7 @@ export class ExcelService {
         if (header) {
           rowData[header] =
             cell.value.toString().trim() === '' ? null : cell.value;
+            
         }
       });
 

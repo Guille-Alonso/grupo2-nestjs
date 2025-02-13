@@ -60,12 +60,12 @@ model Profile {
 
 model Product {
   id          String @id @default(uuid())
-  name        String
+  name        String @unique
   description String
   price       Float
   stock       Int
 
-  barcode String
+  barcode String @unique
   sku     String
 
   createdAt DateTime @default(now())
@@ -92,7 +92,7 @@ model Image {
 
 model Category {
   id   String @id @default(uuid())
-  name String 
+  name String @unique
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

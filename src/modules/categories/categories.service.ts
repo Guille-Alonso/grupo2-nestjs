@@ -2,27 +2,22 @@ import { Injectable } from '@nestjs/common';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { PrismaService } from '../prisma/prisma.service';
+import { PaginationService } from 'src/utils/pagination/pagination.service';
+import { PaginationDto2 } from 'src/utils/pagination/dto/pagination.dto';
 
 @Injectable()
 export class CategoriesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly paginationService: PaginationService,
+  ) {}
 
   async create(createCategoryDto: CreateCategoryDto) {
     try {
-      const { productIds, ...categoryData } = createCategoryDto;
       const category = await this.prisma.category.create({
         data: {
-          ...categoryData,
-          isDeleted: false,
-          products: productIds
-            ? {
-                create: productIds.map((id) => ({
-                  product: { connect: { id } },
-                })),
-              }
-            : undefined,
+          name: createCategoryDto.name,
         },
-        include: { products: true },
       });
       return category;
     } catch (error) {
@@ -30,14 +25,35 @@ export class CategoriesService {
     }
   }
 
-  async findAll() {
+  async findAll(paginationDto: PaginationDto2) {
     try {
-      const category = await this.prisma.category.findMany({
-        where: {
-          isDeleted: false,
-        },
-      });
-      return category;
+      const { page, pageSize, sortBy, sortOrder } = paginationDto;
+      const { skip, take, orderBy } =
+        this.paginationService.getPaginationParams(
+          page,
+          pageSize,
+          sortBy,
+          sortOrder,
+        );
+
+      const [data, total] = await Promise.all([
+        this.prisma.category.findMany({
+          where: {
+            isDeleted: false,
+          },
+          skip,
+          take,
+          orderBy,
+        }),
+        this.prisma.category.count(),
+      ]);
+
+      return this.paginationService.formatPaginatedResponse(
+        data,
+        total,
+        page,
+        pageSize,
+      );
     } catch (error) {
       throw new Error(error);
     }
@@ -48,6 +64,7 @@ export class CategoriesService {
       const category = await this.prisma.category.findUnique({
         where: {
           id,
+          isDeleted: false,
         },
       });
       return category;

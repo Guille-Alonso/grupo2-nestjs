@@ -8,7 +8,9 @@
     "numberCode": "{property} debe ser una cadena de 13 numeros",
     "length": "{property} debe tener {constraint1} caracteres",
     "maxLength": "{property} no puede tener más de {constraint1} caracteres",
-    "isUrl": "{property} debe ser una URL válida"
+    "isUrl": "{property} debe ser una URL válida",
+    "min": "{property} debe ser mayor que {constraint1}",
+    "isIn": "{property} debe ser uno de los siguientes valores: {constraint1}"
 
 
 }
