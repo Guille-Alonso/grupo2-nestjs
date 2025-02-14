@@ -274,7 +274,7 @@ export class UsersService {
         const userExists = await this.prisma.user.findUnique({
           where: { email },
         });
-
+     
         if (userExists && userExists.id !== id) {
           throw new CustomError(
             'El email ya está registrado.',

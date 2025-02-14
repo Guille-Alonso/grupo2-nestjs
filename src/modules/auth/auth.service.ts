@@ -80,6 +80,20 @@ export class AuthService {
       const { password } = credentials;
       const email = credentials.email.toLowerCase();
 
+      const isDeletedUser = await this.prisma.user.findUnique({
+        where: {
+          email,
+          isDeleted:false
+        },
+      });
+
+      if (!isDeletedUser) {
+        throw new CustomError(
+          'Usuario no encontrado.',
+          HttpStatus.NOT_FOUND, // 404
+        );
+      }
+
       const findUser = await this.prisma.user.findUnique({
         where: {
           email,
