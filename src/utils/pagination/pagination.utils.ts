@@ -1,6 +1,6 @@
-import { PaginationArgs } from './pagination.dto';
+import { PaginationDto } from './dto/pagination.dto';
 
-export const getPaginationFilter = (pagination: PaginationArgs) => {
+export const getPaginationFilter = (pagination: PaginationDto) => {
   const { page, perPage } = pagination;
   return {
     take: perPage,
