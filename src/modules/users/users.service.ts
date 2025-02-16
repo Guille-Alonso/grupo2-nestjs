@@ -361,7 +361,7 @@ export class UsersService {
     updateUserDto: UpdateUserDto,
     file: Express.Multer.File,
   ) {
-    const { url, key } = await this.awsService.uploadFile(file, id);
+    const { url, key } = await this.awsService.uploadFile(file, id,'user');
     console.log(url);
 
     const user = await this.prisma.user
@@ -413,7 +413,7 @@ export class UsersService {
       path: '',
       stream: null,
     };
-    const { url } = await this.awsService.uploadFile(file, 'excel');
+    const { url } = await this.awsService.uploadFile(file, 'excel', 'user');
     await this.prisma.report.create({
       data: { content: url, type: 'Usuario', userId: userId },
     });

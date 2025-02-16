@@ -9,6 +9,7 @@ import { PaginationDto2 } from 'src/utils/pagination/dto/pagination.dto';
 import { Prisma } from '@prisma/client';
 import { ExcelColumn } from 'src/common/interfaces';
 import { FilterProductsDto } from './dto/filter-product.dto';
+import { AwsService } from '../aws/aws.service';
 @Injectable()
 export class ProductsService {
   constructor(
@@ -16,12 +17,21 @@ export class ProductsService {
     private readonly excelService: ExcelService,
     private readonly i18n: I18nService,
     private readonly paginationService: PaginationService,
+    private readonly awsService: AwsService
   ) {}
 
 
   async create(newProduct: CreateProductDto) {
     try {
       const { categoryIds, images, ...productData } = newProduct;
+
+      const categorys = this.prisma.category.findMany({
+        where: {
+          id: { in: categoryIds },
+        },
+      })
+      const existingCategoryIds = (await categorys).map((p) => p.id);
+
       const product = await this.prisma.product.create({
         data: {
           ...productData,
@@ -32,7 +42,7 @@ export class ProductsService {
           },
           categorys: categoryIds
             ? {
-                create: categoryIds.map((id) => ({
+                create: existingCategoryIds.map((id) => ({
                   category: { connect: { id } },
                 })),
               }
@@ -100,6 +110,7 @@ export class ProductsService {
   async update(id: string, updateProductDto: UpdateProductDto) {
     try {
       const { categoryIds, images, ...productData } = updateProductDto;
+      
       const updatedProduct = await this.prisma.product.update({
         where: {
           id,
@@ -339,7 +350,6 @@ export class ProductsService {
         'Productos',
       );
       const buffer = await Buffer.from(await workbook.xlsx.writeBuffer());
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const file: Express.Multer.File = {
         fieldname: 'file',
         originalname: 'productos.xlsx',
@@ -353,10 +363,7 @@ export class ProductsService {
         path: '',
         stream: null,
       };
-      /*const { url } = await this.awsService.uploadFile(file, 'excel');
-    await this.prisma.report.create({
-      data: { content: url, type: 'Usuario' },
-    });*/
+      await this.awsService.uploadFile(file, 'excel','product');
       await this.excelService.exportToResponse(res, workbook, 'productos.xlsx');
       return { message: this.i18n.t('messages.productsExported') };
     } catch (error) {

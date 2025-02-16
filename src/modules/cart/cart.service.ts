@@ -1,267 +1,269 @@
-import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateCartDto } from './dto/create-cart.dto';
 import { PrismaService } from '../prisma/prisma.service';
 
 
 
+
 @Injectable()
 export class CartService {
-  constructor(private readonly prisma: PrismaService){}
- 
-  async recoverCartData (cartId: string){
+  constructor(
+    private readonly prisma: PrismaService,
+  ) {}
+
+  async recoverCartData(cartId: string) {
     const cartData = await this.prisma.cart.findUnique({
-      where:{
+      where: {
         id: cartId,
-        isDeleted: false
+        isDeleted: false,
       },
-      select:{
-        totalAmount:true,
+      select: {
+        totalAmount: true,
         state: true,
-        user:{
-          select:{
-            name:true,
-            email:true,
-          }
+        user: {
+          select: {
+            name: true,
+            email: true,
+          },
         },
-        cartLine:{
-          select:{
-            unit_price:true,
-            total_price:true,
+        cartLine: {
+          select: {
+            unit_price: true,
+            total_price: true,
             quantity: true,
-            product:{
-              select:{
-                name:true,
-                description:true
-              }
-            }
-          }
-        }
-      }
-    })
-    return cartData
+            product: {
+              select: {
+                name: true,
+                description: true,
+              },
+            },
+          },
+        },
+      },
+    });
+    return cartData;
   }
 
-
-
   async create(cart: CreateCartDto) {
-    try{
+    try {
+      let subtotal = 0;
 
-      let subtotal= 0;
-      
-      for (const product of cart.cartLine){
+      for (const product of cart.cartLine) {
         const prod = await this.prisma.product.findUnique({
-          where:{
-            id: product.productId
-          }
-        })
+          where: {
+            id: product.productId,
+          },
+        });
         const total = product.quantity * prod.price;
-        subtotal = subtotal + total
+        subtotal = subtotal + total;
       }
       console.log(subtotal);
-  
-      const newCart = await this.prisma.$transaction(async (tx)=>{
+
+      const newCart = await this.prisma.$transaction(async (tx) => {
         const carrito = await tx.cart.create({
-          data:{
+          data: {
             userId: cart.userId,
-            totalAmount:subtotal
-          }
+            totalAmount: subtotal,
+          },
         });
-        
-        
-        for (const product of cart.cartLine){
+
+        for (const product of cart.cartLine) {
           const exist = await tx.product.findUnique({
-            where:{
-              id: product.productId
-            }
-          })
-          if(!exist){
-            
-            throw new Error('no products exist')
-            
+            where: {
+              id: product.productId,
+            },
+          });
+          if (!exist) {
+            throw new Error('no products exist');
           }
+          // eslint-disable-next-line prefer-const
           let totalPrice = product.quantity * exist.price;
           await tx.cartLine.create({
-            data:{
+            data: {
               cartId: carrito.id,
               productId: product.productId,
               quantity: product.quantity,
               unit_price: exist.price,
-              total_price: totalPrice
-            }
-          })
+              total_price: totalPrice,
+            },
+          });
         }
-        return carrito
-      })
-      
-      return {Message: 'carrito', newCart}
-    }catch(e){
-      throw new Error(e.message)
+        return carrito;
+      });
+
+      return { Message: 'carrito', newCart };
+    } catch (e) {
+      throw new Error(e.message);
     }
   }
 
   async findAll(userId) {
-    
-    try{
+    try {
       const datacart = await this.prisma.cart.findMany({
-        where:{
-              userId,
-              isDeleted:false
+        where: {
+          userId,
+          isDeleted: false,
+        },
+        select: {
+          id: true,
+          totalAmount: true,
+          user: {
+            select: {
+              name: true,
+              email: true,
             },
-            select:{
-              id: true,
-              totalAmount:true,
-               user:{
-                select:{
-                  name:true,
-                  email:true,
-                }
+          },
+          cartLine: {
+            select: {
+              quantity: true,
+              unit_price: true,
+              total_price: true,
+              product: {
+                select: {
+                  name: true,
+                  description: true,
+                },
               },
-              cartLine:{
-                select:{
-                  quantity:true,
-                  unit_price:true,
-                  total_price:true,
-                  product:{
-                    select:{
-                      name:true,
-                      description:true,
-                    }
-                  }
-                }
-              }
-            }
-          })
-          if(!datacart){
-            throw new Error('no se encontraron datos')
-          }
-          return datacart
-    }catch(e){
-      throw new Error(e.message)
+            },
+          },
+        },
+      });
+      if (!datacart) {
+        throw new Error('no se encontraron datos');
+      }
+      return datacart;
+    } catch (e) {
+      throw new Error(e.message);
     }
   }
 
-  async findAllAdmin(){
-    try{
+  async findAllAdmin() {
+    try {
       const datacart = await this.prisma.cart.findMany({
-            select:{
-              id: true,
-              totalAmount:true,
-              state:true,
-               user:{
-                select:{
-                  name:true,
-                  email:true,
-                }
+        select: {
+          id: true,
+          totalAmount: true,
+          state: true,
+          user: {
+            select: {
+              name: true,
+              email: true,
+            },
+          },
+          cartLine: {
+            select: {
+              quantity: true,
+              unit_price: true,
+              total_price: true,
+              product: {
+                select: {
+                  name: true,
+                  description: true,
+                },
               },
-              cartLine:{
-                select:{
-                  quantity:true,
-                  unit_price:true,
-                  total_price:true,
-                  product:{
-                    select:{
-                      name:true,
-                      description:true,
-                    }
-                  }
-                }
-              }
-            }
-          })
-          if(!datacart){
-            throw new Error('no se encontraron datos')
-          }
-          return datacart
-    }catch(e){
-      throw new Error(e.message)
+            },
+          },
+        },
+      });
+      if (!datacart) {
+        throw new Error('no se encontraron datos');
+      }
+      return datacart;
+    } catch (e) {
+      throw new Error(e.message);
     }
   }
 
   findOne(id: string) {
-    try{
-      const datita =this.recoverCartData(id); 
+    try {
+      const datita = this.recoverCartData(id);
       return datita;
-    }catch(e){
-      throw new Error(e)
+    } catch (e) {
+      throw new Error(e);
     }
   }
 
   async comfirmCart(id: string) {
     try {
-        const confCart = await this.prisma.$transaction(async (tx) => {
-            const carrito = await tx.cart.findUnique({
-                where: { id, state: "PENDING" },
-                include: { cartLine: { include: { product: true } } },
-            });
-
-            if (!carrito) {
-                throw new Error('cart no find'); 
-            }
-
-            const productCart = carrito.cartLine;
-
-            for (const line of productCart) {
-                const productStock = await tx.product.findUnique({
-                    where: { id: line.product.id },
-                    select: { stock: true },
-                });
-
-                if (productStock.stock < line.quantity || productStock.stock == 0) {
-                    throw new Error('producto ' + line.product.name + ' sin stock'); 
-                }
-
-                await tx.product.update({
-                    where: { id: line.product.id },
-                    data: { stock: { decrement: line.quantity } },
-                });
-            }
-
-            await tx.cart.update({
-                where: { id },
-                data: { state: "CONFIRMED" },
-            });
-
-            return carrito; 
+      const confCart = await this.prisma.$transaction(async (tx) => {
+        const carrito = await tx.cart.findUnique({
+          where: { id, state: 'PENDING' },
+          include: { cartLine: { include: { product: true } } },
         });
 
-        return { Message: 'carrito confirmado', confCart }; 
-
-    } catch (e) {
-        if (e.message === 'cart no find') {
-            throw new NotFoundException(e.message); 
-        } else if (e.message.startsWith('producto ')) {
-            throw new BadRequestException(e.message);
-        } else {
-            Logger.error(e); 
-            throw new InternalServerErrorException('Error interno del servidor');
+        if (!carrito) {
+          throw new Error('cart no find');
         }
-    }
-}
-  
-  async remove(id: string) {
-   try{
-    const carrito = await this.prisma.cart.findUnique({
-      where:{
-        id,
-        state:"PENDING",
-      },
-    })
 
-    if(!carrito){
-      throw new Error('cart confirm')
+        const productCart = carrito.cartLine;
+
+        for (const line of productCart) {
+          const productStock = await tx.product.findUnique({
+            where: { id: line.product.id },
+            select: { stock: true },
+          });
+
+          if (productStock.stock < line.quantity || productStock.stock == 0) {
+            throw new Error('producto ' + line.product.name + ' sin stock');
+          }
+
+          await tx.product.update({
+            where: { id: line.product.id },
+            data: { stock: { decrement: line.quantity } },
+          });
+        }
+
+        await tx.cart.update({
+          where: { id },
+          data: { state: 'CONFIRMED' },
+        });
+
+        return carrito;
+      });
+
+      return { Message: 'carrito confirmado', confCart };
+    } catch (e) {
+      if (e.message === 'cart no find') {
+        throw new NotFoundException(e.message);
+      } else if (e.message.startsWith('producto ')) {
+        throw new BadRequestException(e.message);
+      } else {
+        Logger.error(e);
+        throw new InternalServerErrorException('Error interno del servidor');
+      }
     }
-    await this.prisma.cart.update({
-    where:{
-      id,
-      state:"PENDING"
-    },
-    data:{
-      state:"CANCELLED"
+  }
+
+  async remove(id: string) {
+    try {
+      const carrito = await this.prisma.cart.findUnique({
+        where: {
+          id,
+          state: 'PENDING',
+        },
+      });
+
+      if (!carrito) {
+        throw new Error('cart confirm');
+      }
+      await this.prisma.cart.update({
+        where: {
+          id,
+          state: 'PENDING',
+        },
+        data: {
+          state: 'CANCELLED',
+        },
+      });
+      return { Message: 'carrito cancelado' };
+    } catch (e) {
+      throw new Error(e.message);
     }
-  })
-  return {Message: 'carrito cancelado'}
-   }catch(e){
-    throw new Error(e.message)
-   }
   }
 }

@@ -13,10 +13,13 @@ export class ImagesService {
   ) {}
   async create(createImageDto: CreateImageDto) {
     try {
+      const product = await this.prisma.product.findUnique({ where: { id: createImageDto.productId, isDeleted: false },select: { id: true } });
+      if (product.id == null) {
+        throw new Error('Producto no encontrado');
+      }
       const image = await this.prisma.image.create({
         data: createImageDto,
       });
-
       return image;
     } catch (error) {
       throw new Error(error);
@@ -99,4 +102,18 @@ export class ImagesService {
       throw new Error(error);
     }
   }
+
+  async assignImage(file: Express.Multer.File, productId: string) {
+    this.prisma.image.update({
+      where: {
+        productId,
+      },
+      data: {
+        colection: {
+          push: file.originalname,
+        },
+      },
+    })
+  }
 }
+
