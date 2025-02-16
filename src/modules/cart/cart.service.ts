@@ -1,12 +1,19 @@
-import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, HttpStatus, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { CreateCartDto } from './dto/create-cart.dto';
 import { PrismaService } from '../prisma/prisma.service';
+import { PaginationDto2 } from 'src/utils/pagination/dto/pagination.dto';
+import { I18nService } from 'nestjs-i18n';
+import { PaginationService } from 'src/utils/pagination/pagination.service';
+import { hrtime } from 'process';
 
 
 
 @Injectable()
 export class CartService {
-  constructor(private readonly prisma: PrismaService){}
+  constructor(private readonly prisma: PrismaService,
+    private readonly i18n:I18nService,
+    private readonly paginationService:PaginationService,
+  ){}
  
   async recoverCartData (cartId: string){
     const cartData = await this.prisma.cart.findUnique({
@@ -76,8 +83,7 @@ export class CartService {
           })
           if(!exist){
             
-            throw new Error('no products exist')
-            
+            throw new Error(this.i18n.t('messages.productNotFound') + HttpStatus.BAD_REQUEST)
           }
           let totalPrice = product.quantity * exist.price;
           await tx.cartLine.create({
@@ -93,16 +99,21 @@ export class CartService {
         return carrito
       })
       
-      return {Message: 'carrito', newCart}
+      return {newCart}
     }catch(e){
-      throw new Error(e.message)
+      throw new Error(e.message + HttpStatus.BAD_REQUEST)
     }
   }
 
-  async findAll(userId) {
+  async findAll(userId, pDTO2:PaginationDto2) {
     
     try{
-      const datacart = await this.prisma.cart.findMany({
+      const {page,pageSize,sortBy,sortOrder}=pDTO2;
+      const {skip, take, orderBy}= this.paginationService.getPaginationParams(
+        page, pageSize, sortBy, sortOrder
+      )
+      const [data, total] = await Promise.all([
+       this.prisma.cart.findMany({
         where:{
               userId,
               isDeleted:false
@@ -129,20 +140,31 @@ export class CartService {
                   }
                 }
               }
-            }
-          })
-          if(!datacart){
-            throw new Error('no se encontraron datos')
+            },
+            skip,
+            take,
+            orderBy
+          }),
+          this.prisma.cart.count()
+        ])
+        if (data.length === 0){
+            throw new Error(this.i18n.t('messages.cartsNotFind') + HttpStatus.BAD_REQUEST)
           }
-          return datacart
+          return this.paginationService.formatPaginatedResponse(data,total,page,pageSize)
     }catch(e){
-      throw new Error(e.message)
+      const message = this.i18n.t('messages.cartsNotFind') + e;
+      throw new Error(message)
     }
   }
 
-  async findAllAdmin(){
+  async findAllAdmin(pDTO2:PaginationDto2){
     try{
-      const datacart = await this.prisma.cart.findMany({
+      const {page,pageSize,sortBy,sortOrder}=pDTO2;
+      const {skip, take, orderBy}= this.paginationService.getPaginationParams(
+        page, pageSize, sortBy, sortOrder
+      )
+      const [data, total] = await Promise.all([
+       this.prisma.cart.findMany({
             select:{
               id: true,
               totalAmount:true,
@@ -166,20 +188,29 @@ export class CartService {
                   }
                 }
               }
-            }
-          })
-          if(!datacart){
-            throw new Error('no se encontraron datos')
-          }
-          return datacart
+            },
+            skip,
+            take,
+            orderBy
+          }),
+          this.prisma.cart.count()
+        ])
+        if (data.length === 0){
+          throw new Error(this.i18n.t('messages.cartsNotFind') + HttpStatus.BAD_REQUEST)
+        }
+        return this.paginationService.formatPaginatedResponse(data,total,page,pageSize)
     }catch(e){
-      throw new Error(e.message)
+      const message = this.i18n.t('messages.cartsNotFind') + e;
+      throw new Error(message)
     }
   }
 
   findOne(id: string) {
     try{
       const datita =this.recoverCartData(id); 
+      if (!datita){
+        throw new Error(this.i18n.t('messages.cartNotFind'))
+      }
       return datita;
     }catch(e){
       throw new Error(e)
@@ -195,7 +226,7 @@ export class CartService {
             });
 
             if (!carrito) {
-                throw new Error('cart no find'); 
+                throw new Error(this.i18n.t('messages.cartsNotFind')); 
             }
 
             const productCart = carrito.cartLine;
@@ -224,7 +255,7 @@ export class CartService {
             return carrito; 
         });
 
-        return { Message: 'carrito confirmado', confCart }; 
+        return { Message: this.i18n.t('confirmCart'), confCart }; 
 
     } catch (e) {
         if (e.message === 'cart no find') {
@@ -233,7 +264,7 @@ export class CartService {
             throw new BadRequestException(e.message);
         } else {
             Logger.error(e); 
-            throw new InternalServerErrorException('Error interno del servidor');
+            throw new InternalServerErrorException(this.i18n.t('noConfirmCart'));
         }
     }
 }
@@ -248,7 +279,7 @@ export class CartService {
     })
 
     if(!carrito){
-      throw new Error('cart confirm')
+      throw new Error(this.i18n.t('confirmCart'))
     }
     await this.prisma.cart.update({
     where:{
@@ -259,7 +290,7 @@ export class CartService {
       state:"CANCELLED"
     }
   })
-  return {Message: 'carrito cancelado'}
+  return {Message: this.i18n.t('cartCancel')}
    }catch(e){
     throw new Error(e.message)
    }

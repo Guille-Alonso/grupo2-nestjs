@@ -16,5 +16,12 @@
     "productsUploaded": "Productos cargados con exito",
     "productsNotUploaded": "Ubo un error al cargar el los datos desde el exel: ",
     "productsExported": "Productos exportados con exito",
-    "productsNotExported": "Ubo un error al exportar los productos: "
+    "productsNotExported": "Ubo un error al exportar los productos: ",
+    "cartsNotFind": "información de carritos no encontrada",
+    "cartNotFind": "informacion de carrito no encontrada",
+    "confirmCart":"carrito confirmado",
+    "cartCancel":"carrito cancelado",
+    "noConfirmCart": "no se pudo confirmar carrito"
+
+
 }
