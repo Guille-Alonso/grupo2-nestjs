@@ -25,16 +25,22 @@ export class AuthService {
         throw new CustomError('Todos los campos son obligatorios.', HttpStatus.BAD_REQUEST); // 400
       }
   
-      const email = user.email.toLowerCase();
-      const existingUser = await this.prisma.user.findUnique({
-        where: { email },
+      const userExists = await this.prisma.user.findFirst({
+        where: {
+          email: {
+            equals: user.email,
+            mode: 'insensitive',
+          },
+        },
       });
-  
-      if (existingUser) {
+      
+      
+      if (userExists) {
         throw new CustomError('El email ya está registrado.', HttpStatus.CONFLICT); // 409
       }
       
       const hashedPassword = await hashPassword(user.password);
+      const email = user.email.toLowerCase();
   
       const newUser = await this.prisma.user.create({
         data: {
@@ -47,7 +53,7 @@ export class AuthService {
       try {
         await this.messagingService.sendRegisterUserEmail({
           from: messagingConfig.emailSender,
-          to: user.email,
+          to: email,
         });
       } catch (emailError) {
     
@@ -78,32 +84,22 @@ export class AuthService {
   async login(credentials: LoginAuthDto) {
     try {
       const { password } = credentials;
-      const email = credentials.email.toLowerCase();
 
-      const isDeletedUser = await this.prisma.user.findUnique({
+      const findUser = await this.prisma.user.findFirst({
         where: {
-          email,
-          isDeleted:false
+          email: {
+            equals: credentials.email,
+            mode: 'insensitive',
+          },
+          isDeleted:false,
+          isActive:true
         },
       });
-
-      if (!isDeletedUser) {
-        throw new CustomError(
-          'Usuario no encontrado.',
-          HttpStatus.NOT_FOUND, // 404
-        );
-      }
-
-      const findUser = await this.prisma.user.findUnique({
-        where: {
-          email,
-        },
-      });
-
+      
       if (!findUser) {
         throw new CustomError('Credenciales invalidas.',HttpStatus.UNAUTHORIZED);
       }
-
+   
       const isCorrectPassword = await comparePassword(
         password,
         findUser.password,
@@ -139,13 +135,16 @@ export class AuthService {
 
   async recoveryPassword(recoverDto: RecoverPasswordDto) {
     try {
-      const email = recoverDto.email.toLowerCase();
 
-      const findUser = await this.prisma.user.findUnique({
+      const findUser = await this.prisma.user.findFirst({
         where: {
-          email,
+          email: {
+            equals: recoverDto.email,
+            mode: 'insensitive',
+          },
         },
       });
+      
 
       if(!findUser){
         throw new CustomError(
@@ -233,10 +232,5 @@ export class AuthService {
     }
    
   }
-
-  // private async createTokens(payload: JwtPayload) {
-  //   return {
-  //     accessToken: await this.jwtService.signAsync(payload),
-  //   };
-  // }
+  
 }

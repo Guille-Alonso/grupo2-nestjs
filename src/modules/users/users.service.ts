@@ -24,73 +24,29 @@ export class UsersService {
     private messagingService: MessagingService,
   ) {}
 
-  // async create(user: CreateUserDto) {
-  //   try {
-  //     // Validación de entrada
-  //     if (!user.email || !user.password || !user.name) {
-  //       throw new BadRequestException('Todos los campos son obligatorios.');
-  //     }
-
-  //     // Verificar si el usuario ya existe
-  //     const existingUser = await this.prisma.user.findUnique({
-  //       where: { email: user.email },
-  //     });
-
-  //     if (existingUser) {
-  //       throw new ConflictException('El email ya está registrado.');
-  //     }
-
-  //     // Hash de la contraseña
-  //     const hashedPassword = await hashPassword(user.password);
-
-  //     // Crear el usuario en la base de datos
-  //     const newUser = await this.prisma.user.create({
-  //       data: {
-  //         ...user,
-  //         password: hashedPassword,
-  //       },
-  //     });
-
-  //     // Enviar correo de confirmación
-  //     try {
-  //       await this.messagingService.sendRegisterUserEmail({
-  //         from: messagingConfig.emailSender,
-  //         to: user.email,
-  //       });
-  //     } catch (emailError) {
-  //       console.error('Error al enviar el correo:', emailError);
-  //     }
-
-  //     return {
-  //       message: 'Usuario creado correctamente',
-  //       userId: newUser.id,
-  //     };
-  //   } catch (error) {
-  //     if (error instanceof BadRequestException || error instanceof ConflictException) {
-  //       throw error;
-  //     }
-
-  //     console.error('Error interno en la creación del usuario:', error);
-  //     throw new InternalServerErrorException('Error al crear el usuario. Inténtelo más tarde.');
-  //   }
-  // }
-
   async create(user: CreateUserDto) {
     try {
  
       if (!user.email || !user.password || !user.name || !user.lastName) {
         throw new CustomError('Todos los campos son obligatorios.', HttpStatus.BAD_REQUEST); // 400
       }
-      const email = user.email.toLowerCase();
-      const existingUser = await this.prisma.user.findUnique({
-        where: { email },
+      
+      const userExists = await this.prisma.user.findFirst({
+        where: {
+          email: {
+            equals: user.email,
+            mode: 'insensitive',
+          },
+        },
       });
+      
   
-      if (existingUser) {
+      if (userExists) {
         throw new CustomError('El email ya está registrado.', HttpStatus.CONFLICT); // 409
       }
       
       const hashedPassword = await hashPassword(user.password);
+      const email = user.email.toLowerCase();
   
       const newUser = await this.prisma.user.create({
         data: {
@@ -270,11 +226,16 @@ export class UsersService {
       }
 
       if (updateUserDto.email) {
-        const email = updateUserDto.email.toLowerCase();
-        const userExists = await this.prisma.user.findUnique({
-          where: { email },
-        });
      
+        const userExists = await this.prisma.user.findFirst({
+          where: {
+            email: {
+              equals: updateUserDto.email,
+              mode: 'insensitive',
+            },
+          },
+        });
+        
         if (userExists && userExists.id !== id) {
           throw new CustomError(
             'El email ya está registrado.',
@@ -286,7 +247,7 @@ export class UsersService {
           where: { id },
           data: {
             ...updateUserDto,
-            email,
+            email: { set: updateUserDto.email.toLowerCase() },
           },
         });
 
