@@ -88,17 +88,26 @@ export class PurchasesService {
       include:{user:true, products:{include:{product:true}}}
      
     }) 
-    return datita
+    const setear = []
     for(const purchases of datita){
-      const setear = [
-        {
-          "usuario": purchases.user.name,
-          "fecha":  purchases.createdAt.getDate(),
-          "hora": purchases.createdAt.getTime()
-
+      const purchaseData = {
+          users: purchases.user.name + " "+ purchases.user.lastName,
+          fecha:  purchases.createdAt.getDate()+"-"+purchases.createdAt.getMonth()+"-"+purchases.createdAt.getFullYear(),
+          hora: purchases.createdAt.getHours()+":"+purchases.createdAt.getMinutes(),
+          total: purchases.total,
+          products:[]
         }
-      ]
+      
+      for(const Prod of purchases.products){
+        purchaseData.products.push({
+          quantity: Prod.quantity,
+          productName: Prod.product.name,
+          price:Prod.product.price
+        })
+      }
+      setear.push(purchaseData)
     }
+    return setear
   }
 
 
