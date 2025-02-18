@@ -7,24 +7,15 @@ CREATE TYPE "State" AS ENUM ('PENDING', 'CONFIRMED', 'CANCELLED');
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
-    "lastName" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "email" TEXT NOT NULL,
-    "role" "Role" NOT NULL DEFAULT 'USER',
     "password" TEXT NOT NULL,
-<<<<<<<< HEAD:prisma/migrations/20250217224937_init_db/migration.sql
-    "isActive" BOOLEAN NOT NULL DEFAULT true,
-    "isDeleted" BOOLEAN NOT NULL DEFAULT false,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-========
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "isDeleted" BOOLEAN NOT NULL DEFAULT false,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "lastName" TEXT NOT NULL,
     "role" "Role" NOT NULL DEFAULT 'USER',
->>>>>>>> origin/purchases:prisma/migrations/20250217023221_init/migration.sql
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
@@ -94,10 +85,6 @@ CREATE TABLE "ProductOnCategory" (
 CREATE TABLE "Cart" (
     "id" TEXT NOT NULL,
     "state" "State" NOT NULL DEFAULT 'PENDING',
-<<<<<<<< HEAD:prisma/migrations/20250217224937_init_db/migration.sql
-    "totalAmount" DOUBLE PRECISION NOT NULL,
-========
->>>>>>>> origin/purchases:prisma/migrations/20250217023221_init/migration.sql
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "isDeleted" BOOLEAN NOT NULL DEFAULT false,
@@ -110,12 +97,6 @@ CREATE TABLE "Cart" (
 -- CreateTable
 CREATE TABLE "CartLine" (
     "id" TEXT NOT NULL,
-<<<<<<<< HEAD:prisma/migrations/20250217224937_init_db/migration.sql
-    "unit_price" DOUBLE PRECISION NOT NULL,
-    "total_price" DOUBLE PRECISION NOT NULL,
-    "quantity" INTEGER NOT NULL,
-========
->>>>>>>> origin/purchases:prisma/migrations/20250217023221_init/migration.sql
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "isDeleted" BOOLEAN NOT NULL DEFAULT false,
@@ -144,7 +125,7 @@ CREATE TABLE "Report" (
 -- CreateTable
 CREATE TABLE "Purchase" (
     "id" TEXT NOT NULL,
-    "State" "State" NOT NULL,
+    "total" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "isDeleted" BOOLEAN NOT NULL DEFAULT false,
@@ -155,6 +136,7 @@ CREATE TABLE "Purchase" (
 
 -- CreateTable
 CREATE TABLE "ProductPurchase" (
+    "quantity" INTEGER NOT NULL DEFAULT 0,
     "productId" TEXT NOT NULL,
     "purchaseId" TEXT NOT NULL,
     "id" TEXT NOT NULL,
@@ -169,25 +151,10 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 CREATE UNIQUE INDEX "Profile_userId_key" ON "Profile"("userId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Product_name_key" ON "Product"("name");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Product_barcode_key" ON "Product"("barcode");
-
--- CreateIndex
 CREATE UNIQUE INDEX "Image_productId_key" ON "Image"("productId");
 
 -- CreateIndex
-<<<<<<<< HEAD:prisma/migrations/20250217224937_init_db/migration.sql
-CREATE UNIQUE INDEX "Category_name_key" ON "Category"("name");
-
--- CreateIndex
-========
->>>>>>>> origin/purchases:prisma/migrations/20250217023221_init/migration.sql
 CREATE UNIQUE INDEX "Report_userId_key" ON "Report"("userId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Purchase_userId_key" ON "Purchase"("userId");
 
 -- AddForeignKey
 ALTER TABLE "Profile" ADD CONSTRAINT "Profile_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
