@@ -59,6 +59,7 @@ export class AuthService {
         await this.messagingService.sendRegisterUserEmail({
           from: messagingConfig.emailSender,
           to: email,
+          name: user.name
         });
       } catch (emailError) {
         const message = this.i18n.t('messages.sendEmailError');
@@ -69,7 +70,7 @@ export class AuthService {
       }
       const message = this.i18n.t('messages.successfulRegistration');
       return {
-        message: message,
+        message,
         userId: newUser.id,
       };
       
