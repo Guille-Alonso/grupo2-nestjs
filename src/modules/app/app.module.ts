@@ -9,6 +9,7 @@ import I18nModuleConfig from 'src/config/i18n.config';
 import { CartModule } from '../cart/cart.module';
 import { UsersModule } from '../users/users.module';
 import { AuthModule } from '../auth/auth.module';
+import { PurchasesModule } from '../purchases/purchases.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -21,7 +22,8 @@ import { AuthModule } from '../auth/auth.module';
     ProductsModule,
     CartModule,
     UsersModule,
-    AuthModule
+    AuthModule,
+    PurchasesModule
   ],
   controllers: [AppController],
   providers: [AppService],
