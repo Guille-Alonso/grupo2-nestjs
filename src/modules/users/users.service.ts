@@ -24,73 +24,31 @@ export class UsersService {
     private messagingService: MessagingService,
   ) {}
 
-  // async create(user: CreateUserDto) {
-  //   try {
-  //     // Validación de entrada
-  //     if (!user.email || !user.password || !user.name) {
-  //       throw new BadRequestException('Todos los campos son obligatorios.');
-  //     }
-
-  //     // Verificar si el usuario ya existe
-  //     const existingUser = await this.prisma.user.findUnique({
-  //       where: { email: user.email },
-  //     });
-
-  //     if (existingUser) {
-  //       throw new ConflictException('El email ya está registrado.');
-  //     }
-
-  //     // Hash de la contraseña
-  //     const hashedPassword = await hashPassword(user.password);
-
-  //     // Crear el usuario en la base de datos
-  //     const newUser = await this.prisma.user.create({
-  //       data: {
-  //         ...user,
-  //         password: hashedPassword,
-  //       },
-  //     });
-
-  //     // Enviar correo de confirmación
-  //     try {
-  //       await this.messagingService.sendRegisterUserEmail({
-  //         from: messagingConfig.emailSender,
-  //         to: user.email,
-  //       });
-  //     } catch (emailError) {
-  //       console.error('Error al enviar el correo:', emailError);
-  //     }
-
-  //     return {
-  //       message: 'Usuario creado correctamente',
-  //       userId: newUser.id,
-  //     };
-  //   } catch (error) {
-  //     if (error instanceof BadRequestException || error instanceof ConflictException) {
-  //       throw error;
-  //     }
-
-  //     console.error('Error interno en la creación del usuario:', error);
-  //     throw new InternalServerErrorException('Error al crear el usuario. Inténtelo más tarde.');
-  //   }
-  // }
-
   async create(user: CreateUserDto) {
     try {
  
       if (!user.email || !user.password || !user.name || !user.lastName) {
-        throw new CustomError('Todos los campos son obligatorios.', HttpStatus.BAD_REQUEST); // 400
+        const message = this.i18n.t('messages.incompleteRegister');
+        throw new CustomError(message, HttpStatus.BAD_REQUEST); // 400
       }
-      const email = user.email.toLowerCase();
-      const existingUser = await this.prisma.user.findUnique({
-        where: { email },
+      
+      const userExists = await this.prisma.user.findFirst({
+        where: {
+          email: {
+            equals: user.email,
+            mode: 'insensitive',
+          },
+        },
       });
+      
   
-      if (existingUser) {
-        throw new CustomError('El email ya está registrado.', HttpStatus.CONFLICT); // 409
+      if (userExists) {
+        const message = this.i18n.t('messages.existingEmail');
+        throw new CustomError(message, HttpStatus.CONFLICT); // 409
       }
       
       const hashedPassword = await hashPassword(user.password);
+      const email = user.email.toLowerCase();
   
       const newUser = await this.prisma.user.create({
         data: {
@@ -104,28 +62,33 @@ export class UsersService {
         await this.messagingService.sendRegisterUserEmail({
           from: messagingConfig.emailSender,
           to: email,
+          name: user.name
         });
       } catch (emailError) {
-    
+        const message = this.i18n.t('messages.sendEmailError');
         throw new CustomError(
-          'Hubo un error al intentar enviar el correo de registro. Usuario creado correctamente.',
+          message,
           HttpStatus.CREATED, // 201
         );
       }
 
+      const message = this.i18n.t('messages.successfulRegistration');
       return {
-        message: 'Usuario creado correctamente',
+        message,
         userId: newUser.id,
       };
       
     } catch (error) {
-    
       if (error instanceof CustomError) {
         throw error;
       }
-  
+      const messageActionRegister = this.i18n.t('messages.messageActionRegister');
+      const message = this.i18n.t('messages.genericError', {
+        args: { action:messageActionRegister },
+      });
+   
       throw new CustomError(
-        error.message || 'Error al crear el usuario. Inténtelo más tarde.',
+        error.message || message,
         HttpStatus.INTERNAL_SERVER_ERROR, // 500
       );
     }
@@ -140,8 +103,9 @@ export class UsersService {
       });
 
       if (!Array.isArray(users) || users.length === 0) {
+        const message = this.i18n.t('messages.usersNotFound');
         throw new CustomError(
-          'No se encontraron usuarios.',
+         message,
           HttpStatus.NOT_FOUND, // 404
         );
       }      
@@ -153,8 +117,13 @@ export class UsersService {
         throw error;
       }
   
+      const messageActionFindUser = this.i18n.t('messages.messageActionFindUser');
+      const message = this.i18n.t('messages.genericError', {
+        args: { action:messageActionFindUser },
+      });
+   
       throw new CustomError(
-        error.message || 'Error al obtener usuarios. Inténtelo más tarde.',
+        error.message || message,
         HttpStatus.INTERNAL_SERVER_ERROR, // 500
       );
     }
@@ -192,8 +161,9 @@ export class UsersService {
       const total = await this.prisma.user.count({ where });
 
       if (total === 0) {
+        const message = this.i18n.t('messages.usersNotFound');
         throw new CustomError(
-          'No se encontraron usuarios que coincidan con el criterio de búsqueda.',
+         message,
           HttpStatus.NOT_FOUND, // 404
         );
       }
@@ -201,19 +171,15 @@ export class UsersService {
       const dataUsers = await this.prisma.user.findMany(baseQuery);
 
       if (!Array.isArray(dataUsers) || dataUsers.length === 0) {
+        const message = this.i18n.t('messages.usersNotFound');
         throw new CustomError(
-          'No se encontraron usuarios.',
+         message,
           HttpStatus.NOT_FOUND, // 404
         );
       }
       
   
       const res = Paginate(dataUsers, total, pagination);
-
-      // const userName = 'Joe';
-      // const message = this.i18n.t('messages.welcome', {
-      //   args: { name: userName },
-      // });
    
       return res;
 
@@ -222,8 +188,13 @@ export class UsersService {
         throw error;
       }
   
+      const messageActionFindUser = this.i18n.t('messages.messageActionFindUser');
+      const message = this.i18n.t('messages.genericError', {
+        args: { action:messageActionFindUser },
+      });
+   
       throw new CustomError(
-        error.message || 'Error al obtener usuarios. Inténtelo más tarde.',
+        error.message || message,
         HttpStatus.INTERNAL_SERVER_ERROR, // 500
       );
     }
@@ -239,19 +210,26 @@ export class UsersService {
       });
   
       if(!user){
+        const message = this.i18n.t('messages.userNotFound');
         throw new CustomError(
-          'Usuario no encontrado.',
+         message,
           HttpStatus.NOT_FOUND, // 404
         );
       }
+      
       return user;
     } catch (error) {
       if (error instanceof CustomError) {
         throw error;
       }
-  
+      
+      const messageActionFindUser = this.i18n.t('messages.messageActionFindUser');
+      const message = this.i18n.t('messages.genericError', {
+        args: { action:messageActionFindUser },
+      });
+   
       throw new CustomError(
-        error.message || 'Error al buscar el usuario. Inténtelo más tarde.',
+        error.message || message,
         HttpStatus.INTERNAL_SERVER_ERROR, // 500
       );
     }
@@ -266,42 +244,54 @@ export class UsersService {
       });
   
       if (!existingUser) {
-        throw new CustomError('Usuario no encontrado.', HttpStatus.NOT_FOUND);
+        const message = this.i18n.t('messages.userNotFound');
+        throw new CustomError(
+         message,
+          HttpStatus.NOT_FOUND, // 404
+        );
       }
 
       if (updateUserDto.email) {
-        const email = updateUserDto.email.toLowerCase();
-        const userExists = await this.prisma.user.findUnique({
-          where: { email },
+     
+        const userExists = await this.prisma.user.findFirst({
+          where: {
+            email: {
+              equals: updateUserDto.email,
+              mode: 'insensitive',
+            },
+          },
         });
-
+        
         if (userExists && userExists.id !== id) {
-          throw new CustomError(
-            'El email ya está registrado.',
-            HttpStatus.CONFLICT, // 409
-          );
+          const message = this.i18n.t('messages.existingEmail');
+          throw new CustomError(message, HttpStatus.CONFLICT); // 409
         }
 
         const updatedUser = await this.prisma.user.update({
           where: { id },
           data: {
             ...updateUserDto,
-            email,
+            email: { set: updateUserDto.email.toLowerCase() },
           },
         });
 
+        const message = this.i18n.t('messages.userSuccessfullyUpdated');
+
         return {
-          message: 'Usuario modificado correctamente',
+          message,
           user: updatedUser,
         };
+
       } else {
         const updatedUser = await this.prisma.user.update({
           where: { id },
           data: updateUserDto,
         });
 
+        const message = this.i18n.t('messages.userSuccessfullyUpdated');
+
         return {
-          message: 'Usuario modificado correctamente',
+          message,
           user: updatedUser,
         };
       }
@@ -311,8 +301,13 @@ export class UsersService {
         throw error;
       }
   
+      const messageActionUpdateUser = this.i18n.t('messages.messageActionUpdateUser');
+      const message = this.i18n.t('messages.genericError', {
+        args: { action:messageActionUpdateUser },
+      });
+   
       throw new CustomError(
-        error.message || 'Error al actualizar el usuario. Inténtelo más tarde.',
+        error.message || message,
         HttpStatus.INTERNAL_SERVER_ERROR, // 500
       );
     }
@@ -326,7 +321,11 @@ export class UsersService {
       });
   
       if (!existingUser) {
-        throw new CustomError('Usuario no encontrado.', HttpStatus.NOT_FOUND);
+        const message = this.i18n.t('messages.userNotFound');
+        throw new CustomError(
+         message,
+          HttpStatus.NOT_FOUND, // 404
+        );
       }
 
       const deletedUser = await this.prisma.user.update({
@@ -338,8 +337,10 @@ export class UsersService {
         },
       });
 
+      const message = this.i18n.t('messages.userSuccessfullyDeleted');
+
       return {
-        message: 'Usuario eliminado correctamente',
+        message,
         user: deletedUser,
       };
 
@@ -348,8 +349,13 @@ export class UsersService {
         throw error;
       }
   
+      const messageActionDeleteUser = this.i18n.t('messages.messageActionDeleteUser');
+      const message = this.i18n.t('messages.genericError', {
+        args: { action:messageActionDeleteUser },
+      });
+   
       throw new CustomError(
-        error.message || 'Error al eliminar el usuario. Inténtelo más tarde.',
+        error.message || message,
         HttpStatus.INTERNAL_SERVER_ERROR, // 500
       );
     }
