@@ -5,9 +5,10 @@ import { PaginationModule } from 'src/utils/pagination/pagination.module';
 import { ExcelModule } from '../excel/excel.module';
 import { CategoriesModule } from '../categories/categories.module';
 import { ImagesModule } from '../images/images.module';
+import { AwsModule } from '../aws/aws.module';
 
 @Module({
-  imports: [PaginationModule, ExcelModule, CategoriesModule, ImagesModule],
+  imports: [PaginationModule, ExcelModule, CategoriesModule, ImagesModule, AwsModule],
   controllers: [ProductsController],
   providers: [ProductsService],
 })

@@ -1,12 +1,20 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
 import { ReportsService } from './reports.service';
 import { CreateReportDto } from './dto/create-report.dto';
 import { UpdateReportDto } from './dto/update-report.dto';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/guards/jwt.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from 'src/common/decorators/roles.decorators';
+import { RoleEnum } from 'src/common/constants';
 
+@UseGuards(JwtAuthGuard, RolesGuard)
+@ApiTags('Reports')
 @Controller('reports')
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
-
+@Roles(RoleEnum.USER)
+  @ApiOperation({ summary: 'Create report' })
   @Post()
   create(@Body() createReportDto: CreateReportDto) {
     return this.reportsService.create(createReportDto);
@@ -30,5 +38,33 @@ export class ReportsController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.reportsService.remove(+id);
+  }
+
+  @Roles(RoleEnum.SUPERADMIN)
+  @ApiOperation({ summary: 'Sales report' })
+  @Get('sales-report')
+  salesReport() {
+    return this.reportsService.salesReport();
+  }
+
+  @Roles(RoleEnum.SUPERADMIN)
+  @ApiOperation({ summary: 'Products report' })
+  @Get('products-report')
+  productsReport() {
+    return this.reportsService.productsReport();
+  }
+
+  @Roles(RoleEnum.SUPERADMIN)
+  @ApiOperation({ summary: 'Earnings report' })
+  @Get('earnings-report')
+  earningsReport() {    
+    return this.reportsService.earningsReport();
+  }
+
+  @Roles(RoleEnum.SUPERADMIN)
+  @ApiOperation({ summary: 'Earnings by product report' })
+  @Get('earnings-by-product-report')
+  earningsByProductReport() {    
+    return this.reportsService.earningsByProductReport();
   }
 }

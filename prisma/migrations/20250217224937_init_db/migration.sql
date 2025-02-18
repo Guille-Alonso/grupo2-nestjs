@@ -2,18 +2,20 @@
 CREATE TYPE "Role" AS ENUM ('SUPERADMIN', 'USER');
 
 -- CreateEnum
-CREATE TYPE "State" AS ENUM ('PENDIENTE', 'COMPLETADO', 'CANCELADO');
+CREATE TYPE "State" AS ENUM ('PENDING', 'CONFIRMED', 'CANCELLED');
 
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
+    "lastName" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "email" TEXT NOT NULL,
+    "role" "Role" NOT NULL DEFAULT 'USER',
     "password" TEXT NOT NULL,
-    "rol" "Role" NOT NULL DEFAULT 'USER',
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "isDeleted" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "isDeleted" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
@@ -82,7 +84,8 @@ CREATE TABLE "ProductOnCategory" (
 -- CreateTable
 CREATE TABLE "Cart" (
     "id" TEXT NOT NULL,
-    "state" "State" NOT NULL,
+    "state" "State" NOT NULL DEFAULT 'PENDING',
+    "totalAmount" DOUBLE PRECISION NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "isDeleted" BOOLEAN NOT NULL DEFAULT false,
@@ -94,7 +97,9 @@ CREATE TABLE "Cart" (
 -- CreateTable
 CREATE TABLE "CartLine" (
     "id" TEXT NOT NULL,
-    "amount" INTEGER NOT NULL,
+    "unit_price" DOUBLE PRECISION NOT NULL,
+    "total_price" DOUBLE PRECISION NOT NULL,
+    "quantity" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "isDeleted" BOOLEAN NOT NULL DEFAULT false,
@@ -144,10 +149,16 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 CREATE UNIQUE INDEX "Profile_userId_key" ON "Profile"("userId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Product_name_key" ON "Product"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Product_barcode_key" ON "Product"("barcode");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Image_productId_key" ON "Image"("productId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Cart_userId_key" ON "Cart"("userId");
+CREATE UNIQUE INDEX "Category_name_key" ON "Category"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Report_userId_key" ON "Report"("userId");

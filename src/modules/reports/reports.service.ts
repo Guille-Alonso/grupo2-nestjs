@@ -6,6 +6,7 @@ import { AwsService } from '../aws/aws.service';
 import { JwtService } from '@nestjs/jwt';
 import { JwtPayload } from 'src/common/interfaces';
 import { ChartConfiguration } from 'chart.js';
+import { CreateReportDto } from './dto/create-report.dto';
 
 @Injectable()
 export class ReportsService {
@@ -15,13 +16,9 @@ export class ReportsService {
     private readonly awsService: AwsService,
     private readonly jwtService: JwtService,
   ) {}
-  create(url: string, type: string, userId: string) {
+  create(createReportDto: CreateReportDto) {
     this.prisma.report.create({
-      data: {
-        content : url,
-        type,
-        userId,
-      },
+      data: createReportDto
     })
     return 'This action adds a new report';
   }
@@ -108,7 +105,13 @@ export class ReportsService {
       const token = req.headers.authorization.split(' ')[1];
       const payload: JwtPayload = await this.jwtService.decode(token);
       const userId = payload.id;
-      this.create(url, 'VentaTotal', userId);
+
+      const reportdto:CreateReportDto= {
+        content: url,
+        type: 'VentaTotal',
+        userId
+      }
+      this.create(reportdto);
       
       return { Message: 'reporte generado',
         report
