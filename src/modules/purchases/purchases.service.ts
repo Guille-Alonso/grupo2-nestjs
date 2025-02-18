@@ -14,15 +14,21 @@ export class PurchasesService {
   async create(createPurchaseDto: CreatePurchaseDto, userId) {
     
     try{
-      
+      let total=0;
+      for(const produ of createPurchaseDto.productPurchase){
+        total =total + produ.product.stock * produ.product.price
+      }
+
         const newPurchase = await this.prisma.$transaction(async (tx)=>{
               const purchase = await tx.purchase.create({
                 data:{
-                  userId
+                  userId,
+                  total
                 }
               })
               
               for (const product of createPurchaseDto.productPurchase){
+                
                 const exist = await tx.product.findFirst({
                   where:{
                     OR:[
@@ -44,7 +50,8 @@ export class PurchasesService {
                   await tx.productPurchase.create({
                     data:{
                       productId: exist.id,
-                      purchaseId: purchase.id
+                      purchaseId: purchase.id,
+                      quantity: product.product.stock
                     }
                   })
                   
@@ -59,7 +66,8 @@ export class PurchasesService {
                   tx.productPurchase.create({
                     data:{
                       purchaseId: purchase.id,
-                      productId: newProduct.id
+                      productId: newProduct.id,
+                      quantity:  product.product.stock
                     }
                   })
                   
@@ -77,21 +85,20 @@ export class PurchasesService {
       where:{
         userId
       },
-      select:{
-        user:{
-          select:{
-            name:true,
-            password:true
-          }
-        },
-        products:{
-          select:{
-            product:true
-          }
-        }
-      }
+      include:{user:true, products:{include:{product:true}}}
+     
     }) 
-    return datita;
+    return datita
+    for(const purchases of datita){
+      const setear = [
+        {
+          "usuario": purchases.user.name,
+          "fecha":  purchases.createdAt.getDate(),
+          "hora": purchases.createdAt.getTime()
+
+        }
+      ]
+    }
   }
 
 

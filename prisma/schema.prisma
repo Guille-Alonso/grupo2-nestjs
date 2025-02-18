@@ -120,6 +120,7 @@ model Report {
 
 model Purchase {
   id        String            @id @default(uuid())
+  total       Float @default(0)
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
   isDeleted Boolean           @default(false)
@@ -129,6 +130,7 @@ model Purchase {
 }
 
 model ProductPurchase {
+  quantity   Int   @default(0)
   productId  String
   purchaseId String
   product    Product  @relation(fields: [productId], references: [id])
