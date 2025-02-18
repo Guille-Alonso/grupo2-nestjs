@@ -21,7 +21,20 @@
     "cartNotFind": "informacion de carrito no encontrada",
     "confirmCart":"carrito confirmado",
     "cartCancel":"carrito cancelado",
-    "noConfirmCart": "no se pudo confirmar carrito"
-
+    "noConfirmCart": "no se pudo confirmar carrito",
+    "incompleteRegister": "Todos los campos son obligatorios.",
+    "existingEmail": "El email ya está registrado.",
+    "sendEmailError":"Hubo un error al intentar enviar el correo de registro. Usuario registrado correctamente.",
+    "successfulRegistration": "Registro exitoso.",
+    "genericError": "Error al {action}. Inténtelo más tarde.",
+    "messageActionRegister":"Registrar usuario",
+    "messageActionLogin": "Iniciar sesión",
+    "unauthorized":"Credenciales invalidas.",
+    "messageActionRecoveryPassword":"Recuperar contraseña",
+    "userNotFound": "Usuario no encontrado",
+    "sendEmailRecoveryPassword":"Se envio un correo con las instrucciones para recuperar la contraseña.",
+    "messageActionResetPassword":"Cambiar la contraseña",
+    "errorPassword":"Las contraseñas no coinciden.",
+    "passwordUpdated" :"Contraseña actualizada correctamente"
 
 }

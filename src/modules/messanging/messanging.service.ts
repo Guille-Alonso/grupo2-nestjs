@@ -1,9 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { EMAIL_PROVIDER, EmailService } from './messanging.types';
+import { I18nService } from 'nestjs-i18n';
 
 @Injectable()
 export class MessagingService {
-  constructor(@Inject(EMAIL_PROVIDER) private emailService: EmailService) {}
+  constructor(@Inject(EMAIL_PROVIDER) private emailService: EmailService, private readonly i18n: I18nService) {}
 
   async sendRegisterUserEmail(input: { from: string; to: string }) {
     const { from, to } = input;
