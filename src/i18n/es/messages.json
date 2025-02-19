@@ -46,8 +46,11 @@
     "hi": "hola",
     "welcomeMessageBody": "Te damos la bienvenida a ApiRestNest! Estamos muy contentos de que te hayas unido a nuestra comunidad.",
     "messageBody":"¡Disfruta de ApiRestNest!",
-    "finallyMessageBody":"Atentamente,<br> El equipo de grupo 2",
-    "messageRecoveryPassword":"Hemos recibido una solicitud para recuperar tu contraseña. Para restablecerla, por favor, haz clic en el siguiente enlace:",
-    "ignoreMessageBody":"Si no solicitaste recuperar tu contraseña, puedes ignorar este correo electrónico.",
-     "messageErrorReadExcel":"Hubo un error al procesar el archivo."
+    "finallyMessageBody": "Atentamente,<br> El equipo de grupo 2",
+    "messageRecoveryPassword": "Hemos recibido una solicitud para recuperar tu contraseña. Para restablecerla, por favor, haz clic en el siguiente enlace:",
+    "ignoreMessageBody": "Si no solicitaste recuperar tu contraseña, puedes ignorar este correo electrónico.",
+    "messageErrorReadExcel": "Hubo un error al procesar el archivo.",
+    "messageExportExcel": "exportar usuarios en formato excel",
+    "fileNotProvided": "el archivo no fue cargado",
+    "emptyFile":"el archivo se encuentra vacío"
 }
