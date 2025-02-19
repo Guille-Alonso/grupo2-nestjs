@@ -1,6 +1,5 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { ApiProperty } from '@nestjs/swagger';
-import { Role } from '@prisma/client';
 import {
   IsEmail,
   IsEnum,
@@ -11,6 +10,7 @@ import {
   MinLength
 } from 'class-validator';
 import { i18nValidationMessage } from 'nestjs-i18n';
+import { RoleEnum } from 'src/common/constants';
 
 export class CreateUserDto {
   @ApiProperty({
@@ -63,9 +63,7 @@ export class CreateUserDto {
   @IsNotEmpty({
     message: i18nValidationMessage('errors.isNotEmpty'),
   })
-  @MinLength(8, {
-     message: i18nValidationMessage('errors.length'),
-   })
+  @MinLength(8,{message: i18nValidationMessage('errors.min',{constraint1:8}) })
   password: string;
 
   @ApiProperty({
@@ -76,8 +74,8 @@ export class CreateUserDto {
   @IsString({
     message: i18nValidationMessage('errors.userRol'),
   })
-  @IsEnum(Role, { message:  i18nValidationMessage('errors.userRol') })
-  role: Role;
+  @IsEnum(RoleEnum, { message:  i18nValidationMessage('errors.userRol') })
+  role: RoleEnum;
 }
 
 export class UpdateUserDto extends PartialType(CreateUserDto) {}

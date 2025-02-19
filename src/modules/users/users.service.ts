@@ -13,6 +13,8 @@ import { hashPassword } from 'src/utils/encryption';
 import { MessagingService } from '../messanging/messanging.service';
 import { messagingConfig } from 'src/common/constants';
 import CustomError from 'src/utils/custom.error';
+import { plainToInstance } from 'class-transformer';
+import { validate } from 'class-validator';
 
 @Injectable()
 export class UsersService {
@@ -88,7 +90,7 @@ export class UsersService {
       });
    
       throw new CustomError(
-        error.message || message,
+        error?.message || message,
         HttpStatus.INTERNAL_SERVER_ERROR, // 500
       );
     }
@@ -123,7 +125,7 @@ export class UsersService {
       });
    
       throw new CustomError(
-        error.message || message,
+        error?.message || message,
         HttpStatus.INTERNAL_SERVER_ERROR, // 500
       );
     }
@@ -194,7 +196,7 @@ export class UsersService {
       });
    
       throw new CustomError(
-        error.message || message,
+        error?.message || message,
         HttpStatus.INTERNAL_SERVER_ERROR, // 500
       );
     }
@@ -229,7 +231,7 @@ export class UsersService {
       });
    
       throw new CustomError(
-        error.message || message,
+        error?.message || message,
         HttpStatus.INTERNAL_SERVER_ERROR, // 500
       );
     }
@@ -307,7 +309,7 @@ export class UsersService {
       });
    
       throw new CustomError(
-        error.message || message,
+        error?.message || message,
         HttpStatus.INTERNAL_SERVER_ERROR, // 500
       );
     }
@@ -355,14 +357,14 @@ export class UsersService {
       });
    
       throw new CustomError(
-        error.message || message,
+        error?.message || message,
         HttpStatus.INTERNAL_SERVER_ERROR, // 500
       );
     }
   }
 
-  // FALTA VALIDAR
-  async updateUser(
+  // FALTA VALIDAR y vincular con PROFILE
+  async updateUserProfile(
     id: string,
     updateUserDto: UpdateUserDto,
     file: Express.Multer.File,
@@ -396,7 +398,7 @@ export class UsersService {
     const columns: ExcelColumn[] = [
       { header: 'Nombre', key: 'name' },
       { header: 'Email', key: 'email' },
-      { header: 'Telefono', key: 'phone' },
+      { header: 'Pass', key: 'password' },
       { header: 'Rol de Usuario', key: 'role' },
     ];
 
@@ -405,33 +407,78 @@ export class UsersService {
       columns,
       'Usuarios',
     );
-    const buffer = await Buffer.from(await workbook.xlsx.writeBuffer());
-    const file: Express.Multer.File = {
-      fieldname: 'file',
-      originalname: 'usuarios.xlsx',
-      encoding: '7bit',
-      mimetype:
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      size: buffer.length,
-      buffer: buffer,
-      destination: '',
-      filename: '',
-      path: '',
-      stream: null,
-    };
-    const { url } = await this.awsService.uploadFile(file, 'excel');
-    await this.prisma.report.create({
-      data: { content: url, type: 'Usuario', userId: userId },
-    });
+    // const buffer = await Buffer.from(await workbook.xlsx.writeBuffer());
+    // const file: Express.Multer.File = {
+    //   fieldname: 'file',
+    //   originalname: 'usuarios.xlsx',
+    //   encoding: '7bit',
+    //   mimetype:
+    //     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    //   size: buffer.length,
+    //   buffer: buffer,
+    //   destination: '',
+    //   filename: '',
+    //   path: '',
+    //   stream: null,
+    // };
+    // const { url } = await this.awsService.uploadFile(file, 'excel');
+    // await this.prisma.report.create({
+    //   data: { content: url, type: 'Usuario', userId: userId },
+    // });
     await this.excelService.exportToResponse(res, workbook, 'usuarios.xlsx');
   }
 
   async uploadUsers(buffer: Buffer) {
-    const users = await this.excelService.readExcel(buffer);
-    for (let index = 0; index < users.length; index++) {
-      const element = users[index];
-      await this.create(element);
+    try {
+      const users = await this.excelService.readExcel(buffer);
+
+      let message = this.i18n.t('messages.messageErrorReadExcel');
+      for (let index = 0; index < users.length; index++) {
+  
+        const element = users[index];
+    
+        const userDto = plainToInstance(CreateUserDto, element);
+        const errors = await validate(userDto);
+        if (errors.length > 0) {
+          throw new CustomError(message, HttpStatus.BAD_REQUEST);
+        }
+
+        if(element.email){
+  
+          const userExists = await this.prisma.user.findFirst({
+            where: {
+              email: {
+                equals: element.email,
+                mode: 'insensitive',
+              },
+            },
+          });
+          
+          if(!userExists){
+            await this.create(element);
+            message = this.i18n.t('messages.successfulRegistration');
+          }
+        }
+      }
+   
+      return {
+        message
+      };
+
+    }catch (error) {
+      if (error instanceof CustomError) {
+        throw error;
+      }
+      const messageActionRegister = this.i18n.t('messages.messageActionRegister');
+      const message = this.i18n.t('messages.genericError', {
+        args: { action:messageActionRegister },
+      });
+   
+      throw new CustomError(
+        error?.message || message,
+        HttpStatus.INTERNAL_SERVER_ERROR, // 500
+      );
     }
-    return { message: 'Usuarios creados correctamente' };
+ 
   }
 }

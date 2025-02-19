@@ -85,7 +85,7 @@ export class AuthService {
       });
    
       throw new CustomError(
-        error.message || message,
+        error?.message || message,
         HttpStatus.INTERNAL_SERVER_ERROR, // 500
       );
     }
@@ -144,7 +144,7 @@ export class AuthService {
       });
    
       throw new CustomError(
-        error.message || message,
+        error?.message || message,
         HttpStatus.INTERNAL_SERVER_ERROR, // 500
       );
     }
@@ -212,7 +212,7 @@ export class AuthService {
       });
    
       throw new CustomError(
-        error.message || message,
+        error?.message || message,
         HttpStatus.INTERNAL_SERVER_ERROR, // 500
       );
     }
@@ -262,7 +262,7 @@ export class AuthService {
       });
    
       throw new CustomError(
-        error.message || message,
+        error?.message || message,
         HttpStatus.INTERNAL_SERVER_ERROR, // 500
       );
     }

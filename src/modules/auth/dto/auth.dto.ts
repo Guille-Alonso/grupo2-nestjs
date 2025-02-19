@@ -25,9 +25,7 @@ export class ResetPasswordDto {
    @IsNotEmpty({
      message: i18nValidationMessage('errors.isNotEmpty'),
    })
-   @MinLength(8, {
-    message: i18nValidationMessage('errors.length'),
-  })
+   @MinLength(8,{message: i18nValidationMessage('errors.min',{constraint1:8}) })
   password: string;
 
   @ApiProperty({
@@ -40,8 +38,6 @@ export class ResetPasswordDto {
   @IsNotEmpty({
     message: i18nValidationMessage('errors.isNotEmpty'),
   })
-  @MinLength(8, {
-   message: i18nValidationMessage('errors.length'),
- })
+  @MinLength(8,{message: i18nValidationMessage('errors.min',{constraint1:8}) })
   confirmPassword: string;
 }

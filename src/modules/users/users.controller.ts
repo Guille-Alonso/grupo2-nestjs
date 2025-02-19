@@ -77,7 +77,7 @@ export class UsersController {
     @Body() updateUserDto: UpdateUserDto,
   ) {
     const { userId } = req.user;
-    await this.usersService.updateUser(userId, updateUserDto, file);
+    await this.usersService.updateUserProfile(userId, updateUserDto, file);
   }
 
   @Get('export/excel')
