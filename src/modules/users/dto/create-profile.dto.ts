@@ -25,7 +25,7 @@ export class CreateProfileDto {
     message: i18nValidationMessage('errors.isNotEmpty'),
   })
   @Length(5, 60, {
-    message: i18nValidationMessage('errors.length'),
+    message: i18nValidationMessage('errors.length',{constraint1:5, constraint2:60}) ,
   })
   address: string;
 
@@ -40,31 +40,9 @@ export class CreateProfileDto {
     message: i18nValidationMessage('errors.isNotEmpty'),
   })
   @Length(5, 15, {
-    message: i18nValidationMessage('errors.length'),
+    message: i18nValidationMessage('errors.length',{constraint1:5, constraint2:15}) ,
   })
   phone: string;
-
-//   @ApiProperty({
-//     description: 'User Photo',
-//     example: 'www.myphoto.com.ar',
-//   })
-//   @IsString({
-//     message: i18nValidationMessage('errors.isString'),
-//   })
-//   @IsNotEmpty({
-//     message: i18nValidationMessage('errors.isNotEmpty'),
-//   })
-//   @Length(5, 100, {
-//     message: i18nValidationMessage('errors.length'),
-//   })
-//   photo: string;
-
-  @ApiProperty({ description: 'id of User', example: 'b5e0211f-0105-4ae1-ba67-9edqw9a9b4f1' })
-  @IsNotEmpty({message: i18nValidationMessage('errors.isNotEmpty')})
-  @IsString({
-    message: i18nValidationMessage('errors.isString'),
-  })
-  userId: string;
 
 }
 

@@ -25,7 +25,7 @@ import { PaginationDto } from 'src/utils/pagination/dto//pagination.dto';
 import { Roles } from 'src/common/decorators/roles.decorators';
 import CustomError from 'src/utils/custom.error';
 import { I18nService } from 'nestjs-i18n';
-import { UpdateProfileDto } from './dto/create-profile.dto';
+import { CreateProfileDto, UpdateProfileDto } from './dto/create-profile.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(RoleEnum.SUPERADMIN)
@@ -41,8 +41,8 @@ export class UsersController {
     responseDescription: 'User created successfully',
   })
   @Post('')
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+  async create(@Body() createUserDto: CreateUserDto) {
+    return await this.usersService.create(createUserDto);
   }
 
   @ApiCustomOperation({
@@ -51,40 +51,41 @@ export class UsersController {
     responseDescription: 'Return all users',
   })
   @Get()
-  findAllUserWithPagination(@Query() pagination: PaginationDto) {
-    return this.usersService.findAllUserWithPagination(pagination);
+  async findAllUserWithPagination(@Query() pagination: PaginationDto) {
+    return await this.usersService.findAllUserWithPagination(pagination);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(id);
+  async findOne(@Param('id') id: string) {
+    return await this.usersService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(id, updateUserDto);
+  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+    return await this.usersService.update(id, updateUserDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(id);
+  async remove(@Param('id') id: string) {
+    return await this.usersService.remove(id);
   }
 
+  @Roles(RoleEnum.USER)
   @Post('update/profile')
   @UseInterceptors(FileInterceptor('file'))
   async updateUserProfile(
-    @UploadedFile() file: Express.Multer.File,
     @Req() req: any,
-    @Body() updateProfileDto: UpdateProfileDto,
+    @Body() createProfileDto: CreateProfileDto,
+    @UploadedFile() file?: Express.Multer.File,
   ) {
     const { userId } = req.user;
-    await this.usersService.updateUserProfile(userId, updateProfileDto, file);
+    return await this.usersService.updateUserProfile(userId, createProfileDto, file);
   }
 
   @Get('export/excel')
   async exportAllExcel(@Res() res: Response) {
   
-    return this.usersService.exportAllExcel(res);
+    return await this.usersService.exportAllExcel(res);
   }
 
   @Post('upload/excel')

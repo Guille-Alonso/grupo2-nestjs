@@ -104,6 +104,12 @@ export class AuthService {
           isDeleted:false,
           isActive:true
         },
+        include:{
+          profile: {
+          where: {
+            isDeleted: false, // Filtra productos no eliminados
+          },
+        },}
       });
       
       if (!findUser) {

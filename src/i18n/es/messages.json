@@ -52,5 +52,7 @@
     "messageErrorReadExcel": "Hubo un error al procesar el archivo.",
     "messageExportExcel": "exportar usuarios en formato excel",
     "fileNotProvided": "el archivo no fue cargado",
-    "emptyFile":"el archivo se encuentra vacío"
+    "emptyFile":"el archivo se encuentra vacío",
+    "typeFileProfile": "el archivo debe ser una imágen.",
+    "messageActionProfile":"actualizar o crear perfil de usuario"
 }

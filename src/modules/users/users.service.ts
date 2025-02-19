@@ -15,7 +15,7 @@ import { awsConfig, messagingConfig } from 'src/common/constants';
 import CustomError from 'src/utils/custom.error';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
-import { UpdateProfileDto } from './dto/create-profile.dto';
+import { CreateProfileDto, UpdateProfileDto } from './dto/create-profile.dto';
 
 @Injectable()
 export class UsersService {
@@ -363,66 +363,46 @@ export class UsersService {
       );
     }
   }
-
-  // FALTA VALIDAR y vincular con PROFILE
-  // async updateUserProfile(
-  //   id: string,
-  //   updateUserDto: UpdateUserDto,
-  //   file: Express.Multer.File,
-  // ) {
-  //   const { url, key } = await this.awsService.uploadFile(file, id);
-  //   console.log(url);
-
-  //   const user = await this.prisma.user
-  //     .update({
-  //       where: {
-  //         id,
-  //       },
-  //       data: { ...updateUserDto },
-  //     })
-  //     .catch(async () => {
-  //       await this.awsService.deleteFile(key);
-  //       console.log('Error');
-  //       await this.prisma.user.update({
-  //         where: {
-  //           id,
-  //         },
-  //         data: {},
-  //       });
-  //     });
-  //   return user;
-  // }
  
   private extractFileKeyFromUrl(url: string): string {
     const baseUrl = `https://${awsConfig.s3.bucket}.s3.${awsConfig.client.region}.amazonaws.com/`;
-    return url.replace(baseUrl, ''); // 🔹 Elimina la parte base de la URL
+    return url.replace(baseUrl, ''); 
   }
-  
   
   async updateUserProfile(
     id: string,
-    updateUserDto: UpdateProfileDto,
+    createProfileDto: CreateProfileDto,
     file?: Express.Multer.File,
   ) {
+
+    let uploadResult = null;
+
     try {
+
+      if (file && !file.mimetype.startsWith('image/')) {
+        const message = this.i18n.t('messages.typeFileProfile');
+        throw new CustomError(
+         message,
+          HttpStatus.BAD_REQUEST, // 400
+        );
+      }
+
       let existingProfile = await this.prisma.profile.findUnique({
         where: { userId: id },
       });
   
-      let uploadResult = null;
+      if (file) {
+        if (existingProfile?.photo) {
+          const oldPhotoKey = this.extractFileKeyFromUrl(existingProfile.photo);
+          await this.awsService.deleteFile(oldPhotoKey);
+        }
   
-      // if (file) {
-      //   if (existingProfile?.photo) {
-      //     const oldPhotoKey = this.extractFileKeyFromUrl(existingProfile.photo);
-      //     await this.awsService.deleteFile(oldPhotoKey);
-      //   }
-  
-      //   uploadResult = await this.awsService.uploadFile(file, id);
-      // }
+        uploadResult = await this.awsService.uploadFile(file, id);
+      }
   
       const profileData = {
-        address: updateUserDto.address,
-        phone: updateUserDto.phone,
+        address: createProfileDto.address,
+        phone: createProfileDto.phone,
         ...(uploadResult ? { photo: uploadResult.url } : {}),
       };
   
@@ -442,14 +422,23 @@ export class UsersService {
         });
       }
   
-      return existingProfile;
+      return { message: 'ok', profile: existingProfile };
     } catch (error) {
-      if (file) {
+      if (uploadResult) {
         await this.awsService.deleteFile(file.filename);
       }
   
+      if (error instanceof CustomError) {
+        throw error;
+      }
+
+      const messageActionProfile = this.i18n.t('messages.messageActionProfile');
+      const message = this.i18n.t('messages.genericError', {
+        args: { action: messageActionProfile },
+      });
+
       throw new CustomError(
-        error?.message || 'Error al actualizar o crear el perfil.',
+        error?.message || message,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

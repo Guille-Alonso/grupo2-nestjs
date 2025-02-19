@@ -10,24 +10,24 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('/register')
-  register(@Body() user: RegisterUserDto) {
-    return this.authService.register(user);
+ async register(@Body() user: RegisterUserDto) {
+    return await this.authService.register(user);
   }
 
   @Post('/login')
-  login(@Body() credentials: LoginAuthDto) {
-    return this.authService.login(credentials);
+ async login(@Body() credentials: LoginAuthDto) {
+    return await this.authService.login(credentials);
   }
 
   @Post('/recovery-password')
-  recoveryPassword(@Body() recoverDto: RecoverPasswordDto) {
-    return this.authService.recoveryPassword(recoverDto);
+ async recoveryPassword(@Body() recoverDto: RecoverPasswordDto) {
+    return await this.authService.recoveryPassword(recoverDto);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('/reset-password')
-  resetPassword(@Body() resetDto: ResetPasswordDto, @Req() req) {
+ async resetPassword(@Body() resetDto: ResetPasswordDto, @Req() req) {
     const id = req.user.userId;
-    return this.authService.resetPassword(resetDto, id);
+    return await this.authService.resetPassword(resetDto, id);
   }
 }

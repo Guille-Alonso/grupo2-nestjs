@@ -24,7 +24,7 @@ export class CreateUserDto {
     message: i18nValidationMessage('errors.isNotEmpty'),
   })
   @Length(2, 40, {
-    message: i18nValidationMessage('errors.length'),
+    message: i18nValidationMessage('errors.length',{constraint1:2, constraint2:40}) ,
   })
   name: string;
 
@@ -39,7 +39,7 @@ export class CreateUserDto {
     message: i18nValidationMessage('errors.isNotEmpty'),
   })
   @Length(2, 40, {
-    message: i18nValidationMessage('errors.length'),
+    message: i18nValidationMessage('errors.length',{constraint1:2, constraint2:40}) ,
   })
   lastName: string;
 
