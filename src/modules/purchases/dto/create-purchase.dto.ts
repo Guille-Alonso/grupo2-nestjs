@@ -6,7 +6,7 @@ import { CreateProductDto } from "src/modules/products/dto/create-product.dto";
 
 
 export class ProductPurchase{
-
+    @ApiProperty({type: CreateProductDto, description:'product detail'})
     @IsNotEmpty({message: i18nValidationMessage('errors.isNotEmpty')})
     @ValidateNested()
     @Type(()=>CreateProductDto)
