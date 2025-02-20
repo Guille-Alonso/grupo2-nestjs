@@ -48,5 +48,15 @@
     "messageBody":"¡Disfruta de ApiRestNest!",
     "finallyMessageBody":"Atentamente,<br> El equipo de grupo 2",
     "messageRecoveryPassword":"Hemos recibido una solicitud para recuperar tu contraseña. Para restablecerla, por favor, haz clic en el siguiente enlace:",
-    "ignoreMessageBody":"Si no solicitaste recuperar tu contraseña, puedes ignorar este correo electrónico."
+    "ignoreMessageBody":"Si no solicitaste recuperar tu contraseña, puedes ignorar este correo electrónico.",
+    "imageCreated": "Imagen creada con exito",
+    "imageNotcreated": "Ubo un error al crear la imagen: ",
+    "imagesNotFound": "No se encontraron imagenes",
+    "imageNotFound": "No se encontro la imagen",
+    "imageUpdated": "Imagen actualizada con exito",
+    "imageNotUpdated": "Ubo un error al actualizar la imagen: ",
+    "imageDeleted": "Imagen eliminada con exito",
+    "imageNotDeleted": "Ubo un error al eliminar la imagen: ",
+    "imageAssigned": "Imagen asignada con exito",
+    "imageNotAssigned": "Ubo un error al asignar la imagen: "
 }

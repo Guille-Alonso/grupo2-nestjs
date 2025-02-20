@@ -1,12 +1,14 @@
-import { ExecutionContext, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UpdateReportDto } from './dto/update-report.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { ChartService } from '../chart/chart.service';
 import { AwsService } from '../aws/aws.service';
 import { JwtService } from '@nestjs/jwt';
-import { JwtPayload } from 'src/common/interfaces';
 import { ChartConfiguration } from 'chart.js';
 import { CreateReportDto } from './dto/create-report.dto';
+import { PrinterService } from '../printer/printer.service';
+import { I18nService } from 'nestjs-i18n';
+import { Readable } from 'stream';
 
 @Injectable()
 export class ReportsService {
@@ -15,6 +17,8 @@ export class ReportsService {
     private readonly chartService: ChartService,
     private readonly awsService: AwsService,
     private readonly jwtService: JwtService,
+    private readonly printerService: PrinterService,
+    private readonly i18n: I18nService
   ) {}
   create(createReportDto: CreateReportDto) {
     this.prisma.report.create({
@@ -39,7 +43,7 @@ export class ReportsService {
     return `This action removes a #${id} report`;
   }
 
-  async salesReport( ) {
+  async salesReport( userId: string) {
     try {
       const sales = await this.prisma.cart.findMany({
         where: {
@@ -87,24 +91,24 @@ export class ReportsService {
         chartData,
         chartOptions,
       );
-      const pdfReport:Express.Multer.File={
-        fieldname: "file",
-        originalname: "report.pdf", 
-        encoding: "7bit", 
-        mimetype: "application/pdf", 
-        buffer: report,
+      const file: Express.Multer.File = {
+        fieldname: 'file',
+        originalname: 'report.png',
+        encoding: '7bit',
+        mimetype: 'image/png',
+        buffer: report, // Aquí asignamos el buffer generado
         size: report.length,
-        destination: "",
-        filename: "",
-        path: "",
-        stream: null
-      }
-      const{url}= await this.awsService.uploadFile(pdfReport, 'report', 'user');
-      const context: ExecutionContext = {} as ExecutionContext;
+        stream: Readable.from(report),
+        destination: '',
+        filename: '',
+        path: '',
+      };
+      const{url}= await this.awsService.uploadFile(file, 'report', 'user');
+      /*const context: ExecutionContext = {} as ExecutionContext;
       const req = context.switchToHttp().getRequest();
       const token = req.headers.authorization.split(' ')[1];
       const payload: JwtPayload = await this.jwtService.decode(token);
-      const userId = payload.id;
+      const userId = payload.id;*/
 
       const reportdto:CreateReportDto= {
         content: url,
@@ -114,7 +118,8 @@ export class ReportsService {
       this.create(reportdto);
       
       return { Message: 'reporte generado',
-        report
+        report,
+        url
        };
     } catch (e) {
       throw new Error(e.message);
@@ -165,11 +170,26 @@ export class ReportsService {
       },
     };
 
-    return await this.chartService.generateChart(
+    const report = await this.chartService.generateChart(
       'bar',
       chartData,
       chartOptions,
     );
+
+    const pdfReport:Express.Multer.File={
+      fieldname: "file",
+      originalname: "report.pdf", 
+      encoding: "7bit", 
+      mimetype: "application/pdf", 
+      buffer: report,
+      size: report.length,
+      destination: "",
+      filename: "",
+      path: "",
+      stream: null
+    }
+    //const{url}= await this.awsService.uploadFile(pdfReport, 'report', 'user');
+    return pdfReport
 
     }catch(e){
       throw new Error(e.message);
@@ -223,7 +243,21 @@ export class ReportsService {
         chartData,
         chartOptions,
       );
-      return report;
+
+      const pdfReport:Express.Multer.File={
+        fieldname: "file",
+        originalname: "report.pdf", 
+        encoding: "7bit", 
+        mimetype: "application/pdf", 
+        buffer: report,
+        size: report.length,
+        destination: "",
+        filename: "",
+        path: "",
+        stream: null
+      }
+      //const{url}= await this.awsService.uploadFile(pdfReport, 'report', 'user');
+      return pdfReport
     }catch(e){
       throw new Error(e.message);
     }
@@ -277,7 +311,21 @@ export class ReportsService {
       chartData,
       chartOptions,
     );
-    return report;
+
+    const pdfReport:Express.Multer.File={
+      fieldname: "file",
+      originalname: "report.pdf", 
+      encoding: "7bit", 
+      mimetype: "application/pdf", 
+      buffer: report,
+      size: report.length,
+      destination: "",
+      filename: "",
+      path: "",
+      stream: null
+    }
+    //const{url}= await this.awsService.uploadFile(pdfReport, 'report', 'user');
+    return pdfReport
 
   } catch(e){
     throw new Error(e.message);

@@ -42,9 +42,9 @@ export class ReportsController {
 
   @Roles(RoleEnum.SUPERADMIN)
   @ApiOperation({ summary: 'Sales report' })
-  @Get('sales-report')
-  salesReport() {
-    return this.reportsService.salesReport();
+  @Get('sales-report:id')
+  salesReport( @Param('id') userId: string) {
+    return this.reportsService.salesReport( userId);
   }
 
   @Roles(RoleEnum.SUPERADMIN)

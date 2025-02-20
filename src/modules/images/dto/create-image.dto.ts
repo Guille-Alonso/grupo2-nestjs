@@ -1,10 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsString, IsUrl, Matches } from 'class-validator';
 import { i18nValidationMessage } from 'nestjs-i18n';
 
 export class CreateImageDto {
-  @ApiProperty({ description: 'Image name', example: 'image.jpg' })
+  @ApiProperty({ description: 'Image name', example: ['https://example.com/image1.jpg', 'https://example.com/image2.png'] })
   @IsArray({ message: i18nValidationMessage('errors.isArray') })
+  @IsUrl({}, { each: true, message: i18nValidationMessage('errors.isUrl') })
+  @Matches(/\.(jpg|png)$/i, { each: true, message: 'Cada URL debe terminar en .jpg o .png' })
   @IsOptional()
   coleccion?: string[];
 

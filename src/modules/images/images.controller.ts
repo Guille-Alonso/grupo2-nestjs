@@ -22,44 +22,51 @@ import { RoleEnum } from 'src/common/constants';
 import { ApiBody, ApiConsumes, ApiOperation } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('images')
 export class ImagesController {
   constructor(private readonly imagesService: ImagesService) {}
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  
   @Roles(RoleEnum.SUPERADMIN)
+  @ApiOperation({ summary: 'Create image' })
+  @ApiBody({ type: CreateImageDto })
   @Post()
   create(@Body() createImageDto: CreateImageDto) {
     return this.imagesService.create(createImageDto);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
+
   @Roles(RoleEnum.SUPERADMIN)
+  @ApiOperation({ summary: 'Get all images' })
   @Get()
   findAll(@Query() paginationDto2: PaginationDto2) {
     return this.imagesService.findAll(paginationDto2);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(RoleEnum.SUPERADMIN)
+  @ApiOperation({ summary: 'Get image by id' })
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.imagesService.findOne(id);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(RoleEnum.SUPERADMIN)
+  @ApiOperation({ summary: 'Update image' })
+  @ApiBody({ type: UpdateImageDto })
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateImageDto: UpdateImageDto) {
     return this.imagesService.update(id, updateImageDto);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(RoleEnum.SUPERADMIN)
+  @ApiOperation({ summary: 'Delete image' })
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.imagesService.remove(id);
   }
+
+  @Roles(RoleEnum.SUPERADMIN)
   @ApiOperation({ summary: 'Assign image to product' })
   @UseInterceptors(FileInterceptor('file'))
   @ApiConsumes('multipart/form-data')

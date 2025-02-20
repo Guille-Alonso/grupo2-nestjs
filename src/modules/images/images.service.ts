@@ -1,28 +1,36 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { CreateImageDto } from './dto/create-image.dto';
 import { UpdateImageDto } from './dto/update-image.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { PaginationDto2 } from 'src/utils/pagination/dto/pagination.dto';
 import { PaginationService } from 'src/utils/pagination/pagination.service';
+import CustomError from 'src/utils/custom.error';
+import { I18nService } from 'nestjs-i18n';
+import { AwsService } from '../aws/aws.service';
 
 @Injectable()
 export class ImagesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly paginationService: PaginationService,
+    private readonly i18n: I18nService,
+    private readonly awsService: AwsService,
   ) {}
   async create(createImageDto: CreateImageDto) {
     try {
       const product = await this.prisma.product.findUnique({ where: { id: createImageDto.productId, isDeleted: false },select: { id: true } });
       if (product.id == null) {
-        throw new Error('Producto no encontrado');
+        const message = this.i18n.t('messages.productNotFound');
+        throw new CustomError(message, HttpStatus.BAD_REQUEST); // 400
       }
       const image = await this.prisma.image.create({
         data: createImageDto,
       });
-      return image;
+      const message = this.i18n.t('messages.imageCreated')+image;
+      return message;
     } catch (error) {
-      throw new Error(error);
+      const message = this.i18n.t('messages.imageNotCreated')+error.message;
+      throw new Error(message);
     }
   }
 
@@ -56,7 +64,8 @@ export class ImagesService {
         pageSize,
       );
     } catch (error) {
-      throw new Error(error);
+      const message = this.i18n.t('messages.imagesNotFound');
+      throw new Error(message +error.message);
     }
   }
 
@@ -69,7 +78,8 @@ export class ImagesService {
       });
       return image;
     } catch (error) {
-      throw new Error(error);
+      const message = this.i18n.t('messages.imageNotFound');
+      throw new Error(message +error.message);
     }
   }
 
@@ -81,9 +91,11 @@ export class ImagesService {
         },
         data: updateImageDto,
       });
-      return image;
+      const message = this.i18n.t('messages.imageUpdated')+image;
+      return message;
     } catch (error) {
-      throw new Error(error);
+      const message = this.i18n.t('messages.imageNotUpdated');
+      throw new Error(message +error.message);
     }
   }
 
@@ -97,23 +109,33 @@ export class ImagesService {
           isDeleted: true,
         },
       });
-      return deleteImage;
+      const message = this.i18n.t('messages.imageDeleted') + deleteImage;
+      return message;
     } catch (error) {
       throw new Error(error);
     }
   }
 
   async assignImage(file: Express.Multer.File, productId: string) {
+    try {
+    const { url } = await this.awsService.uploadFile(file, productId,'product');
     this.prisma.image.update({
       where: {
         productId,
       },
       data: {
         colection: {
-          push: file.originalname,
+          push: url,
         },
       },
     })
+    const message = this.i18n.t('messages.imageAssigned');
+    return message;
+  }
+  catch (error) {
+    const message = this.i18n.t('messages.imageNotAssigned')+error.message;
+    throw new Error(message);
+  }
   }
 }
 

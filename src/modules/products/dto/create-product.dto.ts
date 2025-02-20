@@ -88,7 +88,7 @@ export class CreateProductDto {
 
   @ApiProperty({
     description: 'Images of the product',
-    example: ['imagen1.jpg', 'imagen2.jpg'],
+    example: ['https://example.com/image1.jpg', 'https://example.com/image2.png'],
   })
   @IsOptional()
   @IsArray({ message: i18nValidationMessage('errors.isString') })
