@@ -21,5 +21,8 @@
     "cartNotFind": "car information not found",
     "confirmCart":"cart confirm",
     "cartCancel": "cart cancel",
-    "noConfirmCart":"could not confirm cart"
+    "noConfirmCart":"could not confirm cart",
+    "opConfirm": "successful operation ",
+    "prod": "product",
+    "notAvailable": "not available"
 }

@@ -10,5 +10,8 @@
     "maxLength": "{property} cannot be longer than {constraint1} characters",
     "isUrl": "{property} must be a valid URL",
     "min": "{property} must be greater than {constraint1}",
-    "isIn": "{property} must be one of the following values: {constraint1}"
+    "isIn": "{property} must be one of the following values: {constraint1}",
+    "arrayMin": "{property} must have at least {x} element",
+    "arrayMax": "{property} must have at least {x} elements"
+
 }

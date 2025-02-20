@@ -21,7 +21,10 @@
     "cartNotFind": "informacion de carrito no encontrada",
     "confirmCart":"carrito confirmado",
     "cartCancel":"carrito cancelado",
-    "noConfirmCart": "no se pudo confirmar carrito"
+    "noConfirmCart": "no se pudo confirmar carrito",
+    "opConfirm": "operación exitosa",
+    "prod": "producto",
+    "notAvailable": "not disponible"
 
 
 }
