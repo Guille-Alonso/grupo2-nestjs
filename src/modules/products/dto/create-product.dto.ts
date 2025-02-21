@@ -7,6 +7,7 @@ import {
   IsOptional,
   IsPositive,
   IsString,
+  IsUUID,
   Length,
   Matches,
   MaxLength,
@@ -81,8 +82,8 @@ export class CreateProductDto {
   @IsString({
     message: i18nValidationMessage('errors.isString'),
   })
-  @MaxLength(20, {
-    message: i18nValidationMessage('oerrors.maxLength'),
+  @MaxLength(50, {
+    message: i18nValidationMessage('oerrors.maxLength',{ constraint1: 50 }),
   })
   sku: string;
 
@@ -91,7 +92,8 @@ export class CreateProductDto {
     example: ['https://example.com/image1.jpg', 'https://example.com/image2.png'],
   })
   @IsOptional()
-  @IsArray({ message: i18nValidationMessage('errors.isString') })
+  @IsArray({message: i18nValidationMessage('errors.isArrayString') })
+  @IsString({each: true, message: i18nValidationMessage('errors.isString') })
   images?: string[];
 
   @ApiProperty({
@@ -102,6 +104,7 @@ export class CreateProductDto {
     ],
   })
   @IsOptional()
-  @IsArray({ message: i18nValidationMessage('errors.isString') })
+  @IsArray({ message: i18nValidationMessage('errors.isArrayUUID') })
+  @IsUUID('4', { each: true, message: i18nValidationMessage('errors.isArrayUUID') })
   categoryIds?: string[];
 }

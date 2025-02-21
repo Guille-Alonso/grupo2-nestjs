@@ -19,13 +19,13 @@ import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { RoleEnum } from 'src/common/constants';
 @ApiTags('Categories')
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('categories')
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
   @ApiOperation({ summary: 'Create a new category' })
   @ApiBody({ type: CreateCategoryDto })
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(RoleEnum.SUPERADMIN)
   @Post()
   create(@Body() createCategoryDto: CreateCategoryDto) {
@@ -33,7 +33,6 @@ export class CategoriesController {
   }
 
   @ApiOperation({ summary: 'Get all categories' })
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(RoleEnum.SUPERADMIN)
   @Get()
   findAll(@Query() paginationDto2: PaginationDto2) {
@@ -41,7 +40,6 @@ export class CategoriesController {
   }
 
   @ApiOperation({ summary: 'Get one category by id' })
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(RoleEnum.USER)
   @Get(':id')
   findOne(@Param('id') id: string) {
@@ -49,7 +47,6 @@ export class CategoriesController {
   }
 
   @ApiOperation({ summary: 'Update a category' })
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(RoleEnum.SUPERADMIN)
   @Patch(':id')
   update(
@@ -60,7 +57,6 @@ export class CategoriesController {
   }
 
   @ApiOperation({ summary: 'Delete a category' })
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(RoleEnum.SUPERADMIN)
   @Delete(':id')
   remove(@Param('id') id: string) {
@@ -68,7 +64,6 @@ export class CategoriesController {
   }
 
   @ApiOperation({ summary: 'Get all products of a category' })
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(RoleEnum.USER)
   @Get('product/:id')
   findProducts(@Param('id') id: string) {
@@ -82,7 +77,6 @@ export class CategoriesController {
       properties: { productIds: { type: 'array', example: ['1a', '2b'] } },
     },
   })
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(RoleEnum.USER)
   @Patch('assign-products/:id')
   assignProductsToCategory(

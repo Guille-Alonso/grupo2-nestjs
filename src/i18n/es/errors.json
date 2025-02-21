@@ -11,6 +11,9 @@
     "isUrl": "{property} debe ser una URL válida",
     "min": "{property} debe ser mayor que {constraint1}",
     "isIn": "{property} debe ser uno de los siguientes valores: {constraint1}",
-    "userRol": "{property} El rol debe ser uno de los siguientes: SUPERADMIN o USER"
+    "userRol": "{property} El rol debe ser uno de los siguientes: SUPERADMIN o USER",
+    "isImage": "{property} debe ser una URL con extension .jpg o .png",
+    "isArrayUUID": "{property} debe ser un array de UUIDs válidos",
+    "isArrayString": "{property} debe ser un array de texto"
 
 }

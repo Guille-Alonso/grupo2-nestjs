@@ -58,5 +58,13 @@
     "imageDeleted": "Imagen eliminada con exito",
     "imageNotDeleted": "Ubo un error al eliminar la imagen: ",
     "imageAssigned": "Imagen asignada con exito",
-    "imageNotAssigned": "Ubo un error al asignar la imagen: "
+    "imageNotAssigned": "Ubo un error al asignar la imagen: ",
+    "categoryCreated": "Categoria creada con exito",
+    "categoryNotCreated": "Ubo un error al crear la categoria: ",
+    "categoriesNotFound": "No se encontraron categorias",
+    "categoryNotFound": "No se encontro la categoria",
+    "categoryUpdated": "Categoria actualizada con exito",
+    "categoryNotUpdated": "Ubo un error al actualizar la categoria: ",
+    "categoryDeleted": "Categoria eliminada con exito",
+    "categoryNotDeleted": "Ubo un error al eliminar la categoria: "
 }

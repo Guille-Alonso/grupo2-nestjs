@@ -25,11 +25,13 @@ import { PaginationDto2 } from 'src/utils/pagination/dto/pagination.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FilterProductsDto } from './dto/filter-product.dto';
 
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('products')
 @Controller('products')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
+  @Roles(RoleEnum.SUPERADMIN)
   @ApiOperation({ summary: 'Create a product' })
   @ApiBody({ type: CreateProductDto })
   @ApiCustomOperation({
@@ -38,8 +40,8 @@ export class ProductsController {
     responseStatus: 201,
     responseDescription: 'Product created',
   })
-  //@UseGuards(JwtAuthGuard, RolesGuard)
-  //@Roles(RoleEnum.SUPERADMIN)
+
+  @Roles(RoleEnum.SUPERADMIN)
   @Post()
   create(@Body() createProductDto: CreateProductDto) {
     return this.productsService.create(createProductDto);
@@ -51,26 +53,26 @@ export class ProductsController {
     responseStatus: 200,
     responseDescription: 'Products found',
   })
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(RoleEnum.USER)
+  
+  @Roles(RoleEnum.USER, RoleEnum.SUPERADMIN)
   @Get()
   findAll(@Query() paginationDto2: PaginationDto2) {
     return this.productsService.findAll(paginationDto2);
   }
 
+  @Roles(RoleEnum.USER, RoleEnum.SUPERADMIN)
   @ApiOperation({ summary: 'Get a product' })
   @ApiCustomOperation({
     summary: 'Get a product',
     responseStatus: 200,
     responseDescription: 'Product found',
   })
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(RoleEnum.USER)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.productsService.findOne(id);
   }
 
+  @Roles(RoleEnum.SUPERADMIN)
   @ApiOperation({ summary: 'Update a product' })
   @ApiBody({ type: UpdateProductDto })
   @ApiCustomOperation({
@@ -79,29 +81,25 @@ export class ProductsController {
     responseStatus: 200,
     responseDescription: 'Product updated',
   })
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(RoleEnum.SUPERADMIN)
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
     return this.productsService.update(id, updateProductDto);
   }
 
+  @Roles(RoleEnum.SUPERADMIN)
   @ApiOperation({ summary: 'Delete a product' })
   @ApiCustomOperation({
     summary: 'Delete a product',
     responseStatus: 200,
     responseDescription: 'Product deleted',
   })
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(RoleEnum.SUPERADMIN)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.productsService.remove(id);
   }
 
+  @Roles(RoleEnum.USER, RoleEnum.SUPERADMIN)
   @ApiOperation({ summary: 'Filter products' })
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(RoleEnum.USER)
   @Post('filter')
   filter(@Query() filter: FilterProductsDto) {
     return this.productsService.filterProducts(filter);
@@ -120,7 +118,8 @@ export class ProductsController {
       },
     },
   })
-  @UseGuards(JwtAuthGuard, RolesGuard)
+
+
   @Roles(RoleEnum.SUPERADMIN)
   @Patch('assign-categories/:productId')
   assignCategoriesToProduct(
@@ -146,7 +145,7 @@ export class ProductsController {
       },
     },
   })
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  
   @Roles(RoleEnum.SUPERADMIN)
   @Patch('upload-images/:productId')
   uploadImages(
@@ -156,6 +155,7 @@ export class ProductsController {
     return this.productsService.uploadImages(productId, images);
   }
 
+  @Roles(RoleEnum.SUPERADMIN)
   @ApiOperation({ summary: 'Upload a excel file' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -165,8 +165,6 @@ export class ProductsController {
     },
   })
   @ApiOperation({ summary: 'Upload a excel file' })
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(RoleEnum.SUPERADMIN)
   @Post('upload/excel')
   @UseInterceptors(FileInterceptor('file'))
   async uploadProducts(@UploadedFile() file: Express.Multer.File) {
@@ -174,9 +172,8 @@ export class ProductsController {
     return data;
   }
 
-  @ApiOperation({ summary: 'Export products to excel' })
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(RoleEnum.SUPERADMIN)
+  @ApiOperation({ summary: 'Export products to excel' })
   @Get('export/excel')
   async exportToExcel(@Res() res: Response) {
     return this.productsService.exportToExcel(res);
