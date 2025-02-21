@@ -5,14 +5,17 @@ import { AwsService } from '../aws/aws.service';
 import { ExcelColumn } from 'src/common/interfaces';
 import { ExcelService } from '../excel/excel.service';
 import { PaginationDto } from 'src/utils/pagination/dto/pagination.dto';
-import { Prisma, Role } from '@prisma/client';
+import { Prisma, Profile, Role } from '@prisma/client';
 import { getPaginationFilter } from 'src/utils/pagination/pagination.utils';
 import { I18nService } from 'nestjs-i18n';
 import { Paginate } from 'src/utils/parsing';
 import { hashPassword } from 'src/utils/encryption';
 import { MessagingService } from '../messanging/messanging.service';
-import { messagingConfig } from 'src/common/constants';
+import { awsConfig, messagingConfig } from 'src/common/constants';
 import CustomError from 'src/utils/custom.error';
+import { plainToInstance } from 'class-transformer';
+import { validate } from 'class-validator';
+import { CreateProfileDto, UpdateProfileDto } from './dto/create-profile.dto';
 
 @Injectable()
 export class UsersService {
@@ -88,7 +91,7 @@ export class UsersService {
       });
    
       throw new CustomError(
-        error.message || message,
+        error?.message || message,
         HttpStatus.INTERNAL_SERVER_ERROR, // 500
       );
     }
@@ -123,7 +126,7 @@ export class UsersService {
       });
    
       throw new CustomError(
-        error.message || message,
+        error?.message || message,
         HttpStatus.INTERNAL_SERVER_ERROR, // 500
       );
     }
@@ -194,7 +197,7 @@ export class UsersService {
       });
    
       throw new CustomError(
-        error.message || message,
+        error?.message || message,
         HttpStatus.INTERNAL_SERVER_ERROR, // 500
       );
     }
@@ -229,7 +232,7 @@ export class UsersService {
       });
    
       throw new CustomError(
-        error.message || message,
+        error?.message || message,
         HttpStatus.INTERNAL_SERVER_ERROR, // 500
       );
     }
@@ -307,7 +310,7 @@ export class UsersService {
       });
    
       throw new CustomError(
-        error.message || message,
+        error?.message || message,
         HttpStatus.INTERNAL_SERVER_ERROR, // 500
       );
     }
@@ -355,83 +358,212 @@ export class UsersService {
       });
    
       throw new CustomError(
-        error.message || message,
+        error?.message || message,
         HttpStatus.INTERNAL_SERVER_ERROR, // 500
       );
     }
   }
-
-  // FALTA VALIDAR
-  async updateUser(
-    id: string,
-    updateUserDto: UpdateUserDto,
-    file: Express.Multer.File,
-  ) {
-    const { url, key } = await this.awsService.uploadFile(file, id,'user');
-    console.log(url);
-
-    const user = await this.prisma.user
-      .update({
-        where: {
-          id,
-        },
-        data: { ...updateUserDto },
-      })
-      .catch(async () => {
-        await this.awsService.deleteFile(key);
-        console.log('Error');
-        await this.prisma.user.update({
-          where: {
-            id,
-          },
-          data: { },
-        });
-      });
-    return user;
+ 
+  private extractFileKeyFromUrl(url: string): string {
+    const baseUrl = `https://${awsConfig.s3.bucket}.s3.${awsConfig.client.region}.amazonaws.com/`;
+    return url.replace(baseUrl, ''); 
   }
+  
+  async updateUserProfile(
+    id: string,
+    createProfileDto: CreateProfileDto,
+    file?: Express.Multer.File,
+  ) {
 
-  async exportAllExcel(res: Response, userId: string) {
-    const users = await this.findAll();
+    let uploadResult = null;
 
-    const columns: ExcelColumn[] = [
-      { header: 'Nombre', key: 'name' },
-      { header: 'Email', key: 'email' },
-      { header: 'Telefono', key: 'phone' },
-      { header: 'Rol de Usuario', key: 'role' },
-    ];
+    try {
 
-    const workbook = await this.excelService.generateExcel(
-      users,
-      columns,
-      'Usuarios',
-    );
-    const buffer = await Buffer.from(await workbook.xlsx.writeBuffer());
-    const file: Express.Multer.File = {
-      fieldname: 'file',
-      originalname: 'usuarios.xlsx',
-      encoding: '7bit',
-      mimetype:
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      size: buffer.length,
-      buffer: buffer,
-      destination: '',
-      filename: '',
-      path: '',
-      stream: null,
-    };
-    const { url } = await this.awsService.uploadFile(file, 'excel', 'user');
-    await this.prisma.report.create({
-      data: { content: url, type: 'Usuario', userId: userId },
-    });
-    await this.excelService.exportToResponse(res, workbook, 'usuarios.xlsx');
+      if (file && !file.mimetype.startsWith('image/')) {
+        const message = this.i18n.t('messages.typeFileProfile');
+        throw new CustomError(
+         message,
+          HttpStatus.BAD_REQUEST, // 400
+        );
+      }
+
+      let existingProfile = await this.prisma.profile.findUnique({
+        where: { userId: id },
+      });
+  
+      if (file) {
+        if (existingProfile?.photo) {
+          const oldPhotoKey = this.extractFileKeyFromUrl(existingProfile.photo);
+          await this.awsService.deleteFile(oldPhotoKey);
+        }
+  
+        uploadResult = await this.awsService.uploadFile(file, id);
+      }
+  
+      const profileData = {
+        address: createProfileDto.address,
+        phone: createProfileDto.phone,
+        ...(uploadResult ? { photo: uploadResult.url } : {}),
+      };
+  
+      if (!existingProfile) {
+        existingProfile = await this.prisma.profile.create({
+          data: {
+            address: profileData.address,
+            phone: profileData.phone,
+            photo: profileData.photo,
+            userId: id
+          },
+        });
+      } else {
+        existingProfile = await this.prisma.profile.update({
+          where: { userId: id },
+          data: profileData,
+        });
+      }
+  
+      return { message: 'ok', profile: existingProfile };
+    } catch (error) {
+      if (uploadResult) {
+        await this.awsService.deleteFile(file.filename);
+      }
+  
+      if (error instanceof CustomError) {
+        throw error;
+      }
+
+      const messageActionProfile = this.i18n.t('messages.messageActionProfile');
+      const message = this.i18n.t('messages.genericError', {
+        args: { action: messageActionProfile },
+      });
+
+      throw new CustomError(
+        error?.message || message,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+  
+
+  async exportAllExcel(res: Response) {
+
+    try {
+      const users = await this.findAll();
+
+      if (!Array.isArray(users) || users.length === 0) {
+        const message = this.i18n.t('messages.usersNotFound');
+        throw new CustomError(
+         message,
+          HttpStatus.NOT_FOUND, // 404
+        );
+      } 
+
+      const columns: ExcelColumn[] = [
+        { header: 'Nombre', key: 'name' },
+        { header: 'Apellido', key: 'lastName' },
+        { header: 'Email', key: 'email' },
+        { header: 'Rol de Usuario', key: 'role' },
+      ];
+  
+      const workbook = await this.excelService.generateExcel(
+        users,
+        columns,
+        'Usuarios',
+      );
+
+      await this.excelService.exportToResponse(res, workbook, 'usuarios.xlsx');
+
+    } catch (error) {
+      if (error instanceof CustomError) {
+        throw error;
+      }
+      const messageExportExcel = this.i18n.t('messages.messageExportExcel');
+      const message = this.i18n.t('messages.genericError', {
+        args: { action:messageExportExcel },
+      });
+   
+      throw new CustomError(
+        error?.message || message,
+        HttpStatus.INTERNAL_SERVER_ERROR, // 500
+      );
+    }
+
   }
 
   async uploadUsers(buffer: Buffer) {
-    const users = await this.excelService.readExcel(buffer);
-    for (let index = 0; index < users.length; index++) {
-      const element = users[index];
-      await this.create(element);
+    try {
+
+      if (!buffer) {
+        throw new CustomError(
+          this.i18n.t('messages.fileNotProvided'),
+          HttpStatus.BAD_REQUEST
+        );
+      }
+
+      const users = await this.excelService.readExcel(buffer);
+
+      if (!users || users.length === 0) {
+        throw new CustomError(
+          this.i18n.t('messages.emptyFile'),
+          HttpStatus.BAD_REQUEST
+        );
+      }
+  
+      let createdCount = 0;
+      let duplicatedCount = 0;
+      let validationErrorsCount = 0;
+  
+      for (let index = 0; index < users.length; index++) {
+        const element: CreateUserDto = users[index];
+  
+        const userDto = plainToInstance(CreateUserDto, element);
+        const errors = await validate(userDto);
+  
+        if (errors.length > 0) {
+          validationErrorsCount++;
+          continue; 
+        }
+  
+        if (element.email) {
+          const userExists = await this.prisma.user.findFirst({
+            where: {
+              email: {
+                equals: element.email,
+                mode: 'insensitive',
+              },
+            },
+          });
+  
+          if (!userExists) {
+            await this.create(element);
+            createdCount++; 
+          } else {
+            duplicatedCount++;
+          }
+        }
+      }
+  
+      return {
+        created: createdCount,
+        duplicated: duplicatedCount,
+        validationErrors: validationErrorsCount,
+      };
+  
+    } catch (error) {
+      if (error instanceof CustomError) {
+        throw error;
+      }
+      
+      const messageActionRegister = this.i18n.t('messages.messageActionRegister');
+      const message = this.i18n.t('messages.genericError', {
+        args: { action: messageActionRegister },
+      });
+  
+      throw new CustomError(
+        error?.message || message,
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
     }
-    return { message: 'Usuarios creados correctamente' };
   }
+  
 }

@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  ArrayMinSize,
   IsEmail,
   IsNotEmpty,
   IsString,
@@ -21,7 +22,7 @@ export class RegisterUserDto {
     message: i18nValidationMessage('errors.isNotEmpty'),
   })
   @Length(2, 40, {
-    message: i18nValidationMessage('errors.length'),
+    message: i18nValidationMessage('errors.length',{constraint1:2, constraint2:40}) ,
   })
   name: string;
 
@@ -36,7 +37,7 @@ export class RegisterUserDto {
     message: i18nValidationMessage('errors.isNotEmpty'),
   })
   @Length(2, 40, {
-    message: i18nValidationMessage('errors.length'),
+    message: i18nValidationMessage('errors.length',{constraint1:2, constraint2:40}) ,
   })
   lastName: string;
 
@@ -60,7 +61,6 @@ export class RegisterUserDto {
   @IsNotEmpty({
     message: i18nValidationMessage('errors.isNotEmpty'),
   })
-  @MinLength(8, {
-    message: i18nValidationMessage('errors.length',{constraint1:8})})
+  @MinLength(8,{message: i18nValidationMessage('errors.min',{constraint1:8}) })
   password: string;
 }

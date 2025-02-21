@@ -85,7 +85,7 @@ export class AuthService {
       });
    
       throw new CustomError(
-        error.message || message,
+        error?.message || message,
         HttpStatus.INTERNAL_SERVER_ERROR, // 500
       );
     }
@@ -104,6 +104,12 @@ export class AuthService {
           isDeleted:false,
           isActive:true
         },
+        include:{
+          profile: {
+          where: {
+            isDeleted: false, // Filtra productos no eliminados
+          },
+        },}
       });
       
       if (!findUser) {
@@ -144,7 +150,7 @@ export class AuthService {
       });
    
       throw new CustomError(
-        error.message || message,
+        error?.message || message,
         HttpStatus.INTERNAL_SERVER_ERROR, // 500
       );
     }
@@ -212,7 +218,7 @@ export class AuthService {
       });
    
       throw new CustomError(
-        error.message || message,
+        error?.message || message,
         HttpStatus.INTERNAL_SERVER_ERROR, // 500
       );
     }
@@ -262,7 +268,7 @@ export class AuthService {
       });
    
       throw new CustomError(
-        error.message || message,
+        error?.message || message,
         HttpStatus.INTERNAL_SERVER_ERROR, // 500
       );
     }

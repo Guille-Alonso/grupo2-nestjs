@@ -71,7 +71,7 @@ export class CreateProductDto {
     message: i18nValidationMessage('errors.numberCode'),
   })
   @Length(13, 13, {
-    message: i18nValidationMessage('errors.length', { constraint1: 13 }),
+    message: i18nValidationMessage('errors.length',{constraint1:13, constraint2:13}) ,
   })
   barcode: string;
 
