@@ -2,6 +2,7 @@ import { IsOptional, IsString, IsNumber, Min } from 'class-validator';
 import { ApiProperty, PartialType } from '@nestjs/swagger';
 import { PaginationDto2 } from 'src/utils/pagination/dto/pagination.dto';
 import { i18nValidationMessage } from 'nestjs-i18n';
+import { Type } from 'class-transformer';
 
 export class FilterProductsDto extends PartialType(PaginationDto2) {
   @ApiProperty({
@@ -24,6 +25,7 @@ export class FilterProductsDto extends PartialType(PaginationDto2) {
     required: false,
   })
   @IsOptional()
+  @Type(() => Number)
   @IsNumber({}, { message: i18nValidationMessage('errors.isNumber') })
   @Min(0)
   minPrice?: number;
@@ -34,6 +36,7 @@ export class FilterProductsDto extends PartialType(PaginationDto2) {
     required: false,
   })
   @IsOptional()
+  @Type(() => Number)
   @IsNumber({}, { message: i18nValidationMessage('errors.isNumber') })
   @Min(0, { message: i18nValidationMessage('errors.min') })
   maxPrice?: number;

@@ -15,7 +15,7 @@ import {
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiCustomOperation } from 'src/common/decorators/swagger.decorator';
 import { RoleEnum } from 'src/common/constants';
 import { Roles } from 'src/common/decorators/roles.decorators';
@@ -26,6 +26,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { FilterProductsDto } from './dto/filter-product.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
+@ApiBearerAuth('access-token')
 @ApiTags('products')
 @Controller('products')
 export class ProductsController {

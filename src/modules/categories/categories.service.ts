@@ -33,6 +33,7 @@ export class CategoriesService {
   async findAll(paginationDto: PaginationDto2) {
     try {
       const { page, pageSize, sortBy, sortOrder } = paginationDto;
+      console.log(paginationDto,page, pageSize, sortBy, sortOrder);
       const { skip, take, orderBy } =
         this.paginationService.getPaginationParams(
           page,

@@ -12,7 +12,7 @@ export class AwsService {
     this.s3Client = new S3Client(awsConfig.client);
   }
 
-  async uploadFile(file: Express.Multer.File, userId: string, model:string) {
+  async uploadFile(file: Express.Multer.File, userId: string, model:string='user') {
     const fileExtensionsByMimetype: { [key: string]: string } = {
       'image/jpeg': 'jpg',
       'image/png': 'png',

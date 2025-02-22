@@ -19,9 +19,10 @@ import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from 'src/common/decorators/roles.decorators';
 import { RoleEnum } from 'src/common/constants';
-import { ApiBody, ApiConsumes, ApiOperation } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 
+@ApiBearerAuth('access-token')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('images')
 export class ImagesController {
