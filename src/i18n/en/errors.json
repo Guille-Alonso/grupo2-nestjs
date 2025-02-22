@@ -6,12 +6,12 @@
     "isPositive": "{property} must be a positive number",
     "isInt": "{property} must be an integer",
     "numberCode": "{property} must be a string of 13 characters",
-    "length": "{property} must be {constraint1} characters long",
+    "length": "{property} must be between {constraint1} and {constraint2} characters",
     "maxLength": "{property} cannot be longer than {constraint1} characters",
     "isUrl": "{property} must be a valid URL",
     "min": "{property} must be greater than {constraint1}",
     "isIn": "{property} must be one of the following values: {constraint1}",
     "arrayMin": "{property} must have at least {x} element",
-    "arrayMax": "{property} must have at least {x} elements"
-
+    "arrayMax": "{property} must have at least {x} elements",
+    "userRol": "{property} must be one of the following: SUPERADMIN or USER"
 }

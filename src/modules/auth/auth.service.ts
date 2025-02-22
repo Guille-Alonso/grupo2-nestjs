@@ -9,6 +9,7 @@ import { messagingConfig } from 'src/common/constants';
 import { RecoverPasswordDto, ResetPasswordDto } from './dto/auth.dto';
 import { RegisterUserDto } from './dto/register.dto';
 import CustomError from 'src/utils/custom.error';
+import { I18nService } from 'nestjs-i18n';
 
 @Injectable()
 export class AuthService {
@@ -16,25 +17,35 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private messagingService: MessagingService,
+    private readonly i18n: I18nService,
   ) {}
   
   async register(user: RegisterUserDto) {
     try {
  
       if (!user.email || !user.password || !user.name || !user.lastName) {
-        throw new CustomError('Todos los campos son obligatorios.', HttpStatus.BAD_REQUEST); // 400
+        
+      const message = this.i18n.t('messages.incompleteRegister');
+        throw new CustomError(message, HttpStatus.BAD_REQUEST); // 400
       }
   
-      const email = user.email.toLowerCase();
-      const existingUser = await this.prisma.user.findUnique({
-        where: { email },
+      const userExists = await this.prisma.user.findFirst({
+        where: {
+          email: {
+            equals: user.email,
+            mode: 'insensitive',
+          },
+        },
       });
-  
-      if (existingUser) {
-        throw new CustomError('El email ya está registrado.', HttpStatus.CONFLICT); // 409
+      
+      
+      if (userExists) {
+        const message = this.i18n.t('messages.existingEmail');
+        throw new CustomError(message, HttpStatus.CONFLICT); // 409
       }
       
       const hashedPassword = await hashPassword(user.password);
+      const email = user.email.toLowerCase();
   
       const newUser = await this.prisma.user.create({
         data: {
@@ -47,18 +58,19 @@ export class AuthService {
       try {
         await this.messagingService.sendRegisterUserEmail({
           from: messagingConfig.emailSender,
-          to: user.email,
+          to: email,
+          name: user.name
         });
       } catch (emailError) {
-    
+        const message = this.i18n.t('messages.sendEmailError');
         throw new CustomError(
-          'Hubo un error al intentar enviar el correo de registro. Usuario registrado correctamente.',
+          message,
           HttpStatus.CREATED, // 201
         );
       }
-
+      const message = this.i18n.t('messages.successfulRegistration');
       return {
-        message: 'Registro exitoso.',
+        message,
         userId: newUser.id,
       };
       
@@ -67,9 +79,13 @@ export class AuthService {
       if (error instanceof CustomError) {
         throw error;
       }
-  
+      const messageActionRegister = this.i18n.t('messages.messageActionRegister');
+      const message = this.i18n.t('messages.genericError', {
+        args: { action:messageActionRegister },
+      });
+   
       throw new CustomError(
-        error.message || 'Error al registrar usuario. Inténtelo más tarde.',
+        error?.message || message,
         HttpStatus.INTERNAL_SERVER_ERROR, // 500
       );
     }
@@ -78,25 +94,37 @@ export class AuthService {
   async login(credentials: LoginAuthDto) {
     try {
       const { password } = credentials;
-      const email = credentials.email.toLowerCase();
 
-      const findUser = await this.prisma.user.findUnique({
+      const findUser = await this.prisma.user.findFirst({
         where: {
-          email,
+          email: {
+            equals: credentials.email,
+            mode: 'insensitive',
+          },
+          isDeleted:false,
+          isActive:true
         },
+        include:{
+          profile: {
+          where: {
+            isDeleted: false, // Filtra productos no eliminados
+          },
+        },}
       });
-
+      
       if (!findUser) {
-        throw new CustomError('Credenciales invalidas.',HttpStatus.UNAUTHORIZED);
+        const message = this.i18n.t('messages.unauthorized');
+        throw new CustomError(message,HttpStatus.UNAUTHORIZED);
       }
-
+   
       const isCorrectPassword = await comparePassword(
         password,
         findUser.password,
       );
 
       if (!isCorrectPassword) {
-        throw new CustomError('Credenciales invalidas.',HttpStatus.UNAUTHORIZED);
+        const message = this.i18n.t('messages.unauthorized');
+        throw new CustomError(message,HttpStatus.UNAUTHORIZED);
       }
 
       const payload: JwtPayload = {
@@ -116,8 +144,13 @@ export class AuthService {
         throw error;
       }
   
+      const messageActionLogin = this.i18n.t('messages.messageActionLogin');
+      const message = this.i18n.t('messages.genericError', {
+        args: { action:messageActionLogin },
+      });
+   
       throw new CustomError(
-        error.message || 'Error al iniciar sesión. Inténtelo más tarde.',
+        error?.message || message,
         HttpStatus.INTERNAL_SERVER_ERROR, // 500
       );
     }
@@ -125,17 +158,21 @@ export class AuthService {
 
   async recoveryPassword(recoverDto: RecoverPasswordDto) {
     try {
-      const email = recoverDto.email.toLowerCase();
 
-      const findUser = await this.prisma.user.findUnique({
+      const findUser = await this.prisma.user.findFirst({
         where: {
-          email,
+          email: {
+            equals: recoverDto.email,
+            mode: 'insensitive',
+          },
         },
       });
+      
 
       if(!findUser){
+        const message = this.i18n.t('messages.userNotFound');
         throw new CustomError(
-          'Usuario no encontrado.',
+         message,
           HttpStatus.NOT_FOUND, // 404
         );
       }
@@ -149,8 +186,12 @@ export class AuthService {
       const { accessToken } = await createTokens(payload, this.jwtService);
 
       if(!accessToken){
+        const messageActionRecoveryPassword = this.i18n.t('messages.messageActionRecoveryPassword');
+        const message = this.i18n.t('messages.genericError', {
+          args: { action:messageActionRecoveryPassword },
+        });
         throw new CustomError(
-          'Error al recuperar contraseña. Inténtelo más tarde.',
+          message,
           HttpStatus.INTERNAL_SERVER_ERROR, // 500
         );
       }
@@ -161,8 +202,9 @@ export class AuthService {
         url: `${messagingConfig.resetPasswordUrls.backoffice}/${accessToken}`,
       });
 
+      const message = this.i18n.t('messages.sendEmailRecoveryPassword');
       return {
-        message: 'Se envio un correo con las instrucciones para recuperar la contraseña.',
+        message
       };
 
     } catch (error) {
@@ -170,8 +212,13 @@ export class AuthService {
         throw error;
       }
   
+      const messageActionRecoveryPassword = this.i18n.t('messages.messageActionRecoveryPassword');
+      const message = this.i18n.t('messages.genericError', {
+        args: { action:messageActionRecoveryPassword },
+      });
+   
       throw new CustomError(
-        error.message || 'Error al recuperar contraseña. Inténtelo más tarde.',
+        error?.message || message,
         HttpStatus.INTERNAL_SERVER_ERROR, // 500
       );
     }
@@ -183,8 +230,9 @@ export class AuthService {
       const { password, confirmPassword } = resetDto;
 
       if (password !== confirmPassword) {
+        const message = this.i18n.t('messages.errorPassword');
         throw new CustomError(
-          'Las contraseñas no coinciden.',
+          message,
           HttpStatus.BAD_REQUEST // 400
         );
       }      
@@ -192,8 +240,9 @@ export class AuthService {
       const findUser = await this.prisma.user.findUnique({ where: { id } });
   
       if(!findUser){
+        const message = this.i18n.t('messages.userNotFound');
         throw new CustomError(
-          'Usuario no encontrado.',
+         message,
           HttpStatus.NOT_FOUND, // 404
         );
       }
@@ -205,24 +254,25 @@ export class AuthService {
         },
       });
 
-      return { message: 'Contraseña actualizada correctamente' };
+      const message = this.i18n.t('messages.passwordUpdated');
+      return { message};
 
     } catch (error) {
         if (error instanceof CustomError) {
         throw error;
       }
   
+      const messageActionResetPassword = this.i18n.t('messages.messageActionResetPassword');
+      const message = this.i18n.t('messages.genericError', {
+        args: { action:messageActionResetPassword },
+      });
+   
       throw new CustomError(
-        error.message || 'Error al actualizar contraseña. Inténtelo más tarde.',
+        error?.message || message,
         HttpStatus.INTERNAL_SERVER_ERROR, // 500
       );
     }
    
   }
 
-  // private async createTokens(payload: JwtPayload) {
-  //   return {
-  //     accessToken: await this.jwtService.signAsync(payload),
-  //   };
-  // }
 }
