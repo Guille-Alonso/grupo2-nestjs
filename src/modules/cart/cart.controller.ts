@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Req, UseGuards, Query } from '@nestjs/common';
 import { CartService } from './cart.service';
 import { CreateCartDto } from './dto/create-cart.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
@@ -6,10 +6,11 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { RoleEnum } from 'src/common/constants';
 import { Roles } from 'src/common/decorators/roles.decorators';
 import { ApiCustomOperation } from 'src/common/decorators/swagger.decorator';
-import { ApiBody, ApiQuery } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiQuery } from '@nestjs/swagger';
 import { PaginationDto2 } from 'src/utils/pagination/dto/pagination.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
+@ApiBearerAuth('access-token')
 @Roles(RoleEnum.USER)
 @Controller('cart')
 export class CartController {
@@ -35,7 +36,7 @@ export class CartController {
     })
     @ApiQuery({ name: 'id', description: 'User Id', example: 'b5e0211f-0105-4ae1-ba67-9edqw9a9b4f1' })
   @Get()
-  findAll(@Req() req,  paginationDto2: PaginationDto2) {
+  findAll(@Req() req, @Query() paginationDto2: PaginationDto2) {
     const {userId}= req.user;
     return this.cartService.findAll(userId, paginationDto2);
   }
@@ -47,7 +48,7 @@ export class CartController {
   })
   @Roles(RoleEnum.SUPERADMIN)
   @Get("allCart")
-  findAllAdmin(paginationDto2: PaginationDto2){
+  findAllAdmin(@Query() paginationDto2: PaginationDto2){
     return this.cartService.findAllAdmin(paginationDto2);
   }
 

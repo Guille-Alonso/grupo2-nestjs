@@ -4,7 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { PaginationDto2 } from 'src/utils/pagination/dto/pagination.dto';
 import { I18nService } from 'nestjs-i18n';
 import { PaginationService } from 'src/utils/pagination/pagination.service';
-import { hrtime } from 'process';
+
 
 
 
@@ -51,6 +51,7 @@ export class CartService {
 
 
   async create(cart: CreateCartDto) {
+    console.log(cart);
     try{
 
       let subtotal= 0;
@@ -82,7 +83,6 @@ export class CartService {
             }
           })
           if(!exist){
-            
             throw new Error(this.i18n.t('messages.productNotFound') + HttpStatus.BAD_REQUEST)
           }
           let totalPrice = product.quantity * exist.price;
@@ -105,10 +105,10 @@ export class CartService {
     }
   }
 
-  async findAll(userId, pDTO2:PaginationDto2) {
+  async findAll(userId, paginationDto2) {
     
     try{
-      const {page,pageSize,sortBy,sortOrder}=pDTO2;
+      const {page,pageSize,sortBy,sortOrder}=paginationDto2;
       const {skip, take, orderBy}= this.paginationService.getPaginationParams(
         page, pageSize, sortBy, sortOrder
       )
@@ -157,9 +157,9 @@ export class CartService {
     }
   }
 
-  async findAllAdmin(pDTO2:PaginationDto2){
+  async findAllAdmin(paginationDto2: PaginationDto2){
     try{
-      const {page,pageSize,sortBy,sortOrder}=pDTO2;
+      const {page, pageSize, sortBy, sortOrder}=paginationDto2;
       const {skip, take, orderBy}= this.paginationService.getPaginationParams(
         page, pageSize, sortBy, sortOrder
       )
@@ -200,7 +200,7 @@ export class CartService {
         }
         return this.paginationService.formatPaginatedResponse(data,total,page,pageSize)
     }catch(e){
-      const message = this.i18n.t('messages.cartsNotFind') + e;
+      const message = this.i18n.t('messages.cartsNotFind') +" "+e;
       throw new Error(message)
     }
   }
@@ -238,7 +238,7 @@ export class CartService {
                 });
 
                 if (productStock.stock < line.quantity || productStock.stock == 0) {
-                    throw new Error('producto ' + line.product.name + ' sin stock'); 
+                    throw new Error(this.i18n.t('messages.prod') + line.product.name + this.i18n.t('messages.notAvailable')); 
                 }
 
                 await tx.product.update({

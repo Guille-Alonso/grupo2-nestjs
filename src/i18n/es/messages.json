@@ -54,5 +54,8 @@
     "fileNotProvided": "el archivo no fue cargado",
     "emptyFile":"el archivo se encuentra vacío",
     "typeFileProfile": "el archivo debe ser una imágen.",
-    "messageActionProfile":"actualizar o crear perfil de usuario"
+    "messageActionProfile":"actualizar o crear perfil de usuario",
+    "opConfirm": "operación exitosa",
+    "prod": "producto",
+    "notAvailable": "not disponible"
 }

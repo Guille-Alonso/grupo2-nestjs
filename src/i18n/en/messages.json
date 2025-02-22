@@ -54,5 +54,8 @@
   "fileNotProvided":"the file was not uploaded",
   "emptyFile":"the file is empty",
   "typeFileProfile":"the file must be an image.",
-  "messageActionProfile":"update or create user profile"
+  "messageActionProfile":"update or create user profile",
+  "opConfirm": "successful operation ",
+  "prod": "product",
+  "notAvailable": "not available"
 }
