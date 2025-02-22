@@ -14,5 +14,4 @@
     "arrayMin": "{property} debe tener al menos {x} elemento",
     "arrayMax": "{property} debe tener al menos {x} elementos",
     "userRol": "{property} debe ser uno de los siguientes: SUPERADMIN o USER"
-
 }
