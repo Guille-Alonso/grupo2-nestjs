@@ -1,19 +1,22 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Res } from '@nestjs/common';
 import { ReportsService } from './reports.service';
 import { CreateReportDto } from './dto/create-report.dto';
 import { UpdateReportDto } from './dto/update-report.dto';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from 'src/common/decorators/roles.decorators';
 import { RoleEnum } from 'src/common/constants';
+import { Response } from 'express';
 
-@UseGuards(JwtAuthGuard, RolesGuard)
+//@UseGuards(JwtAuthGuard, RolesGuard)
+//@Roles(RoleEnum.SUPERADMIN)
+//@ApiBearerAuth('access-token')
 @ApiTags('Reports')
 @Controller('reports')
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
-@Roles(RoleEnum.USER)
+
   @ApiOperation({ summary: 'Create report' })
   @Post()
   create(@Body() createReportDto: CreateReportDto) {
@@ -42,29 +45,39 @@ export class ReportsController {
 
   @Roles(RoleEnum.SUPERADMIN)
   @ApiOperation({ summary: 'Sales report' })
-  @Get('sales-report:id')
-  salesReport( @Param('id') userId: string) {
-    return this.reportsService.salesReport( userId);
+  @Post('sales-report:id')
+  async salesReport(@Res() res: Response, @Param('id') userId: string) {
+    
+    const buffer = await this.reportsService.salesReport( userId);
+    res.setHeader('Content-Type', 'image/png');
+    res.send(buffer);
   }
 
-  @Roles(RoleEnum.SUPERADMIN)
+  //@Roles(RoleEnum.SUPERADMIN)
   @ApiOperation({ summary: 'Products report' })
-  @Get('products-report')
-  productsReport() {
-    return this.reportsService.productsReport();
+  @Get('products/report')
+  async productsReport(@Res() res: Response) {
+    const buffer = await this.reportsService.productsReport();
+    res.setHeader('Content-Type', 'image/png');
+    res.send(buffer);
   }
 
-  @Roles(RoleEnum.SUPERADMIN)
+  //@Roles(RoleEnum.SUPERADMIN)
   @ApiOperation({ summary: 'Earnings report' })
-  @Get('earnings-report')
-  earningsReport() {    
-    return this.reportsService.earningsReport();
+  @Get('earnings/report')
+  async earningsReport(@Res() res: Response) {   
+    const buffer = await this.reportsService.earningsReport();
+    res.setHeader('Content-Type', 'image/png');
+    res.send(buffer);
   }
 
-  @Roles(RoleEnum.SUPERADMIN)
+  //@Roles(RoleEnum.SUPERADMIN)
   @ApiOperation({ summary: 'Earnings by product report' })
-  @Get('earnings-by-product-report')
-  earningsByProductReport() {    
-    return this.reportsService.earningsByProductReport();
+  @Get('earningsbyproduct/report')
+   async earningsByProductReport(@Res() res: Response) {
+    
+    const buffer = await this.reportsService.earningsByProductReport();
+    res.setHeader('Content-Type', 'image/png');
+    res.send(buffer);
   }
 }

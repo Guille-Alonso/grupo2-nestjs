@@ -32,6 +32,7 @@ export class ProductsService {
       })
       const existingCategoryIds = (await categorys).map((p) => p.id);
 
+
       const product = await this.prisma.product.create({
         data: {
           ...productData,
@@ -307,6 +308,7 @@ export class ProductsService {
 
   async uploadProducts(buffer: Buffer) {
     try {
+      //validar los datos antes de importarlos
       const products = await this.excelService.readExcel(buffer);
 
       for (let index = 0; index < products.length; index++) {
@@ -315,8 +317,8 @@ export class ProductsService {
           ...product,
           price: parseFloat(product.price),
         };
+        //aqui seria la validadcion? creo que ya estan validados
         await this.create(productNew as CreateProductDto);
-        //await this.prisma.product.create({ data: productNew });
       }
       return { message: this.i18n.t('messages.productsUploaded') };
     } catch (error) {
@@ -343,13 +345,14 @@ export class ProductsService {
         { header: 'SKU', key: 'sku' },
         { header: 'Categorys', key: 'categorys' },
         { header: 'Images', key: 'images' },
+
       ];
       const workbook = await this.excelService.generateExcel(
         products,
         columns,
         'Productos',
       );
-      const buffer = await Buffer.from(await workbook.xlsx.writeBuffer());
+      /*const buffer = await Buffer.from(await workbook.xlsx.writeBuffer());
       const file: Express.Multer.File = {
         fieldname: 'file',
         originalname: 'productos.xlsx',
@@ -362,10 +365,9 @@ export class ProductsService {
         filename: '',
         path: '',
         stream: null,
-      };
-      await this.awsService.uploadFile(file, 'excel','product');
-      await this.excelService.exportToResponse(res, workbook, 'productos.xlsx');
-      return { message: this.i18n.t('messages.productsExported') };
+      };*/
+      return this.excelService.exportToResponse(res, workbook, 'productos.xlsx');
+      
     } catch (error) {
       const message=  this.i18n.t('messages.productsNotExported')+error;
       throw new Error(message);

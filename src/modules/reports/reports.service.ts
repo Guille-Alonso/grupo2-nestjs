@@ -3,11 +3,10 @@ import { UpdateReportDto } from './dto/update-report.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { ChartService } from '../chart/chart.service';
 import { AwsService } from '../aws/aws.service';
-import { JwtService } from '@nestjs/jwt';
+
 import { ChartConfiguration } from 'chart.js';
 import { CreateReportDto } from './dto/create-report.dto';
-import { PrinterService } from '../printer/printer.service';
-import { I18nService } from 'nestjs-i18n';
+
 import { Readable } from 'stream';
 
 @Injectable()
@@ -16,9 +15,9 @@ export class ReportsService {
     private readonly prisma: PrismaService,
     private readonly chartService: ChartService,
     private readonly awsService: AwsService,
-    private readonly jwtService: JwtService,
-    private readonly printerService: PrinterService,
-    private readonly i18n: I18nService
+    //private readonly jwtService: JwtService,
+    //private readonly printerService: PrinterService,
+    //private readonly i18n: I18nService
   ) {}
   create(createReportDto: CreateReportDto) {
     this.prisma.report.create({
@@ -53,6 +52,7 @@ export class ReportsService {
           },
         },
       });
+      console.log(sales);
       const salesByDate = await sales.reduce((acc, cart) => {
         const date = cart.createdAt.toISOString().split('T')[0];
         if (!acc[date]) {
@@ -62,6 +62,7 @@ export class ReportsService {
         return acc;
       },{});
 
+      console.log(salesByDate);
       const labels = Object.keys(salesByDate);
       const data = Object.values(salesByDate);
 
@@ -91,6 +92,8 @@ export class ReportsService {
         chartData,
         chartOptions,
       );
+      return report;
+      /*console.log(report);
       const file: Express.Multer.File = {
         fieldname: 'file',
         originalname: 'report.png',
@@ -103,13 +106,7 @@ export class ReportsService {
         filename: '',
         path: '',
       };
-      const{url}= await this.awsService.uploadFile(file, 'report', 'user');
-      /*const context: ExecutionContext = {} as ExecutionContext;
-      const req = context.switchToHttp().getRequest();
-      const token = req.headers.authorization.split(' ')[1];
-      const payload: JwtPayload = await this.jwtService.decode(token);
-      const userId = payload.id;*/
-
+      console.log(file);
       const reportdto:CreateReportDto= {
         content: url,
         type: 'VentaTotal',
@@ -120,13 +117,13 @@ export class ReportsService {
       return { Message: 'reporte generado',
         report,
         url
-       };
+       };*/
     } catch (e) {
       throw new Error(e.message);
     }
   }
 
-  async productsReport() {
+  async productsReport(): Promise<Buffer> {
     try{
       const carts = await this.prisma.cart.findMany({
         where: {
@@ -136,6 +133,7 @@ export class ReportsService {
           cartLine:{ include: { product: true } },
         }
       })
+      console.log(carts);
       const productsBySales = await carts.reduce((acc, cart) => {
           cart.cartLine.forEach(async line => {
             if (!acc[line.product.name]) {
@@ -176,27 +174,13 @@ export class ReportsService {
       chartOptions,
     );
 
-    const pdfReport:Express.Multer.File={
-      fieldname: "file",
-      originalname: "report.pdf", 
-      encoding: "7bit", 
-      mimetype: "application/pdf", 
-      buffer: report,
-      size: report.length,
-      destination: "",
-      filename: "",
-      path: "",
-      stream: null
-    }
-    //const{url}= await this.awsService.uploadFile(pdfReport, 'report', 'user');
-    return pdfReport
-
+    return report;
     }catch(e){
       throw new Error(e.message);
     }
   }
 
-  async earningsReport() {
+  async earningsReport(): Promise<Buffer> {
     try{
       const sales = await this.prisma.cart.findMany({
         where: {
@@ -221,7 +205,7 @@ export class ReportsService {
         labels,
         datasets: [
           {
-            label: 'Ventas Totales de la semana',
+            label: 'Ingresos de la semana',
             data,
             backgroundColor: '#36A2EB',
           },
@@ -233,7 +217,7 @@ export class ReportsService {
           legend: { position: 'top' as const },
           title: {
             display: true,
-            text: 'Ventas de la semana',
+            text: 'Ingresos de la semana',
           },
         },
       };
@@ -244,26 +228,14 @@ export class ReportsService {
         chartOptions,
       );
 
-      const pdfReport:Express.Multer.File={
-        fieldname: "file",
-        originalname: "report.pdf", 
-        encoding: "7bit", 
-        mimetype: "application/pdf", 
-        buffer: report,
-        size: report.length,
-        destination: "",
-        filename: "",
-        path: "",
-        stream: null
-      }
-      //const{url}= await this.awsService.uploadFile(pdfReport, 'report', 'user');
-      return pdfReport
+      
+      return report
     }catch(e){
       throw new Error(e.message);
     }
   }
 
-  async earningsByProductReport() {
+  async earningsByProductReport(): Promise<Buffer> {
     try{
     const carts = await this.prisma.cart.findMany({
       where: {
@@ -289,7 +261,7 @@ export class ReportsService {
       labels,
       datasets: [
         {
-          label: 'Ventas Totales de la semana',
+          label: 'Ganancias por producto',
           data,
           backgroundColor: '#36A2EB',
         },
@@ -301,7 +273,7 @@ export class ReportsService {
         legend: { position: 'top' as const },
         title: {
           display: true,
-          text: 'Ventas de la semana',
+          text: 'Ganancias por producto',
         },
       },
     };
@@ -312,20 +284,8 @@ export class ReportsService {
       chartOptions,
     );
 
-    const pdfReport:Express.Multer.File={
-      fieldname: "file",
-      originalname: "report.pdf", 
-      encoding: "7bit", 
-      mimetype: "application/pdf", 
-      buffer: report,
-      size: report.length,
-      destination: "",
-      filename: "",
-      path: "",
-      stream: null
-    }
-    //const{url}= await this.awsService.uploadFile(pdfReport, 'report', 'user');
-    return pdfReport
+    
+    return report
 
   } catch(e){
     throw new Error(e.message);

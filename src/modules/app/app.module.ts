@@ -11,6 +11,7 @@ import { UsersModule } from '../users/users.module';
 import { AuthModule } from '../auth/auth.module';
 import { PurchasesModule } from '../purchases/purchases.module';
 import { ImagesModule } from '../images/images.module';
+import { ReportsModule } from '../reports/reports.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -20,12 +21,13 @@ import { ImagesModule } from '../images/images.module';
     }),
     I18nModuleConfig(),
     PrismaModule,
+    AuthModule,
     ProductsModule,
     CartModule,
     UsersModule,
-    AuthModule,
     PurchasesModule,
     ImagesModule,
+    ReportsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

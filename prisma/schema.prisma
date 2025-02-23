@@ -42,7 +42,7 @@ model Product {
   description String
   price       Float
   stock       Int
-  barcode     String
+  barcode     String @unique
   sku         String
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt

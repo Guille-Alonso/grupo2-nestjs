@@ -12,7 +12,7 @@ export class AwsService {
     this.s3Client = new S3Client(awsConfig.client);
   }
 
-  async uploadFile(file: Express.Multer.File, userId: string, model:string='user') {
+  async uploadFile(file: Express.Multer.File, userId: string) {
     const fileExtensionsByMimetype: { [key: string]: string } = {
       'image/jpeg': 'jpg',
       'image/png': 'png',
@@ -38,7 +38,7 @@ export class AwsService {
     try {
       const { mimetype } = file;
       const extension = fileExtensionsByMimetype[mimetype] ?? 'file';
-      key = `${model}_${userId}/${crypto.randomUUID()}.${extension}`;
+      key = `user_${userId}/${crypto.randomUUID()}.${extension}`;
       await this.s3Client.send(
         new PutObjectCommand({
           Bucket: awsConfig.s3.bucket,

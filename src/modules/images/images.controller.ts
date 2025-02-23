@@ -22,8 +22,8 @@ import { RoleEnum } from 'src/common/constants';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 
-@ApiBearerAuth('access-token')
-@UseGuards(JwtAuthGuard, RolesGuard)
+//@ApiBearerAuth('access-token')
+//@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('images')
 export class ImagesController {
   constructor(private readonly imagesService: ImagesService) {}
@@ -67,7 +67,7 @@ export class ImagesController {
     return this.imagesService.remove(id);
   }
 
-  @Roles(RoleEnum.SUPERADMIN)
+  //@Roles(RoleEnum.SUPERADMIN)
   @ApiOperation({ summary: 'Assign image to product' })
   @UseInterceptors(FileInterceptor('file'))
   @ApiConsumes('multipart/form-data')

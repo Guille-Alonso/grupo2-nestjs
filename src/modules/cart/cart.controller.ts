@@ -6,11 +6,12 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { RoleEnum } from 'src/common/constants';
 import { Roles } from 'src/common/decorators/roles.decorators';
 import { ApiCustomOperation } from 'src/common/decorators/swagger.decorator';
-import { ApiBody, ApiQuery } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiQuery } from '@nestjs/swagger';
 import { PaginationDto2 } from 'src/utils/pagination/dto/pagination.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(RoleEnum.USER)
+@Roles(RoleEnum.USER, RoleEnum.SUPERADMIN)
+@ApiBearerAuth('access-token')
 @Controller('cart')
 export class CartController {
   constructor(private readonly cartService: CartService) {}
