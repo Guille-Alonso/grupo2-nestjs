@@ -9,7 +9,7 @@ import {
   Query,
   UseGuards,
   UseInterceptors,
-  UploadedFile,
+  UploadedFiles,
 } from '@nestjs/common';
 import { ImagesService } from './images.service';
 import { CreateImageDto } from './dto/create-image.dto';
@@ -20,7 +20,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from 'src/common/decorators/roles.decorators';
 import { RoleEnum } from 'src/common/constants';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation } from '@nestjs/swagger';
-import { FileInterceptor } from '@nestjs/platform-express';
+import {FilesInterceptor } from '@nestjs/platform-express';
 
 //@ApiBearerAuth('access-token')
 //@UseGuards(JwtAuthGuard, RolesGuard)
@@ -69,22 +69,22 @@ export class ImagesController {
 
   //@Roles(RoleEnum.SUPERADMIN)
   @ApiOperation({ summary: 'Assign image to product' })
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FilesInterceptor('files', 5))
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
       type: 'object',
       properties: {
         productId: { type: 'string' },  
-        file: {
-          type: 'string',
-          format: 'binary',
+        files: {
+          type: 'array',
+          items: { type: 'string', format: 'binary' },
         },
       },
     },
   })
   @Post('assign-image')
-  async assignImage(@UploadedFile() file: Express.Multer.File,@Body() productId: string) {
-    return await this.imagesService.assignImage(file, productId);
+  async assignImage( @UploadedFiles() files: Express.Multer.File[],@Body() productId: string) {
+    return await this.imagesService.assignImage(files, productId);
   }
 }

@@ -312,7 +312,7 @@ export class ProductsService {
     }
   }
   
-  async eliminarCategorias(productId: string, categorys: string[]) {
+  async deleteCategories(productId: string, categorys: string[]) {
     try {
       await this.prisma.productOnCategory.deleteMany({
         where: {
@@ -328,7 +328,7 @@ export class ProductsService {
     
   }
 
-  async eliminarImages(productId: string, images: string[]) {
+  async deteleImages(productId: string, images: string[]) {
     try {
       await this.prisma.image.update({
         where: { productId },

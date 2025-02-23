@@ -156,6 +156,53 @@ export class ProductsController {
     return this.productsService.uploadImages(productId, images);
   }
 
+  @ApiOperation({ summary: 'Delete categories from a product' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        categorys: {
+          type: 'array',
+          items: { type: 'string' },
+          example: ['Electronics', 'Computers'],
+        },
+      },
+    },
+  })
+  @Roles(RoleEnum.SUPERADMIN)
+  @Patch('delete-categories/:productId')
+  deleteCategories(
+    @Param('productId') productId: string,
+    @Body('categorys') categorys: string[],
+  ) {
+    return this.productsService.deleteCategories(productId, categorys);
+  }
+
+  @ApiOperation({ summary: 'Delete images from a product' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        images: {
+          type: 'array',
+          items: { type: 'string' },
+          example: [
+            'https://example.com/image1.jpg',
+            'https://example.com/image2.jpg',
+          ],
+        },
+      },
+    },
+  })
+  @Roles(RoleEnum.SUPERADMIN)
+  @Patch('delete-images/:productId')
+  deteleImages(
+    @Param('productId') productId: string,
+    @Body('images') images: string[],
+  ) {
+    return this.productsService.deteleImages(productId, images);
+  }
+  
   @Roles(RoleEnum.SUPERADMIN)
   @ApiOperation({ summary: 'Upload a excel file' })
   @ApiConsumes('multipart/form-data')

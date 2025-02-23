@@ -117,8 +117,9 @@ export class ImagesService {
     }
   }
 
-  async assignImage(file: Express.Multer.File, productId: string) {
+  async assignImage(files: Express.Multer.File[], productId: string) {
     try {
+    for (const file of files) {
     const { url, key } = await this.awsService.uploadFile(file, productId);
     this.prisma.image.update({
       where: {
@@ -136,7 +137,7 @@ export class ImagesService {
   });
     const message = this.i18n.t('messages.imageAssigned');
     return message;
-  }
+  }}
   catch (error) {
     const message = this.i18n.t('messages.imageNotAssigned')+error.message;
     throw new Error(message);
