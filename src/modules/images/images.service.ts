@@ -100,6 +100,7 @@ export class ImagesService {
   }
 
   async remove(id: string) {
+    //ver si no hay que eliminarla
     try {
       const deleteImage = await this.prisma.product.update({
         where: {
@@ -109,8 +110,8 @@ export class ImagesService {
           isDeleted: true,
         },
       });
-      const message = this.i18n.t('messages.imageDeleted') + deleteImage;
-      return message;
+      const message = this.i18n.t('messages.imageDeleted');
+      return { message, deleteImage };
     } catch (error) {
       throw new Error(error);
     }

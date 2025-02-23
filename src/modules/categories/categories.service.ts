@@ -107,8 +107,11 @@ export class CategoriesService {
           isDeleted: true,
         },
       });
-      const message = this.i18n.t('messages.categoryDeleted')+category;
-      return message;
+      const message = this.i18n.t('messages.categoryDeleted');
+      return { 
+        message, 
+        category 
+      };
     } catch (error) {
       const message = this.i18n.t('messages.categoryNotDeleted')+error.message;
       throw new Error(message);
@@ -127,6 +130,12 @@ export class CategoriesService {
           },
         },
       });
+
+      if(!category||category.products.length===0){
+        const message = this.i18n.t('messages.productsNotFound');
+        throw new Error(message);
+      }
+
       return category.products.map((relation) => relation.product.name);
     } catch (error) {
       const message = this.i18n.t('messages.productsNotFound')+error.message;
@@ -147,9 +156,9 @@ export class CategoriesService {
         },
         include: { products: { include: { product: true } } },
       });
-      const message = this.i18n.t('messages.categoryUpdated')+
-      category;
-      return message;
+
+      const message = this.i18n.t('messages.categoryUpdated')+category.products
+      return {message};
     } catch (error) {
       const message = this.i18n.t('messages.categoryNotUpdated')+error.message;
       throw new Error(message);

@@ -8,7 +8,7 @@ export class CreateImageDto {
   @IsUrl({}, { each: true, message: i18nValidationMessage('errors.isUrl') })
   @Matches(/\.(jpg|png)$/i, { each: true, message: i18nValidationMessage('errors.isImage') })
   @IsOptional()
-  coleccion?: string[];
+  colection?: string[];
 
   @ApiProperty({ description: 'Product id', example: 'hkasf-asohfioasf' })
   @IsString({ message: i18nValidationMessage('errors.isString') })

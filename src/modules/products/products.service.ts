@@ -98,6 +98,7 @@ export class ProductsService {
       const product = await this.prisma.product.findUnique({
         where: {
           id,
+          isDeleted: false,
         },
         include: { categorys: { include: { category: true } }, images: true },
       });
@@ -148,6 +149,11 @@ export class ProductsService {
         },
         data: {
           isDeleted: true,
+          images: {
+            update: {
+              isDeleted: true,
+            },
+          }
         },
       });
       return {message: this.i18n.t('messages.productDeleted'),deleteProduct};
@@ -305,7 +311,39 @@ export class ProductsService {
       throw new Error(message);
     }
   }
+  
+  async eliminarCategorias(productId: string, categorys: string[]) {
+    try {
+      await this.prisma.productOnCategory.deleteMany({
+        where: {
+          productId: productId,
+          categoryId: { in: categorys },
+        },
+      });
+      return { message: this.i18n.t('messages.categorysDeleted') };
+    } catch (error) {
+      const message=  this.i18n.t('messages.categorysNotDeleted')+error;
+      throw new Error(message);
+    }
+    
+  }
 
+  async eliminarImages(productId: string, images: string[]) {
+    try {
+      await this.prisma.image.update({
+        where: { productId },
+        data: {
+          colection: {
+            set: images,
+          },
+        },
+      });
+      return { message: this.i18n.t('messages.imagesDeleted') };
+    } catch (error) {
+      const message=  this.i18n.t('messages.imagesNotDeleted')+error;
+      throw new Error(message);
+    }
+  }
   async uploadProducts(buffer: Buffer) {
     try {
       //validar los datos antes de importarlos
