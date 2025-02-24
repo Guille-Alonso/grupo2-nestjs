@@ -4,6 +4,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { PaginationDto2 } from 'src/utils/pagination/dto/pagination.dto';
 import { I18nService } from 'nestjs-i18n';
 import { PaginationService } from 'src/utils/pagination/pagination.service';
+import { PrinterService } from '../printer/printer.service';
+import { CarritoConfirmPdf} from '../printer/documents';
 
 
 
@@ -13,6 +15,7 @@ export class CartService {
   constructor(private readonly prisma: PrismaService,
     private readonly i18n:I18nService,
     private readonly paginationService:PaginationService,
+    private readonly printerService : PrinterService,
   ){}
  
   async recoverCartData (cartId: string){
@@ -217,18 +220,21 @@ export class CartService {
     }
   }
 
-  async comfirmCart(id: string) {
+  async comfirmCart(id: string): Promise<Buffer> {
+
+    console.log(id);
+    
     try {
-        const confCart = await this.prisma.$transaction(async (tx) => {
-            const carrito = await tx.cart.findUnique({
-                where: { id, state: "PENDING" },
-                include: { cartLine: { include: { product: true } } },
-            });
+      const carrito = await this.prisma.cart.findUnique({
+          where: { id, state: "PENDING" },
+          include: {user:true, cartLine: { include: { product: true }, } },
+      });
 
-            if (!carrito) {
-                throw new Error(this.i18n.t('messages.cartsNotFind')); 
-            }
-
+      if (!carrito) {
+          throw new Error(this.i18n.t('messages.cartsNotFind')); 
+      }
+     await this.prisma.$transaction(async (tx) => {
+            
             const productCart = carrito.cartLine;
 
             for (const line of productCart) {
@@ -245,17 +251,22 @@ export class CartService {
                     where: { id: line.product.id },
                     data: { stock: { decrement: line.quantity } },
                 });
+
             }
 
             await tx.cart.update({
                 where: { id },
                 data: { state: "CONFIRMED" },
             });
-
-            return carrito; 
-        });
-
-        return { Message: this.i18n.t('confirmCart'), confCart }; 
+            console.log("carrito:------------------------->", carrito);
+            
+          });
+          const pdfConfirm = await CarritoConfirmPdf(carrito);
+          console.log("pdfConfirm", pdfConfirm);
+          
+          const pdfDoc = await this.printerService.createPdf(pdfConfirm);
+          console.log("pdfDoc",pdfDoc)
+          return pdfDoc;  
 
     } catch (e) {
         if (e.message === 'cart no find') {

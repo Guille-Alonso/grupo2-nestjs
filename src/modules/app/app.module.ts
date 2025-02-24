@@ -10,6 +10,7 @@ import { CartModule } from '../cart/cart.module';
 import { UsersModule } from '../users/users.module';
 import { AuthModule } from '../auth/auth.module';
 import { PurchasesModule } from '../purchases/purchases.module';
+import { PrinterModule } from '../printer/printer.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -23,7 +24,8 @@ import { PurchasesModule } from '../purchases/purchases.module';
     CartModule,
     UsersModule,
     AuthModule,
-    PurchasesModule
+    PurchasesModule,
+    PrinterModule
   ],
   controllers: [AppController],
   providers: [AppService],

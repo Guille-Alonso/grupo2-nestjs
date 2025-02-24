@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Req, UseGuards, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Req, UseGuards, Query, Res, HttpStatus } from '@nestjs/common';
 import { CartService } from './cart.service';
 import { CreateCartDto } from './dto/create-cart.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
@@ -8,6 +8,8 @@ import { Roles } from 'src/common/decorators/roles.decorators';
 import { ApiCustomOperation } from 'src/common/decorators/swagger.decorator';
 import { ApiBearerAuth, ApiBody, ApiQuery } from '@nestjs/swagger';
 import { PaginationDto2 } from 'src/utils/pagination/dto/pagination.dto';
+import { Response } from 'express';
+
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth('access-token')
@@ -69,9 +71,24 @@ export class CartController {
     responseDescription: 'cart found',
   })
   @Patch('confirm/:id')
-  update(@Param('id') id: string) {
-    return this.cartService.comfirmCart(id);
+  async update(@Param('id') id: string, @Res() res: Response): Promise<void> {
+      try {
+          const pdfBuffer = (await this.cartService.comfirmCart(id));
+        console.log("controller// pdfBuffer:", pdfBuffer);
+        
+          res.setHeader('Content-Type', 'application/pdf');
+          res.setHeader('Content-Disposition', 'attachment; filename=carrito_confirm.pdf');
+          res.status(HttpStatus.OK).send(pdfBuffer);
+      } catch (error) {
+          // Manejo de errores
+          console.error(error);
+          res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
+              message: 'Error al generar el PDF',
+              error: error.message, // Incluye el mensaje de error
+          });
+      }
   }
+
 
 
   @ApiCustomOperation({
