@@ -7,7 +7,7 @@ const styles: StyleDictionary ={
         color:'#521651',
     },
     subHeader:{
-        fontSize:18,
+        fontSize:12,
         bold:true,
         color:'#525659'
     },
@@ -17,49 +17,102 @@ const styles: StyleDictionary ={
         color:'#0a0a0a'
     }
 }
+interface TableContent {
+    widths: string[];
+    body: any[][]; 
+    layout: string;
+}
+
+interface ContentItem {
+    text?: string;
+    style?: string;
+    marginBottom?: number;
+    table?: TableContent; 
+    alignment?: string;
+    marginTop?: number;
+}
 
 export const CarritoConfirmPdf = async (Carrito:any):Promise<TDocumentDefinitions>=>{
 
     const user = Carrito.user;
     const product = Carrito.cartLine;
-    let productos = [];
-    
-    for(const elem of product){
-        const details = `${elem.product.name}, Cantidad: ${elem.quantity}, Precio: ${elem.product.price}`
-        productos.push(details)
-    }
+    const fecha = `${Carrito.updatedAt.getDate()} / ${Carrito.updatedAt.getMonth()} / ${Carrito.updatedAt.getFullYear()}`
 
-    const contenido = [
+    
+    const tableBody =[
+        [
+        {text:'Producto',
+        style:'tableHeader'
+         },
+         {text:'Cantidad',
+        style:'tableHeader'
+        },
+        {text:'Precio Unitario',
+         style: 'tableHeader'
+        },
+        {text:'total',
+         style:'tableHeader'
+        }
+        ]
+    ];
+    for (const elem of product) {
+        const precioUnitario = elem.product.price;
+        const cantidad = elem.quantity;
+        const total = elem.total_price
+
+        tableBody.push([
+            { text: `${elem.product.name}, detalle: ${elem.product.description}`, style: 'tableCell' },
+            { text: cantidad.toString(), style: 'tableCell' },
+            { text: precioUnitario.toString(), style: 'tableCell' },
+            { text: total.toString(), style: 'tableCell' }
+        ]);
+        }
+    const contenido: ContentItem[] = [
         {
-        text: 'Gracias por tu compra',
-        styles: 'header',
-        marginBottom: 2
+        text: '¡Gracias por tu compra!',
+        style: 'header',
+        marginBottom: 5
         },
         {
-            text:`estimad@ ${user.name}, tu compra fue confirmada.`,
-            styles:'subHeader',
+            text:`fecha: ${fecha} `,
+            style:'subHeader',
             marginBottom:2
         },
         {
-            text:'Productos:',
+            text:`estimad@ ${user.name}, tu compra fue confirmada.`,
+            style:'subHeader',
+            marginBottom:2
+        },
+        {
+            text:'detalle:',
+            marginTop:5,
             marginBottom:10
         },
-        ...productos.map(product =>({
-            text: `${product}`,
-            marginBottom: 5
-        }))
+        {
+            table: {
+                widths: ['*', 'auto', 'auto', 'auto'],
+                body: tableBody,
+                layout: 'lightHorizontalLines',
+            }
+        },
+        {
+            text: `total General ${Carrito.totalAmount}`,
+            alignment: 'right',
+            marginTop:10,
+            style: 'subHeader'
+        }
     ]
 
     return{
         defaultStyle: {
-            fontSize: 10,
+            fontSize: 12,
             font: 'Arial',
             characterSpacing: -0.7,
             color: '#43484C',
           },
           pageSize: 'A4',
           pageMargins: [30, 25],
-          content: contenido,
+          content: contenido as any,
           styles: styles
         };
 }

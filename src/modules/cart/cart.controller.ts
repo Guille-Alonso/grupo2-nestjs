@@ -80,11 +80,10 @@ export class CartController {
           res.setHeader('Content-Disposition', 'attachment; filename=carrito_confirm.pdf');
           res.status(HttpStatus.OK).send(pdfBuffer);
       } catch (error) {
-          // Manejo de errores
           console.error(error);
           res.status(HttpStatus.INTERNAL_SERVER_ERROR).send({
               message: 'Error al generar el PDF',
-              error: error.message, // Incluye el mensaje de error
+              error: error.message, 
           });
       }
   }
