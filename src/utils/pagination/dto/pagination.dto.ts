@@ -30,15 +30,18 @@ export class PaginationDto2 {
 }
 
 export class PaginationDto{
+  @ApiProperty({ description: 'Page number', example: 1, required: false })
   @IsPositive()
   @Type(() => Number)
   page: number = 1;
 
+  @ApiProperty({ description: 'Per Page', example: 10, required: false })
   @IsOptional()
   @IsPositive()
   @Type(() => Number)
   perPage: number = 10;
 
+  @ApiProperty({ description: 'Search', example: "Timoty", required: false })
   @IsOptional()
   @IsString()
   search?: string;
