@@ -1,9 +1,6 @@
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-<<<<<<< HEAD
-=======
 import { SwaggerTheme, SwaggerThemeNameEnum } from 'swagger-themes';
 
->>>>>>> origin/dev
 export const setupSwagger = (app): void => {
   const theme = new SwaggerTheme();
   const darkStyle = theme.getBuffer(SwaggerThemeNameEnum.DARK);
