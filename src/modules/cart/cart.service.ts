@@ -258,14 +258,9 @@ export class CartService {
                 where: { id },
                 data: { state: "CONFIRMED" },
             });
-            console.log("carrito:------------------------->", carrito);
-            
           });
           const pdfConfirm = await CarritoConfirmPdf(carrito);
-          console.log("pdfConfirm", pdfConfirm);
-          
           const pdfDoc = await this.printerService.createPdf(pdfConfirm);
-          console.log("pdfDoc",pdfDoc)
           return pdfDoc;  
 
     } catch (e) {

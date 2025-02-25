@@ -116,3 +116,83 @@ export const CarritoConfirmPdf = async (Carrito:any):Promise<TDocumentDefinition
           styles: styles
         };
 }
+export const detalleCompra = async (purchases:any):Promise<TDocumentDefinitions>=>{
+
+    const user = purchases.user;
+    const lineproduct = purchases.products;
+    const total = purchases.total;
+    const fecha = `${purchases.createdAt.getDate()}/${purchases.createdAt.getMonth()}/${purchases.createdAt.getFullYear()}`
+
+    
+    const tableBody =[
+        [
+        {text:'Producto',
+        style:'tableHeader'
+         },
+         {text:'Cantidad',
+        style:'tableHeader'
+        },
+        {text:'Precio Unitario',
+         style: 'tableHeader'
+        }
+        ]
+    ];
+    for (const elem of lineproduct) {
+        const precioUnitario = elem.product.price;
+        const cantidad = elem.quantity;
+
+        tableBody.push([
+            { text: `${elem.product.name}, detalle: ${elem.product.description}`, style: 'tableCell' },
+            { text: cantidad.toString(), style: 'tableCell' },
+            { text: precioUnitario.toString(), style: 'tableCell' },
+            ]);
+        }
+    const contenido: ContentItem[] = [
+        {
+        text: 'Compra exitosa',
+        style: 'header',
+        marginBottom: 5
+        },
+        {
+            text:`fecha: ${fecha} `,
+            style:'subHeader',
+            marginBottom:2
+        },
+        {
+            text:`Administrador: ${user.name} ${user.lastName}`,
+            style:'subHeader',
+            marginBottom:2
+        },
+        {
+            text:'Compró',
+            marginTop:5,
+            marginBottom:10
+        },
+        {
+            table: {
+                widths: ['*', 'auto', 'auto'],
+                body: tableBody,
+                layout: 'lightHorizontalLines',
+            }
+        },
+        {
+            text: `total: ${total}`,
+            alignment: 'right',
+            marginTop:10,
+            style: 'subHeader'
+        }
+    ]
+
+    return{
+        defaultStyle: {
+            fontSize: 12,
+            font: 'Arial',
+            characterSpacing: -0.7,
+            color: '#43484C',
+          },
+          pageSize: 'A4',
+          pageMargins: [30, 25],
+          content: contenido as any,
+          styles: styles
+        };
+}

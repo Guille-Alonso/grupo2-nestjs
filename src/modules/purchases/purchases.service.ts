@@ -2,31 +2,34 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { CreatePurchaseDto } from './dto/create-purchase.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { I18nService } from 'nestjs-i18n';
+import { PrinterService } from '../printer/printer.service';
+import { detalleCompra } from '../printer/documents';
 
 
 
 @Injectable()
 export class PurchasesService {
   constructor(private readonly prisma : PrismaService,
-    private readonly i18n: I18nService
+    private readonly i18n: I18nService,
+    private readonly printerService : PrinterService
   ){}
 
-  async create(createPurchaseDto: CreatePurchaseDto, userId) {
-    
+  async create(createPurchaseDto: CreatePurchaseDto, userId):Promise<Buffer> {
+    let idPurchase;
     try{
       let total=0;
       for(const produ of createPurchaseDto.productPurchase){
         total =total + produ.product.stock * produ.product.price
       }
 
-        const newPurchase = await this.prisma.$transaction(async (tx)=>{
-              
+    await this.prisma.$transaction(async (tx)=>{        
           const purchase = await tx.purchase.create({
                 data:{
                   userId,
                   total
                 }
               })
+              idPurchase = purchase.id;
               for (const product of createPurchaseDto.productPurchase){
                 
                 const exist = await tx.product.findFirst({
@@ -74,7 +77,17 @@ export class PurchasesService {
                 }
               }
             })
-        return{Message: this.i18n.t('messages.opConfirm'), newPurchase}
+            
+            const purchset = await this.prisma.purchase.findUnique({
+              where:{
+                id : idPurchase
+              }, 
+              include:{user:true, products:{include:{product:true}}}
+            })
+
+            const pdfDetail = await detalleCompra(purchset);
+            const pdfDoc = await this.printerService.createPdf(pdfDetail);
+            return pdfDoc
     }catch(e){
       throw new Error(e +" "+HttpStatus.BAD_REQUEST)
     }

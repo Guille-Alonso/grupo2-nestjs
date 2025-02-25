@@ -74,8 +74,6 @@ export class CartController {
   async update(@Param('id') id: string, @Res() res: Response): Promise<void> {
       try {
           const pdfBuffer = (await this.cartService.comfirmCart(id));
-        console.log("controller// pdfBuffer:", pdfBuffer);
-        
           res.setHeader('Content-Type', 'application/pdf');
           res.setHeader('Content-Disposition', 'attachment; filename=carrito_confirm.pdf');
           res.status(HttpStatus.OK).send(pdfBuffer);
