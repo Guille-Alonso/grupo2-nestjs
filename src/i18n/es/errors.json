@@ -14,6 +14,7 @@
     "userRol": "{property} El rol debe ser uno de los siguientes: SUPERADMIN o USER",
     "isImage": "{property} debe ser una URL con extension .jpg o .png",
     "isArrayUUID": "{property} debe ser un array de UUIDs válidos",
-    "isArrayString": "{property} debe ser un array de texto"
-
+    "isArrayString": "{property} debe ser un array de texto",
+    "arrayMin": "{property} debe tener al menos {x} elemento",
+    "arrayMax": "{property} debe tener al menos {x} elementos"
 }

@@ -45,8 +45,8 @@ userId: string;
   })
 @IsNotEmpty({message: i18nValidationMessage('errors.isNotEmpty')})
 @IsArray({ message: i18nValidationMessage('errors.isString') })
-@ArrayMinSize(1)
-@ArrayMaxSize(15)
+@ArrayMinSize(1,{message: i18nValidationMessage('errors.arrayMin', {x:1})})
+@ArrayMaxSize(15,{message:i18nValidationMessage('errors.arrayMax',{x:15})})
 @ValidateNested({each:true})
 @Type(()=>CreaterCartLineDTO)
 cartLine: CreaterCartLineDTO[];

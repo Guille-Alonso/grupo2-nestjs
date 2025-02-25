@@ -108,9 +108,9 @@ export class CartService {
     }
   }
 
-  async findAll(userId, pDTO2: PaginationDto2) {
+  async findAll(userId, paginationDto2) {
     try {
-      const { page, pageSize, sortBy, sortOrder } = pDTO2;
+      const { page, pageSize, sortBy, sortOrder } = paginationDto2;
       const { skip, take, orderBy } =
         this.paginationService.getPaginationParams(
           page,
@@ -170,9 +170,9 @@ export class CartService {
     }
   }
 
-  async findAllAdmin(pDTO2: PaginationDto2) {
+  async findAllAdmin(paginationDto2: PaginationDto2) {
     try {
-      const { page, pageSize, sortBy, sortOrder } = pDTO2;
+      const { page, pageSize, sortBy, sortOrder } = paginationDto2;
       const { skip, take, orderBy } =
         this.paginationService.getPaginationParams(
           page,
@@ -190,19 +190,6 @@ export class CartService {
               select: {
                 name: true,
                 email: true,
-              },
-            },
-            cartLine: {
-              select: {
-                quantity: true,
-                unit_price: true,
-                total_price: true,
-                product: {
-                  select: {
-                    name: true,
-                    description: true,
-                  },
-                },
               },
             },
           },
@@ -224,7 +211,7 @@ export class CartService {
         pageSize,
       );
     } catch (e) {
-      const message = this.i18n.t('messages.cartsNotFind') + e;
+      const message = this.i18n.t('messages.cartsNotFind') + ' ' + e;
       throw new Error(message);
     }
   }
@@ -262,7 +249,11 @@ export class CartService {
           });
 
           if (productStock.stock < line.quantity || productStock.stock == 0) {
-            throw new Error('producto ' + line.product.name + ' sin stock');
+            throw new Error(
+              this.i18n.t('messages.prod') +
+                line.product.name +
+                this.i18n.t('messages.notAvailable'),
+            );
           }
 
           await tx.product.update({
@@ -275,6 +266,8 @@ export class CartService {
           where: { id },
           data: { state: 'CONFIRMED' },
         });
+
+        return carrito;
       });
       return { Message: this.i18n.t('confirmCart'), confCart };
     } catch (e) {
