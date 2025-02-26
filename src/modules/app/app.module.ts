@@ -12,6 +12,7 @@ import { AuthModule } from '../auth/auth.module';
 import { PurchasesModule } from '../purchases/purchases.module';
 import { ImagesModule } from '../images/images.module';
 import { ReportsModule } from '../reports/reports.module';
+import { PrinterModule } from '../printer/printer.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -28,6 +29,7 @@ import { ReportsModule } from '../reports/reports.module';
     PurchasesModule,
     ImagesModule,
     ReportsModule,
+    PrinterModule
   ],
   controllers: [AppController],
   providers: [AppService],
