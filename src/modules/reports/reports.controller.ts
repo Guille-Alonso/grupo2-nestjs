@@ -55,36 +55,36 @@ export class ReportsController {
     return this.reportsService.remove(id);
   }
 
-  @Roles(RoleEnum.SUPERADMIN)
-  @ApiOperation({ summary: 'Sales report' })
-  @Get('sales-report:id')
-  async salesReport(@Res() res: Response, @Param('id') id: string) {
-    const buffer = await this.reportsService.salesReport(id);
-    res.setHeader('Content-Type', 'image/png');
-    res.send(buffer);
-  }
+  // @Roles(RoleEnum.SUPERADMIN)
+  // @ApiOperation({ summary: 'Sales report' })
+  // @Get('sales-report:id')
+  // async salesReport(@Res() res: Response, @Param('id') id: string) {
+  //   const buffer = await this.reportsService.salesReport(id);
+  //   res.setHeader('Content-Type', 'image/png');
+  //   res.send(buffer);
+  // }
 
-  @ApiOperation({ summary: 'Products report' })
-  @Get('products/report')
-  async productsReport(@Res() res: Response, @Param('id') id: string) {
-    const buffer = await this.reportsService.productsReport(id);
-    res.setHeader('Content-Type', 'image/png');
-    res.send(buffer);
-  }
+  // @ApiOperation({ summary: 'Products report' })
+  // @Get('products/report')
+  // async productsReport(@Res() res: Response, @Param('id') id: string) {
+  //   const buffer = await this.reportsService.productsReport(id);
+  //   res.setHeader('Content-Type', 'image/png');
+  //   res.send(buffer);
+  // }
 
-  @ApiOperation({ summary: 'Earnings report' })
-  @Get('earnings/report')
-  async earningsReport(@Res() res: Response, @Param('id') id: string) {
-    const buffer = await this.reportsService.earningsReport(id);
-    res.setHeader('Content-Type', 'image/png');
-    res.send(buffer);
-  }
+  // @ApiOperation({ summary: 'Earnings report' })
+  // @Get('earnings/report')
+  // async earningsReport(@Res() res: Response, @Param('id') id: string) {
+  //   const buffer = await this.reportsService.earningsReport(id);
+  //   res.setHeader('Content-Type', 'image/png');
+  //   res.send(buffer);
+  // }
 
-  @ApiOperation({ summary: 'Earnings by product report' })
-  @Get('earningsbyproduct/report/:id')
-  async earningsByProductReport(@Res() res: Response, @Param('id') id: string) {
-    const buffer = await this.reportsService.earningsByProductReport(id);
-    res.setHeader('Content-Type', 'image/png');
-    res.send(buffer);
-  }
+  // @ApiOperation({ summary: 'Earnings by product report' })
+  // @Get('earningsbyproduct/report/:id')
+  // async earningsByProductReport(@Res() res: Response, @Param('id') id: string) {
+  //   const buffer = await this.reportsService.earningsByProductReport(id);
+  //   res.setHeader('Content-Type', 'image/png');
+  //   res.send(buffer);
+  // }
 }

@@ -12,8 +12,5 @@
            "dest": "src/main.ts",
             "methods": ["GET", "POST", "PUT","PATCH", "HEAD" ,"DELETE","OPTIONS"]
         }
-    ],
-    "env": {
-        "NODE_VERSION": "18"
-    }
+    ]
 }
