@@ -75,5 +75,6 @@
   "messageActionProfile":"update or create user profile",
   "opConfirm": "successful operation ",
   "prod": "product",
-  "notAvailable": "not available"
+  "notAvailable": "not available",
+  "cartProductNoExist":"the following product is out of stock"
 }
