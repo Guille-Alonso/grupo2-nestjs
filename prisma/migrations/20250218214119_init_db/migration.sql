@@ -125,7 +125,7 @@ CREATE TABLE "Report" (
 -- CreateTable
 CREATE TABLE "Purchase" (
     "id" TEXT NOT NULL,
-    "State" "State" NOT NULL,
+    "total" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "isDeleted" BOOLEAN NOT NULL DEFAULT false,
@@ -136,6 +136,7 @@ CREATE TABLE "Purchase" (
 
 -- CreateTable
 CREATE TABLE "ProductPurchase" (
+    "quantity" INTEGER NOT NULL DEFAULT 0,
     "productId" TEXT NOT NULL,
     "purchaseId" TEXT NOT NULL,
     "id" TEXT NOT NULL,
@@ -154,9 +155,6 @@ CREATE UNIQUE INDEX "Image_productId_key" ON "Image"("productId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Report_userId_key" ON "Report"("userId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Purchase_userId_key" ON "Purchase"("userId");
 
 -- AddForeignKey
 ALTER TABLE "Profile" ADD CONSTRAINT "Profile_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

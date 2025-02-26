@@ -12,20 +12,22 @@ import {
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
-import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiForbiddenResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { PaginationDto2 } from 'src/utils/pagination/dto/pagination.dto';
 import { Roles } from 'src/common/decorators/roles.decorators';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { RoleEnum } from 'src/common/constants';
 @ApiTags('Categories')
+@ApiForbiddenResponse( { description: 'No tienes permisos para acceder a este recurso' })
+@ApiBearerAuth('access-token')
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('categories')
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
   @ApiOperation({ summary: 'Create a new category' })
   @ApiBody({ type: CreateCategoryDto })
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(RoleEnum.SUPERADMIN)
   @Post()
   create(@Body() createCategoryDto: CreateCategoryDto) {
@@ -33,7 +35,6 @@ export class CategoriesController {
   }
 
   @ApiOperation({ summary: 'Get all categories' })
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(RoleEnum.SUPERADMIN)
   @Get()
   findAll(@Query() paginationDto2: PaginationDto2) {
@@ -41,15 +42,13 @@ export class CategoriesController {
   }
 
   @ApiOperation({ summary: 'Get one category by id' })
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(RoleEnum.USER)
+  @Roles(RoleEnum.USER, RoleEnum.SUPERADMIN)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.categoriesService.findOne(id);
   }
 
   @ApiOperation({ summary: 'Update a category' })
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(RoleEnum.SUPERADMIN)
   @Patch(':id')
   update(
@@ -60,7 +59,6 @@ export class CategoriesController {
   }
 
   @ApiOperation({ summary: 'Delete a category' })
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(RoleEnum.SUPERADMIN)
   @Delete(':id')
   remove(@Param('id') id: string) {
@@ -68,8 +66,7 @@ export class CategoriesController {
   }
 
   @ApiOperation({ summary: 'Get all products of a category' })
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(RoleEnum.USER)
+  @Roles(RoleEnum.USER, RoleEnum.SUPERADMIN)
   @Get('product/:id')
   findProducts(@Param('id') id: string) {
     return this.categoriesService.findProducts(id);
@@ -82,8 +79,7 @@ export class CategoriesController {
       properties: { productIds: { type: 'array', example: ['1a', '2b'] } },
     },
   })
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(RoleEnum.USER)
+  @Roles(RoleEnum.USER, RoleEnum.SUPERADMIN)
   @Patch('assign-products/:id')
   assignProductsToCategory(
     @Param('id') categoryId: string,

@@ -4,12 +4,14 @@ import { UpdateCategoryDto } from './dto/update-category.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { PaginationService } from 'src/utils/pagination/pagination.service';
 import { PaginationDto2 } from 'src/utils/pagination/dto/pagination.dto';
+import { I18nService } from 'nestjs-i18n';
 
 @Injectable()
 export class CategoriesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly paginationService: PaginationService,
+    private readonly i18n: I18nService,
   ) {}
 
   async create(createCategoryDto: CreateCategoryDto) {
@@ -19,15 +21,19 @@ export class CategoriesService {
           name: createCategoryDto.name,
         },
       });
-      return category;
+      const message = this.i18n.t('messages.categoryCreated')+
+      category;
+      return message;
     } catch (error) {
-      throw new Error(error);
+      const message = this.i18n.t('messages.categoryNotCreated')+error.message;
+      throw new Error(message);
     }
   }
 
   async findAll(paginationDto: PaginationDto2) {
     try {
       const { page, pageSize, sortBy, sortOrder } = paginationDto;
+      console.log(paginationDto,page, pageSize, sortBy, sortOrder);
       const { skip, take, orderBy } =
         this.paginationService.getPaginationParams(
           page,
@@ -55,7 +61,8 @@ export class CategoriesService {
         pageSize,
       );
     } catch (error) {
-      throw new Error(error);
+      const message = this.i18n.t('messages.categoriesNotFound')+error.message;
+      throw new Error(message);
     }
   }
 
@@ -69,7 +76,8 @@ export class CategoriesService {
       });
       return category;
     } catch (error) {
-      throw new Error(error);
+      const message = this.i18n.t('messages.categoryNotFound')+error.message;
+      throw new Error(message);
     }
   }
 
@@ -81,9 +89,11 @@ export class CategoriesService {
         },
         data: updateCategoryDto,
       });
-      return category;
+      const message = this.i18n.t('messages.categoryUpdated')+category;
+      return message;
     } catch (error) {
-      throw new Error(error);
+      const message = this.i18n.t('messages.categoryNotUpdated')+error.message;
+      throw new Error(message);
     }
   }
 
@@ -97,9 +107,14 @@ export class CategoriesService {
           isDeleted: true,
         },
       });
-      return category;
+      const message = this.i18n.t('messages.categoryDeleted');
+      return { 
+        message, 
+        category 
+      };
     } catch (error) {
-      throw new Error(error);
+      const message = this.i18n.t('messages.categoryNotDeleted')+error.message;
+      throw new Error(message);
     }
   }
 
@@ -115,15 +130,22 @@ export class CategoriesService {
           },
         },
       });
+
+      if(!category||category.products.length===0){
+        const message = this.i18n.t('messages.productsNotFound');
+        throw new Error(message);
+      }
+
       return category.products.map((relation) => relation.product.name);
     } catch (error) {
-      throw new Error(error);
+      const message = this.i18n.t('messages.productsNotFound')+error.message;
+      throw new Error(message);
     }
   }
 
   async assignProductsToCategory(categoryId: string, productIds: string[]) {
     try {
-      return await this.prisma.category.update({
+      const category = await this.prisma.category.update({
         where: { id: categoryId },
         data: {
           products: {
@@ -134,8 +156,12 @@ export class CategoriesService {
         },
         include: { products: { include: { product: true } } },
       });
+
+      const message = this.i18n.t('messages.categoryUpdated')+category.products
+      return {message};
     } catch (error) {
-      throw new Error(error);
+      const message = this.i18n.t('messages.categoryNotUpdated')+error.message;
+      throw new Error(message);
     }
   }
 }

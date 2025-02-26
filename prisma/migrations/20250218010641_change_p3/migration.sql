@@ -1,3 +1,0 @@
--- AlterTable
-ALTER TABLE "ProductPurchase" ADD COLUMN     "price" DOUBLE PRECISION NOT NULL DEFAULT 0,
-ADD COLUMN     "quantity" INTEGER NOT NULL DEFAULT 0;

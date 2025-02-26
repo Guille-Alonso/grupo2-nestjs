@@ -6,16 +6,19 @@ import { Type } from 'class-transformer';
 export class PaginationDto2 {
   @ApiProperty({ description: 'Page number', example: 1, required: false })
   @IsOptional()
+  @Type(() => Number)
   @IsInt({message: i18nValidationMessage('errors.isInt')})
-  @Min(1,{message: i18nValidationMessage('errors.min')})
+  @Min(1,{message: i18nValidationMessage('errors.min',{constraint1:1}) })
   page?: number = 1;
+
   @ApiProperty({ description: 'Page size', example: 10, required: false })
   @IsOptional()
+  @Type(() => Number)
   @IsInt({message: i18nValidationMessage('errors.isInt')})
-  @Min(1,{message: i18nValidationMessage('errors.min')})
+  @Min(1,{message: i18nValidationMessage('errors.min',{constraint1:1}) })
   pageSize?: number = 10;
 
-  @ApiProperty({ description: 'Sort by field', example: 'name', required: false })
+  @ApiProperty({ description: 'Sort by field', example: 'createdAt', required: false })
   @IsOptional()
   @IsString({message: i18nValidationMessage('errors.isString')})
   sortBy?: string = 'createdAt'; // Campo por defecto

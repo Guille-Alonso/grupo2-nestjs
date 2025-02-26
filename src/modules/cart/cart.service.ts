@@ -1,4 +1,11 @@
-import { BadRequestException, HttpStatus, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpStatus,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateCartDto } from './dto/create-cart.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { PaginationDto2 } from 'src/utils/pagination/dto/pagination.dto';
@@ -6,9 +13,6 @@ import { I18nService } from 'nestjs-i18n';
 import { PaginationService } from 'src/utils/pagination/pagination.service';
 import { PrinterService } from '../printer/printer.service';
 import { CarritoConfirmPdf} from '../printer/documents';
-
-
-
 
 @Injectable()
 export class CartService {
@@ -20,210 +24,213 @@ export class CartService {
  
   async recoverCartData (cartId: string){
     const cartData = await this.prisma.cart.findUnique({
-      where:{
+      where: {
         id: cartId,
-        isDeleted: false
+        isDeleted: false,
       },
-      select:{
-        totalAmount:true,
+      select: {
+        totalAmount: true,
         state: true,
-        user:{
-          select:{
-            name:true,
-            email:true,
-          }
+        user: {
+          select: {
+            name: true,
+            email: true,
+          },
         },
-        cartLine:{
-          select:{
-            unit_price:true,
-            total_price:true,
+        cartLine: {
+          select: {
+            unit_price: true,
+            total_price: true,
             quantity: true,
-            product:{
-              select:{
-                name:true,
-                description:true
-              }
-            }
-          }
-        }
-      }
-    })
-    return cartData
+            product: {
+              select: {
+                name: true,
+                description: true,
+              },
+            },
+          },
+        },
+      },
+    });
+    return cartData;
   }
 
-
-
   async create(cart: CreateCartDto) {
-    console.log(cart);
-    try{
+    try {
+      let subtotal = 0;
 
-      let subtotal= 0;
-      
-      for (const product of cart.cartLine){
+      for (const product of cart.cartLine) {
         const prod = await this.prisma.product.findUnique({
-          where:{
-            id: product.productId
-          }
-        })
+          where: {
+            id: product.productId,
+          },
+        });
         const total = product.quantity * prod.price;
-        subtotal = subtotal + total
+        subtotal = subtotal + total;
       }
       console.log(subtotal);
-  
-      const newCart = await this.prisma.$transaction(async (tx)=>{
+
+      const newCart = await this.prisma.$transaction(async (tx) => {
         const carrito = await tx.cart.create({
-          data:{
+          data: {
             userId: cart.userId,
-            totalAmount:subtotal
-          }
+            totalAmount: subtotal,
+          },
         });
-        
-        
-        for (const product of cart.cartLine){
+
+        for (const product of cart.cartLine) {
           const exist = await tx.product.findUnique({
-            where:{
-              id: product.productId
-            }
-          })
-          if(!exist){
-            throw new Error(this.i18n.t('messages.productNotFound') + HttpStatus.BAD_REQUEST)
+            where: {
+              id: product.productId,
+            },
+          });
+          if (!exist) {
+            throw new Error(
+              this.i18n.t('messages.productNotFound') + HttpStatus.BAD_REQUEST,
+            );
           }
+          // eslint-disable-next-line prefer-const
           let totalPrice = product.quantity * exist.price;
           await tx.cartLine.create({
-            data:{
+            data: {
               cartId: carrito.id,
               productId: product.productId,
               quantity: product.quantity,
               unit_price: exist.price,
-              total_price: totalPrice
-            }
-          })
+              total_price: totalPrice,
+            },
+          });
         }
-        return carrito
-      })
-      
-      return {newCart}
-    }catch(e){
-      throw new Error(e.message + HttpStatus.BAD_REQUEST)
+        return carrito;
+      });
+
+      return { newCart };
+    } catch (e) {
+      throw new Error(e.message + HttpStatus.BAD_REQUEST);
     }
   }
 
   async findAll(userId, paginationDto2) {
-    
-    try{
-      const {page,pageSize,sortBy,sortOrder}=paginationDto2;
-      const {skip, take, orderBy}= this.paginationService.getPaginationParams(
-        page, pageSize, sortBy, sortOrder
-      )
+    try {
+      const { page, pageSize, sortBy, sortOrder } = paginationDto2;
+      const { skip, take, orderBy } =
+        this.paginationService.getPaginationParams(
+          page,
+          pageSize,
+          sortBy,
+          sortOrder,
+        );
       const [data, total] = await Promise.all([
-       this.prisma.cart.findMany({
-        where:{
-              userId,
-              isDeleted:false
-            },
-            select:{
-              id: true,
-              totalAmount:true,
-               user:{
-                select:{
-                  name:true,
-                  email:true,
-                }
+        this.prisma.cart.findMany({
+          where: {
+            userId,
+            isDeleted: false,
+          },
+          select: {
+            id: true,
+            totalAmount: true,
+            user: {
+              select: {
+                name: true,
+                email: true,
               },
-              cartLine:{
-                select:{
-                  quantity:true,
-                  unit_price:true,
-                  total_price:true,
-                  product:{
-                    select:{
-                      name:true,
-                      description:true,
-                    }
-                  }
-                }
-              }
             },
-            skip,
-            take,
-            orderBy
-          }),
-          this.prisma.cart.count()
-        ])
-        if (data.length === 0){
-            throw new Error(this.i18n.t('messages.cartsNotFind') + HttpStatus.BAD_REQUEST)
-          }
-          return this.paginationService.formatPaginatedResponse(data,total,page,pageSize)
-    }catch(e){
+            cartLine: {
+              select: {
+                quantity: true,
+                unit_price: true,
+                total_price: true,
+                product: {
+                  select: {
+                    name: true,
+                    description: true,
+                  },
+                },
+              },
+              skip,
+              take,
+              orderBy,
+            },
+          },
+        }),
+        this.prisma.cart.count(),
+      ]);
+      if (data.length === 0) {
+        throw new Error(
+          this.i18n.t('messages.cartsNotFind') + HttpStatus.BAD_REQUEST,
+        );
+      }
+      return this.paginationService.formatPaginatedResponse(
+        data,
+        total,
+        page,
+        pageSize,
+      );
+    } catch (e) {
       const message = this.i18n.t('messages.cartsNotFind') + e;
-      throw new Error(message)
+      throw new Error(message);
     }
   }
 
-  async findAllAdmin(paginationDto2: PaginationDto2){
-    try{
-      const {page, pageSize, sortBy, sortOrder}=paginationDto2;
-      const {skip, take, orderBy}= this.paginationService.getPaginationParams(
-        page, pageSize, sortBy, sortOrder
-      )
+  async findAllAdmin(paginationDto2: PaginationDto2) {
+    try {
+      const { page, pageSize, sortBy, sortOrder } = paginationDto2;
+      const { skip, take, orderBy } =
+        this.paginationService.getPaginationParams(
+          page,
+          pageSize,
+          sortBy,
+          sortOrder,
+        );
       const [data, total] = await Promise.all([
-       this.prisma.cart.findMany({
-            select:{
-              id: true,
-              totalAmount:true,
-              state:true,
-               user:{
-                select:{
-                  name:true,
-                  email:true,
-                }
+        this.prisma.cart.findMany({
+          select: {
+            id: true,
+            totalAmount: true,
+            state: true,
+            user: {
+              select: {
+                name: true,
+                email: true,
               },
-              cartLine:{
-                select:{
-                  quantity:true,
-                  unit_price:true,
-                  total_price:true,
-                  product:{
-                    select:{
-                      name:true,
-                      description:true,
-                    }
-                  }
-                }
-              }
             },
-            skip,
-            take,
-            orderBy
-          }),
-          this.prisma.cart.count()
-        ])
-        if (data.length === 0){
-          throw new Error(this.i18n.t('messages.cartsNotFind') + HttpStatus.BAD_REQUEST)
-        }
-        return this.paginationService.formatPaginatedResponse(data,total,page,pageSize)
-    }catch(e){
-      const message = this.i18n.t('messages.cartsNotFind') +" "+e;
-      throw new Error(message)
+          },
+          skip,
+          take,
+          orderBy,
+        }),
+        this.prisma.cart.count(),
+      ]);
+      if (data.length === 0) {
+        throw new Error(
+          this.i18n.t('messages.cartsNotFind') + HttpStatus.BAD_REQUEST,
+        );
+      }
+      return this.paginationService.formatPaginatedResponse(
+        data,
+        total,
+        page,
+        pageSize,
+      );
+    } catch (e) {
+      const message = this.i18n.t('messages.cartsNotFind') + ' ' + e;
+      throw new Error(message);
     }
   }
 
   findOne(id: string) {
-    try{
-      const datita =this.recoverCartData(id); 
-      if (!datita){
-        throw new Error(this.i18n.t('messages.cartNotFind'))
+    try {
+      const datita = this.recoverCartData(id);
+      if (!datita) {
+        throw new Error(this.i18n.t('messages.cartNotFind'));
       }
       return datita;
-    }catch(e){
-      throw new Error(e)
+    } catch (e) {
+      throw new Error(e);
     }
   }
 
-  async comfirmCart(id: string): Promise<Buffer> {
-
-    console.log(id);
-    
+  async comfirmCart(id: string): Promise<Buffer> {  
     try {
       const carrito = await this.prisma.cart.findUnique({
           where: { id, state: "PENDING" },
@@ -237,15 +244,15 @@ export class CartService {
             
             const productCart = carrito.cartLine;
 
-            for (const line of productCart) {
-                const productStock = await tx.product.findUnique({
-                    where: { id: line.product.id },
-                    select: { stock: true },
-                });
 
-                if (productStock.stock < line.quantity || productStock.stock == 0) {
-                    throw new Error(this.i18n.t('messages.prod') + line.product.name + this.i18n.t('messages.notAvailable')); 
-                }
+        const productCart = carrito.cartLine;
+
+        for (const line of productCart) {
+          const productStock = await tx.product.findUnique({
+            where: { id: line.product.id },
+            select: { stock: true },
+          });
+
 
                 await tx.product.update({
                     where: { id: line.product.id },
@@ -264,41 +271,41 @@ export class CartService {
           return pdfDoc;  
 
     } catch (e) {
-        if (e.message === 'cart no find') {
-            throw new NotFoundException(e.message); 
-        } else if (e.message.startsWith('producto ')) {
-            throw new BadRequestException(e.message);
-        } else {
-            Logger.error(e); 
-            throw new InternalServerErrorException(this.i18n.t('noConfirmCart'));
-        }
+      if (e.message === 'cart no find') {
+        throw new NotFoundException(e.message);
+      } else if (e.message.startsWith('producto ')) {
+        throw new BadRequestException(e.message);
+      } else {
+        Logger.error(e);
+        throw new InternalServerErrorException(this.i18n.t('noConfirmCart'));
+      }
     }
-}
-  
-  async remove(id: string) {
-   try{
-    const carrito = await this.prisma.cart.findUnique({
-      where:{
-        id,
-        state:"PENDING",
-      },
-    })
+  }
 
-    if(!carrito){
-      throw new Error(this.i18n.t('confirmCart'))
+  async remove(id: string) {
+    try {
+      const carrito = await this.prisma.cart.findUnique({
+        where: {
+          id,
+          state: 'PENDING',
+        },
+      });
+
+      if (!carrito) {
+        throw new Error('cart confirm');
+      }
+      await this.prisma.cart.update({
+        where: {
+          id,
+          state: 'PENDING',
+        },
+        data: {
+          state: 'CANCELLED',
+        },
+      });
+      return { Message: this.i18n.t('cartCancel') };
+    } catch (e) {
+      throw new Error(e.message);
     }
-    await this.prisma.cart.update({
-    where:{
-      id,
-      state:"PENDING"
-    },
-    data:{
-      state:"CANCELLED"
-    }
-  })
-  return {Message: this.i18n.t('cartCancel')}
-   }catch(e){
-    throw new Error(e.message)
-   }
   }
 }

@@ -196,3 +196,4 @@ export const detalleCompra = async (purchases:any):Promise<TDocumentDefinitions>
           styles: styles
         };
 }
+

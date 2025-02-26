@@ -10,6 +10,8 @@ import { CartModule } from '../cart/cart.module';
 import { UsersModule } from '../users/users.module';
 import { AuthModule } from '../auth/auth.module';
 import { PurchasesModule } from '../purchases/purchases.module';
+import { ImagesModule } from '../images/images.module';
+import { ReportsModule } from '../reports/reports.module';
 import { PrinterModule } from '../printer/printer.module';
 @Module({
   imports: [
@@ -20,11 +22,13 @@ import { PrinterModule } from '../printer/printer.module';
     }),
     I18nModuleConfig(),
     PrismaModule,
+    AuthModule,
     ProductsModule,
     CartModule,
     UsersModule,
-    AuthModule,
     PurchasesModule,
+    ImagesModule,
+    ReportsModule,
     PrinterModule
   ],
   controllers: [AppController],

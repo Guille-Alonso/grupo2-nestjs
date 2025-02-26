@@ -13,6 +13,7 @@ export class AwsService {
   }
 
   async uploadFile(file: Express.Multer.File, userId: string) {
+
     const fileExtensionsByMimetype: { [key: string]: string } = {
       'image/jpeg': 'jpg',
       'image/png': 'png',

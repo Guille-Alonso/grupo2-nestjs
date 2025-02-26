@@ -9,6 +9,7 @@ import { PaginationDto2 } from 'src/utils/pagination/dto/pagination.dto';
 import { Prisma } from '@prisma/client';
 import { ExcelColumn } from 'src/common/interfaces';
 import { FilterProductsDto } from './dto/filter-product.dto';
+import { AwsService } from '../aws/aws.service';
 @Injectable()
 export class ProductsService {
   constructor(
@@ -16,12 +17,20 @@ export class ProductsService {
     private readonly excelService: ExcelService,
     private readonly i18n: I18nService,
     private readonly paginationService: PaginationService,
+    private readonly awsService: AwsService,
   ) {}
-
 
   async create(newProduct: CreateProductDto) {
     try {
       const { categoryIds, images, ...productData } = newProduct;
+
+      const categorys = this.prisma.category.findMany({
+        where: {
+          id: { in: categoryIds },
+        },
+      });
+      const existingCategoryIds = (await categorys).map((p) => p.id);
+
       const product = await this.prisma.product.create({
         data: {
           ...productData,
@@ -32,7 +41,7 @@ export class ProductsService {
           },
           categorys: categoryIds
             ? {
-                create: categoryIds.map((id) => ({
+                create: existingCategoryIds.map((id) => ({
                   category: { connect: { id } },
                 })),
               }
@@ -40,9 +49,9 @@ export class ProductsService {
         },
         include: { categorys: true },
       });
-      return {message: this.i18n.t('messages.productCreated'),product};
+      return { message: this.i18n.t('messages.productCreated'), product };
     } catch (error) {
-      const message=  this.i18n.t('messages.productNotCreated')+error;
+      const message = this.i18n.t('messages.productNotCreated') + error;
       throw new Error(message);
     }
   }
@@ -77,7 +86,7 @@ export class ProductsService {
         pageSize,
       );
     } catch (error) {
-      const message=  this.i18n.t('messages.productsNotFound')+error;
+      const message = this.i18n.t('messages.productsNotFound') + error;
       throw new Error(message);
     }
   }
@@ -87,12 +96,13 @@ export class ProductsService {
       const product = await this.prisma.product.findUnique({
         where: {
           id,
+          isDeleted: false,
         },
         include: { categorys: { include: { category: true } }, images: true },
       });
       return product;
     } catch (error) {
-      const message=  this.i18n.t('messages.productNotFound')+error;
+      const message = this.i18n.t('messages.productNotFound') + error;
       throw new Error(message);
     }
   }
@@ -100,6 +110,7 @@ export class ProductsService {
   async update(id: string, updateProductDto: UpdateProductDto) {
     try {
       const { categoryIds, images, ...productData } = updateProductDto;
+
       const updatedProduct = await this.prisma.product.update({
         where: {
           id,
@@ -121,9 +132,12 @@ export class ProductsService {
         },
         include: { categorys: true },
       });
-      return{message: this.i18n.t('messages.productUpdated'),updatedProduct};
+      return {
+        message: this.i18n.t('messages.productUpdated'),
+        updatedProduct,
+      };
     } catch (error) {
-      const message=  this.i18n.t('messages.productNotCreated')+error;
+      const message = this.i18n.t('messages.productNotCreated') + error;
       throw new Error(message);
     }
   }
@@ -136,85 +150,90 @@ export class ProductsService {
         },
         data: {
           isDeleted: true,
+          images: {
+            update: {
+              isDeleted: true,
+            },
+          },
         },
       });
-      return {message: this.i18n.t('messages.productDeleted'),deleteProduct};
+      return { message: this.i18n.t('messages.productDeleted'), deleteProduct };
     } catch (error) {
-      const message=  this.i18n.t('messages.productNotDeleted')+error;
+      const message = this.i18n.t('messages.productNotDeleted') + error;
       throw new Error(message);
     }
   }
 
   async filterProducts(query: FilterProductsDto) {
-    try{
-    const {
-      name,
-      sku,
-      minPrice,
-      maxPrice,
-      category,
-      page,
-      pageSize,
-      sortBy,
-      sortOrder,
-    } = query;
-    const { skip, take, orderBy } = this.paginationService.getPaginationParams(
-      page,
-      pageSize,
-      sortBy,
-      sortOrder,
-    );
+    try {
+      const {
+        name,
+        sku,
+        minPrice,
+        maxPrice,
+        category,
+        page,
+        pageSize,
+        sortBy,
+        sortOrder,
+      } = query;
+      const { skip, take, orderBy } =
+        this.paginationService.getPaginationParams(
+          page,
+          pageSize,
+          sortBy,
+          sortOrder,
+        );
 
-    const where: Prisma.ProductWhereInput = {
-      isDeleted: false,
-      name: name
-        ? ({ contains: name, mode: 'insensitive' } as Prisma.StringFilter)
-        : undefined,
-      sku: sku ? ({ equals: sku } as Prisma.StringFilter) : undefined,
-      price: {
-        gte: minPrice ?? undefined,
-        lte: maxPrice ?? undefined,
-      },
-      categorys: category
-        ? {
-            some: {
-              category: {
-                name: {
-                  contains: category,
-                  mode: 'insensitive',
-                } as Prisma.StringFilter,
-              },
-            },
-          }
-        : undefined,
-    };
-    
-
-    const [data, total] = await Promise.all([
-      this.prisma.product.findMany({
-        where,
-        skip,
-        take,
-        orderBy, // Aplicamos la ordenación
-        include: {
-          images: true,
-          categorys: { include: { category: true } },
+      const where: Prisma.ProductWhereInput = {
+        isDeleted: false,
+        name: name
+          ? ({ contains: name, mode: 'insensitive' } as Prisma.StringFilter)
+          : undefined,
+        sku: sku ? ({ equals: sku } as Prisma.StringFilter) : undefined,
+        price: {
+          gte: minPrice ?? undefined,
+          lte: maxPrice ?? undefined,
         },
-      }),
-      this.prisma.product.count({ where }),
-    ]);
+        categorys: category
+          ? {
+              some: {
+                category: {
+                  name: {
+                    contains: category,
+                    mode: 'insensitive',
+                  } as Prisma.StringFilter,
+                },
+              },
+            }
+          : undefined,
+      };
 
-    return this.paginationService.formatPaginatedResponse(
-      data,
-      total,
-      page,
-      pageSize,
-    );
-  }catch (error) {
-    const message=  this.i18n.t('messages.productsNotFound')+error;
-    throw new Error(message);
+      const [data, total] = await Promise.all([
+        this.prisma.product.findMany({
+          where,
+          skip,
+          take,
+          orderBy, // Aplicamos la ordenación
+          include: {
+            images: true,
+            categorys: { include: { category: true } },
+          },
+        }),
+        this.prisma.product.count({ where }),
+      ]);
+
+      return this.paginationService.formatPaginatedResponse(
+        data,
+        total,
+        page,
+        pageSize,
+      );
+    } catch (error) {
+      const message = this.i18n.t('messages.productsNotFound') + error;
+      throw new Error(message);
+    }
   }
-}
   async assignCategoriesToProduct(productId: string, names: string[]) {
     try {
       const categorys = await this.prisma.category.findMany({
@@ -253,12 +272,15 @@ export class ProductsService {
         skipDuplicates: true,
       });
 
-      return{message: this.i18n.t('messages.categorysAssigned'),product: await this.prisma.product.findUnique({
-        where: { id: productId },
-        include: { categorys: { include: { category: true } } },
-      })};
+      return {
+        message: this.i18n.t('messages.categorysAssigned'),
+        product: await this.prisma.product.findUnique({
+          where: { id: productId },
+          include: { categorys: { include: { category: true } } },
+        }),
+      };
     } catch (error) {
-      const message=  this.i18n.t('messages.categorysNotAssigned')+error;
+      const message = this.i18n.t('messages.categorysNotAssigned') + error;
       throw new Error(message);
     }
   }
@@ -289,13 +311,45 @@ export class ProductsService {
       });
       return { message: this.i18n.t('messages.imagesUploaded') };
     } catch (error) {
-      const message=  this.i18n.t('messages.imagesNotUploaded')+error;
+      const message = this.i18n.t('messages.imagesNotUploaded') + error;
       throw new Error(message);
     }
   }
 
+  async deleteCategories(productId: string, categorys: string[]) {
+    try {
+      await this.prisma.productOnCategory.deleteMany({
+        where: {
+          productId: productId,
+          categoryId: { in: categorys },
+        },
+      });
+      return { message: this.i18n.t('messages.categorysDeleted') };
+    } catch (error) {
+      const message = this.i18n.t('messages.categorysNotDeleted') + error;
+      throw new Error(message);
+    }
+  }
+
+  async deteleImages(productId: string, images: string[]) {
+    try {
+      await this.prisma.image.update({
+        where: { productId },
+        data: {
+          colection: {
+            set: images,
+          },
+        },
+      });
+      return { message: this.i18n.t('messages.imagesDeleted') };
+    } catch (error) {
+      const message = this.i18n.t('messages.imagesNotDeleted') + error;
+      throw new Error(message);
+    }
+  }
   async uploadProducts(buffer: Buffer) {
     try {
+      //validar los datos antes de importarlos
       const products = await this.excelService.readExcel(buffer);
 
       for (let index = 0; index < products.length; index++) {
@@ -304,12 +358,12 @@ export class ProductsService {
           ...product,
           price: parseFloat(product.price),
         };
+        //aqui seria la validadcion? creo que ya estan validados
         await this.create(productNew as CreateProductDto);
-        //await this.prisma.product.create({ data: productNew });
       }
       return { message: this.i18n.t('messages.productsUploaded') };
     } catch (error) {
-      const message=  this.i18n.t('messages.productsNotUploaded')+error;
+      const message = this.i18n.t('messages.productsNotUploaded') + error;
       throw new Error(message);
     }
   }
@@ -338,8 +392,7 @@ export class ProductsService {
         columns,
         'Productos',
       );
-      const buffer = await Buffer.from(await workbook.xlsx.writeBuffer());
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      /*const buffer = await Buffer.from(await workbook.xlsx.writeBuffer());
       const file: Express.Multer.File = {
         fieldname: 'file',
         originalname: 'productos.xlsx',
@@ -352,15 +405,14 @@ export class ProductsService {
         filename: '',
         path: '',
         stream: null,
-      };
-      /*const { url } = await this.awsService.uploadFile(file, 'excel');
-    await this.prisma.report.create({
-      data: { content: url, type: 'Usuario' },
-    });*/
-      await this.excelService.exportToResponse(res, workbook, 'productos.xlsx');
-      return { message: this.i18n.t('messages.productsExported') };
+      };*/
+      return this.excelService.exportToResponse(
+        res,
+        workbook,
+        'productos.xlsx',
+      );
     } catch (error) {
-      const message=  this.i18n.t('messages.productsNotExported')+error;
+      const message = this.i18n.t('messages.productsNotExported') + error;
       throw new Error(message);
     }
   }
