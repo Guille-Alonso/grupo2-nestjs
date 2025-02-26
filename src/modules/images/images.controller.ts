@@ -19,16 +19,21 @@ import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from 'src/common/decorators/roles.decorators';
 import { RoleEnum } from 'src/common/constants';
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation } from '@nestjs/swagger';
-import {FilesInterceptor } from '@nestjs/platform-express';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiParam,
+} from '@nestjs/swagger';
+import { FilesInterceptor } from '@nestjs/platform-express';
 
-//@ApiBearerAuth('access-token')
-//@UseGuards(JwtAuthGuard, RolesGuard)
+@ApiBearerAuth('access-token')
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('images')
 export class ImagesController {
   constructor(private readonly imagesService: ImagesService) {}
 
-  
   @Roles(RoleEnum.SUPERADMIN)
   @ApiOperation({ summary: 'Create image' })
   @ApiBody({ type: CreateImageDto })
@@ -36,7 +41,6 @@ export class ImagesController {
   create(@Body() createImageDto: CreateImageDto) {
     return this.imagesService.create(createImageDto);
   }
-
 
   @Roles(RoleEnum.SUPERADMIN)
   @ApiOperation({ summary: 'Get all images' })
@@ -67,24 +71,30 @@ export class ImagesController {
     return this.imagesService.remove(id);
   }
 
-  //@Roles(RoleEnum.SUPERADMIN)
+  @Roles(RoleEnum.SUPERADMIN)
   @ApiOperation({ summary: 'Assign image to product' })
   @UseInterceptors(FilesInterceptor('files', 5))
   @ApiConsumes('multipart/form-data')
+  @ApiParam({ name: 'productId', type: 'string' })
   @ApiBody({
     schema: {
       type: 'object',
       properties: {
-        productId: { type: 'string' },  
         files: {
           type: 'array',
-          items: { type: 'string', format: 'binary' },
+          items: {
+            type: 'string',
+            format: 'binary',
+          },
         },
       },
     },
   })
-  @Post('assign-image')
-  async assignImage( @UploadedFiles() files: Express.Multer.File[],@Body() productId: string) {
+  @Post('assignimage/:productId')
+  async assignImage(
+    @UploadedFiles() files: Express.Multer.File[],
+    @Param('productId') productId: string,
+  ) {
     return await this.imagesService.assignImage(files, productId);
   }
 }

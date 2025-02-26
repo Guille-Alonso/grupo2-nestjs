@@ -71,7 +71,10 @@ export class CreateProductDto {
     message: i18nValidationMessage('errors.numberCode'),
   })
   @Length(13, 13, {
-    message: i18nValidationMessage('errors.length',{constraint1:13, constraint2:13}) ,
+    message: i18nValidationMessage('errors.length', {
+      constraint1: 13,
+      constraint2: 13,
+    }),
   })
   barcode: string;
 
@@ -83,17 +86,20 @@ export class CreateProductDto {
     message: i18nValidationMessage('errors.isString'),
   })
   @MaxLength(50, {
-    message: i18nValidationMessage('oerrors.maxLength',{ constraint1: 50 }),
+    message: i18nValidationMessage('oerrors.maxLength', { constraint1: 50 }),
   })
   sku: string;
 
   @ApiProperty({
     description: 'Images of the product',
-    example: ['https://example.com/image1.jpg', 'https://example.com/image2.png'],
+    example: [
+      'https://example.com/image1.jpg',
+      'https://example.com/image2.png',
+    ],
   })
   @IsOptional()
-  @IsArray({message: i18nValidationMessage('errors.isArrayString') })
-  @IsString({each: true, message: i18nValidationMessage('errors.isString') })
+  @IsArray({ message: i18nValidationMessage('errors.isArrayString') })
+  @IsString({ each: true, message: i18nValidationMessage('errors.isString') })
   images?: string[];
 
   @ApiProperty({
@@ -105,6 +111,9 @@ export class CreateProductDto {
   })
   @IsOptional()
   @IsArray({ message: i18nValidationMessage('errors.isArrayUUID') })
-  @IsUUID('4', { each: true, message: i18nValidationMessage('errors.isArrayUUID') })
+  @IsUUID('4', {
+    each: true,
+    message: i18nValidationMessage('errors.isArrayUUID'),
+  })
   categoryIds?: string[];
 }

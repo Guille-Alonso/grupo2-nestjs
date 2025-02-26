@@ -18,7 +18,10 @@ export class ImagesService {
   ) {}
   async create(createImageDto: CreateImageDto) {
     try {
-      const product = await this.prisma.product.findUnique({ where: { id: createImageDto.productId, isDeleted: false },select: { id: true } });
+      const product = await this.prisma.product.findUnique({
+        where: { id: createImageDto.productId, isDeleted: false },
+        select: { id: true },
+      });
       if (product.id == null) {
         const message = this.i18n.t('messages.productNotFound');
         throw new CustomError(message, HttpStatus.BAD_REQUEST); // 400
@@ -26,10 +29,10 @@ export class ImagesService {
       const image = await this.prisma.image.create({
         data: createImageDto,
       });
-      const message = this.i18n.t('messages.imageCreated')+image;
+      const message = this.i18n.t('messages.imageCreated') + image;
       return message;
     } catch (error) {
-      const message = this.i18n.t('messages.imageNotCreated')+error.message;
+      const message = this.i18n.t('messages.imageNotCreated') + error.message;
       throw new Error(message);
     }
   }
@@ -65,7 +68,7 @@ export class ImagesService {
       );
     } catch (error) {
       const message = this.i18n.t('messages.imagesNotFound');
-      throw new Error(message +error.message);
+      throw new Error(message + error.message);
     }
   }
 
@@ -79,7 +82,7 @@ export class ImagesService {
       return image;
     } catch (error) {
       const message = this.i18n.t('messages.imageNotFound');
-      throw new Error(message +error.message);
+      throw new Error(message + error.message);
     }
   }
 
@@ -91,11 +94,11 @@ export class ImagesService {
         },
         data: updateImageDto,
       });
-      const message = this.i18n.t('messages.imageUpdated')+image;
+      const message = this.i18n.t('messages.imageUpdated') + image;
       return message;
     } catch (error) {
       const message = this.i18n.t('messages.imageNotUpdated');
-      throw new Error(message +error.message);
+      throw new Error(message + error.message);
     }
   }
 
@@ -119,29 +122,31 @@ export class ImagesService {
 
   async assignImage(files: Express.Multer.File[], productId: string) {
     try {
-    for (const file of files) {
-    const { url, key } = await this.awsService.uploadFile(file, productId);
-    this.prisma.image.update({
-      where: {
-        productId,
-      },
-      data: {
-        colection: {
-          push: url,
-        },
-      },
-    })
-    .catch(async()=>{
-      await this.awsService.deleteFile(key);
-    console.log('error');
-  });
-    const message = this.i18n.t('messages.imageAssigned');
-    return message;
-  }}
-  catch (error) {
-    const message = this.i18n.t('messages.imageNotAssigned')+error.message;
-    throw new Error(message);
-  }
+      console.log(files);
+      console.log(productId);
+      for (const file of files) {
+        const { url, key } = await this.awsService.uploadFile(file, productId);
+        this.prisma.image
+          .update({
+            where: {
+              productId,
+            },
+            data: {
+              colection: {
+                push: url,
+              },
+            },
+          })
+          .catch(async () => {
+            await this.awsService.deleteFile(key);
+            console.log('error');
+          });
+        const message = this.i18n.t('messages.imageAssigned');
+        return message;
+      }
+    } catch (error) {
+      const message = this.i18n.t('messages.imageNotAssigned') + error.message;
+      throw new Error(message);
+    }
   }
 }
-

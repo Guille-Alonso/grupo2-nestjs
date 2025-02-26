@@ -15,8 +15,13 @@ import {
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { ApiCustomOperation } from 'src/common/decorators/swagger.decorator';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { RoleEnum } from 'src/common/constants';
 import { Roles } from 'src/common/decorators/roles.decorators';
 import { JwtAuthGuard } from 'src/modules/auth/guards/jwt.guard';
@@ -35,12 +40,6 @@ export class ProductsController {
   @Roles(RoleEnum.SUPERADMIN)
   @ApiOperation({ summary: 'Create a product' })
   @ApiBody({ type: CreateProductDto })
-  @ApiCustomOperation({
-    summary: 'Create a product',
-    bodyType: CreateProductDto,
-    responseStatus: 201,
-    responseDescription: 'Product created',
-  })
 
   @Roles(RoleEnum.SUPERADMIN)
   @Post()
@@ -49,12 +48,6 @@ export class ProductsController {
   }
 
   @ApiOperation({ summary: 'Get all products' })
-  @ApiCustomOperation({
-    summary: 'Get all products',
-    responseStatus: 200,
-    responseDescription: 'Products found',
-  })
-  
   @Roles(RoleEnum.USER, RoleEnum.SUPERADMIN)
   @Get()
   findAll(@Query() paginationDto2: PaginationDto2) {
@@ -63,11 +56,6 @@ export class ProductsController {
 
   @Roles(RoleEnum.USER, RoleEnum.SUPERADMIN)
   @ApiOperation({ summary: 'Get a product' })
-  @ApiCustomOperation({
-    summary: 'Get a product',
-    responseStatus: 200,
-    responseDescription: 'Product found',
-  })
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.productsService.findOne(id);
@@ -76,12 +64,6 @@ export class ProductsController {
   @Roles(RoleEnum.SUPERADMIN)
   @ApiOperation({ summary: 'Update a product' })
   @ApiBody({ type: UpdateProductDto })
-  @ApiCustomOperation({
-    summary: 'Update a product',
-    bodyType: CreateProductDto,
-    responseStatus: 200,
-    responseDescription: 'Product updated',
-  })
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
     return this.productsService.update(id, updateProductDto);
@@ -89,11 +71,6 @@ export class ProductsController {
 
   @Roles(RoleEnum.SUPERADMIN)
   @ApiOperation({ summary: 'Delete a product' })
-  @ApiCustomOperation({
-    summary: 'Delete a product',
-    responseStatus: 200,
-    responseDescription: 'Product deleted',
-  })
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.productsService.remove(id);
@@ -119,8 +96,6 @@ export class ProductsController {
       },
     },
   })
-
-
   @Roles(RoleEnum.SUPERADMIN)
   @Patch('assign-categories/:productId')
   assignCategoriesToProduct(
@@ -146,7 +121,6 @@ export class ProductsController {
       },
     },
   })
-  
   @Roles(RoleEnum.SUPERADMIN)
   @Patch('upload-images/:productId')
   uploadImages(
@@ -202,7 +176,7 @@ export class ProductsController {
   ) {
     return this.productsService.deteleImages(productId, images);
   }
-  
+
   @Roles(RoleEnum.SUPERADMIN)
   @ApiOperation({ summary: 'Upload a excel file' })
   @ApiConsumes('multipart/form-data')
