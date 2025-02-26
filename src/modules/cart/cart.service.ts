@@ -13,6 +13,7 @@ import { I18nService } from 'nestjs-i18n';
 import { PaginationService } from 'src/utils/pagination/pagination.service';
 import { PrinterService } from '../printer/printer.service';
 import { CarritoConfirmPdf} from '../printer/documents';
+import { Message } from 'node-mailjet';
 
 @Injectable()
 export class CartService {
@@ -242,25 +243,22 @@ export class CartService {
       }
      await this.prisma.$transaction(async (tx) => {
             
-            const productCart = carrito.cartLine;
-
-
         const productCart = carrito.cartLine;
 
         for (const line of productCart) {
           const productStock = await tx.product.findUnique({
             where: { id: line.product.id },
-            select: { stock: true },
+            select: { stock: true, name:true },
           });
-
-
-                await tx.product.update({
-                    where: { id: line.product.id },
-                    data: { stock: { decrement: line.quantity } },
-                });
+          if (productStock.stock <= 0){
+            throw new Error(`${this.i18n.t('nessages.cartProductNoExist')}: ${productStock.name}`)
+          }
+          await tx.product.update({
+            where: { id: line.product.id },
+            data: { stock: { decrement: line.quantity } },
+            });
 
             }
-
             await tx.cart.update({
                 where: { id },
                 data: { state: "CONFIRMED" },

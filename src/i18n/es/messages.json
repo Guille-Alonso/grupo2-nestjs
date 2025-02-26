@@ -75,5 +75,6 @@
     "messageActionProfile":"actualizar o crear perfil de usuario",
     "opConfirm": "operación exitosa",
     "prod": "producto",
-    "notAvailable": "not disponible"
+    "notAvailable": "not disponible",
+     "cartProductNoExist":"el siguiente producto no está disponible"
 }
