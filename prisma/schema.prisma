@@ -8,20 +8,20 @@ datasource db {
 }
 
 model User {
-  id        String    @id @default(uuid())
+  id        String     @id @default(uuid())
   name      String
-  email     String    @unique
+  email     String     @unique
   password  String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  isDeleted Boolean   @default(false)
-  isActive  Boolean   @default(true)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  isDeleted Boolean    @default(false)
+  isActive  Boolean    @default(true)
   lastName  String
-  role      Role      @default(USER)
+  role      Role       @default(USER)
   cart      Cart[]
   profile   Profile?
   purchases Purchase[]
-  reports   Report?
+  reports   Report[]
 }
 
 model Profile {
@@ -42,7 +42,7 @@ model Product {
   description String
   price       Float
   stock       Int
-  barcode     String @unique
+  barcode     String              @unique
   sku         String
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
@@ -114,28 +114,28 @@ model Report {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   isDeleted Boolean  @default(false)
-  userId    String   @unique
+  userId    String
   user      User     @relation(fields: [userId], references: [id])
 }
 
 model Purchase {
   id        String            @id @default(uuid())
-  total       Float @default(0)
+  total     Float             @default(0)
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
   isDeleted Boolean           @default(false)
-  userId    String            
+  userId    String
   products  ProductPurchase[]
   user      User              @relation(fields: [userId], references: [id])
 }
 
 model ProductPurchase {
-  quantity   Int   @default(0)
+  quantity   Int      @default(0)
   productId  String
   purchaseId String
   product    Product  @relation(fields: [productId], references: [id])
   purchase   Purchase @relation(fields: [purchaseId], references: [id])
- id        String            @id @default(uuid())
+  id         String   @id @default(uuid())
 }
 
 enum Role {

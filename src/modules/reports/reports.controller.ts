@@ -21,9 +21,9 @@ import { RoleEnum } from 'src/common/constants';
 import { Response } from 'express';
 import { PaginationDto2 } from 'src/utils/pagination/dto/pagination.dto';
 
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(RoleEnum.SUPERADMIN)
-@ApiBearerAuth('access-token')
+//@UseGuards(JwtAuthGuard, RolesGuard)
+//@Roles(RoleEnum.SUPERADMIN)
+//@ApiBearerAuth('access-token')
 @ApiTags('Reports')
 @Controller('reports')
 export class ReportsController {
@@ -55,36 +55,31 @@ export class ReportsController {
     return this.reportsService.remove(id);
   }
 
-  @Roles(RoleEnum.SUPERADMIN)
   @ApiOperation({ summary: 'Sales report' })
-  @Get('sales-report:id')
-  async salesReport(@Res() res: Response, @Param('id') id: string) {
-    const buffer = await this.reportsService.salesReport(id);
-    res.setHeader('Content-Type', 'image/png');
-    res.send(buffer);
+  @Get('salesreport/:id')
+  async salesReport(@Param('id') id: string) {
+    return await this.reportsService.salesReport(id);
+
   }
 
   @ApiOperation({ summary: 'Products report' })
-  @Get('products/report')
-  async productsReport(@Res() res: Response, @Param('id') id: string) {
-    const buffer = await this.reportsService.productsReport(id);
-    res.setHeader('Content-Type', 'image/png');
-    res.send(buffer);
+  @Get('productsreport/:id')
+  async productsReport(@Param('id') id: string) {
+    return await this.reportsService.productsReport(id);
+
   }
 
   @ApiOperation({ summary: 'Earnings report' })
-  @Get('earnings/report')
-  async earningsReport(@Res() res: Response, @Param('id') id: string) {
-    const buffer = await this.reportsService.earningsReport(id);
-    res.setHeader('Content-Type', 'image/png');
-    res.send(buffer);
+  @Get('earningsreport/:id')
+  async earningsReport(@Param('id') id: string) {
+    return await this.reportsService.earningsReport(id);
+
   }
 
   @ApiOperation({ summary: 'Earnings by product report' })
   @Get('earningsbyproduct/report/:id')
-  async earningsByProductReport(@Res() res: Response, @Param('id') id: string) {
-    const buffer = await this.reportsService.earningsByProductReport(id);
-    res.setHeader('Content-Type', 'image/png');
-    res.send(buffer);
+  async earningsByProductReport(@Param('id') id: string) {
+    return await this.reportsService.earningsByProductReport(id);
+
   }
 }

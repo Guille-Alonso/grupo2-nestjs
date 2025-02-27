@@ -9,6 +9,7 @@ import { Readable } from 'stream';
 import { I18nService } from 'nestjs-i18n';
 import { PaginationService } from 'src/utils/pagination/pagination.service';
 import { PaginationDto2 } from 'src/utils/pagination/dto/pagination.dto';
+import e from 'express';
 
 @Injectable()
 export class ReportsService {
@@ -17,22 +18,22 @@ export class ReportsService {
     private readonly chartService: ChartService,
     private readonly awsService: AwsService,
     private readonly i18n: I18nService,
-    private readonly paginationService: PaginationService
+    private readonly paginationService: PaginationService,
   ) {}
   async create(createReportDto: CreateReportDto) {
     try {
       const report = await this.prisma.report.create({
         data: createReportDto,
-      })
-      const message = this.i18n.t('messages.reportCreated')+report;
-      return message
+      });
+      const message = this.i18n.t('messages.reportCreated') + report;
+      return message;
     } catch (error) {
-      const message = this.i18n.t('messages.reportNotCreated')+error.message;
+      const message = this.i18n.t('messages.reportNotCreated') + error.message;
       throw new Error(message);
     }
   }
 
-  async findAll( paginationDto2: PaginationDto2) {
+  async findAll(paginationDto2: PaginationDto2) {
     try {
       const { page, pageSize, sortBy, sortOrder } = paginationDto2;
       const { skip, take, orderBy } =
@@ -74,13 +75,13 @@ export class ReportsService {
           id,
         },
       });
-      return report;    
+      return report;
     } catch (error) {
       const message = this.i18n.t('messages.reportNotFound') + error;
       throw new Error(message);
     }
   }
-//eliminar
+  //eliminar
   async update(id: number, updateReportDto: UpdateReportDto) {
     return `This action${updateReportDto} updates a #${id} report`;
   }
@@ -98,11 +99,11 @@ export class ReportsService {
       return { message: this.i18n.t('messages.reportDeleted'), deleteReport };
     } catch (error) {
       const message = this.i18n.t('messages.reportNotDeleted') + error;
-      throw new Error(message);
+      return new Error(message);
     }
   }
 
-  async salesReport(id: string): Promise<Buffer> {
+  async salesReport(id: string) {
     try {
       const sales = await this.prisma.cart.findMany({
         where: {
@@ -112,6 +113,11 @@ export class ReportsService {
           },
         },
       });
+
+      if (sales.length === 0) {
+        return new Error(this.i18n.t('messages.cartsNotFound'));
+      }
+
       const salesByDate = await sales.reduce((acc, cart) => {
         const date = cart.createdAt.toISOString().split('T')[0];
         if (!acc[date]) {
@@ -124,11 +130,13 @@ export class ReportsService {
       const labels = Object.keys(salesByDate);
       const data = Object.values(salesByDate);
 
+      const week = new Date(new Date().setDate(new Date().getDate() + 7));
+
       const chartData = {
         labels,
         datasets: [
           {
-            label: 'Ventas Totales de la semana',
+            label: 'Ventas del dia',
             data,
             backgroundColor: '#36A2EB',
           },
@@ -140,7 +148,7 @@ export class ReportsService {
           legend: { position: 'top' as const },
           title: {
             display: true,
-            text: 'Ventas de la semana',
+            text: `Ventas Totales de la semana ${new Date().toLocaleDateString()} - ${week.toLocaleDateString()}`,
           },
         },
       };
@@ -150,9 +158,10 @@ export class ReportsService {
         chartData,
         chartOptions,
       );
+
       const file: Express.Multer.File = {
         fieldname: 'file',
-        originalname: 'report.png',
+        originalname: `ventas-${new Date().toLocaleDateString()}.png`,
         encoding: '7bit',
         mimetype: 'image/png',
         buffer: report,
@@ -163,27 +172,29 @@ export class ReportsService {
         path: '',
       };
 
-      const { url, key } = await this.awsService.uploadFile(file, id);
+      const { url } = await this.awsService.uploadFile(file, id);
+
+      if (!url) {
+        throw new Error(this.i18n.t('messages.fileNotUploaded'));
+      }
 
       const reportdto: CreateReportDto = {
         content: url,
         type: 'VentaTotal',
         userId: id,
       };
-      try {
-        await this.prisma.report.create({
-          data: reportdto,
-        });
-      } catch {
-        await this.awsService.deleteFile(key);
-      }
-      return report;
+
+      await this.prisma.report.create({
+        data: reportdto,
+      });
+      return url;
     } catch (e) {
-      throw new Error(e.message);
+      const message = this.i18n.t('messages.reportNotCreated') + e.message;
+      return new Error(message);
     }
   }
 
-  async productsReport(id: string): Promise<Buffer> {
+  async productsReport(id: string) {
     try {
       const carts = await this.prisma.cart.findMany({
         where: {
@@ -193,6 +204,9 @@ export class ReportsService {
           cartLine: { include: { product: true } },
         },
       });
+      if (carts.length === 0) {
+        return new Error(this.i18n.t('messages.cartsNotFound'));
+      }
       const productsBySales = await carts.reduce((acc, cart) => {
         cart.cartLine.forEach(async (line) => {
           if (!acc[line.product.name]) {
@@ -234,7 +248,7 @@ export class ReportsService {
       );
       const file: Express.Multer.File = {
         fieldname: 'file',
-        originalname: 'report.png',
+        originalname: `productos-${new Date().toLocaleDateString()}.png`,
         encoding: '7bit',
         mimetype: 'image/png',
         buffer: report,
@@ -246,27 +260,34 @@ export class ReportsService {
       };
 
       const { url, key } = await this.awsService.uploadFile(file, id);
+      if (!url) {
+        return new Error(this.i18n.t('messages.fileNotUploaded'));
+      }
 
       const reportdto: CreateReportDto = {
         content: url,
-        type: 'VentaTotal',
+        type: 'ProductosVendidos',
         userId: id,
       };
-      try {
-        await this.prisma.report.create({
-          data: reportdto,
-        });
-      } catch {
-        await this.awsService.deleteFile(key);
-      }
 
-      return report;
+      try {
+        await this.prisma.report
+        .create({
+          data: reportdto,
+        })
+      }catch(error) {
+          await this.awsService.deleteFile(key);
+          const message = this.i18n.t('messages.reportNotCreated') + error.message;
+          return message;
+        };
+      return url;
     } catch (e) {
-      throw new Error(e.message);
+      const message = this.i18n.t('messages.reportNotCreated') + e.message;
+      return new Error(message);
     }
   }
 
-  async earningsReport(id: string): Promise<Buffer> {
+  async earningsReport(id: string) {
     try {
       const sales = await this.prisma.cart.findMany({
         where: {
@@ -276,6 +297,9 @@ export class ReportsService {
           },
         },
       });
+      if (sales.length === 0) {
+        return new Error(this.i18n.t('messages.cartsNotFound'));
+      }
       const salesByDate = await sales.reduce((acc, cart) => {
         const date = cart.createdAt.toISOString().split('T')[0];
         if (!acc[date]) {
@@ -286,12 +310,13 @@ export class ReportsService {
       }, {});
       const labels = Object.keys(salesByDate);
       const data = Object.values(salesByDate);
+      const week = new Date(new Date().setDate(new Date().getDate() + 7));
 
       const chartData = {
         labels,
         datasets: [
           {
-            label: 'Ingresos de la semana',
+            label: 'Cantidad de ingresos por dia',
             data,
             backgroundColor: '#36A2EB',
           },
@@ -303,7 +328,7 @@ export class ReportsService {
           legend: { position: 'top' as const },
           title: {
             display: true,
-            text: 'Ingresos de la semana',
+            text: `Ventas Totales de la semana ${new Date().toLocaleDateString()} - ${week.toLocaleDateString()}`,
           },
         },
       };
@@ -313,9 +338,10 @@ export class ReportsService {
         chartData,
         chartOptions,
       );
+
       const file: Express.Multer.File = {
         fieldname: 'file',
-        originalname: 'report.png',
+        originalname: `Ganancias semenales-${new Date().toLocaleDateString()}.png`,
         encoding: '7bit',
         mimetype: 'image/png',
         buffer: report,
@@ -326,27 +352,30 @@ export class ReportsService {
         path: '',
       };
 
-      const { url, key } = await this.awsService.uploadFile(file, id);
+      const { url } = await this.awsService.uploadFile(file, id);
+
+      if (!url) {
+        return new Error(this.i18n.t('messages.fileNotUploaded'));
+      }
 
       const reportdto: CreateReportDto = {
         content: url,
-        type: 'VentaTotal',
+        type: 'GananciasSemanales',
         userId: id,
       };
-      try {
-        await this.prisma.report.create({
-          data: reportdto,
-        });
-      } catch {
-        await this.awsService.deleteFile(key);
-      }
-      return report;
+
+      await this.prisma.report.create({
+        data: reportdto,
+      });
+
+      return url;
     } catch (e) {
-      throw new Error(e.message);
+      const message = this.i18n.t('messages.reportNotCreated') + e.message;
+      return new Error(message);
     }
   }
 
-  async earningsByProductReport(id: string): Promise<Buffer> {
+  async earningsByProductReport(id: string) {
     try {
       const carts = await this.prisma.cart.findMany({
         where: {
@@ -356,6 +385,10 @@ export class ReportsService {
           cartLine: { include: { product: true } },
         },
       });
+      if (carts.length === 0) {
+        return new Error(this.i18n.t('messages.salesNotFound'));
+      }
+
       const productsBySales = await carts.reduce((acc, cart) => {
         cart.cartLine.forEach(async (line) => {
           if (!acc[line.product.name]) {
@@ -397,7 +430,7 @@ export class ReportsService {
 
       const file: Express.Multer.File = {
         fieldname: 'file',
-        originalname: 'report.png',
+        originalname: `gananciasPorProducto-${new Date().toLocaleDateString()}.png`,
         encoding: '7bit',
         mimetype: 'image/png',
         buffer: report,
@@ -408,23 +441,24 @@ export class ReportsService {
         path: '',
       };
 
-      const { url, key } = await this.awsService.uploadFile(file, id);
+      const { url } = await this.awsService.uploadFile(file, id);
 
+      if (!url) throw new Error(this.i18n.t('messages.reportNotCreated'));
+
+      console.log(url);
       const reportdto: CreateReportDto = {
         content: url,
-        type: 'VentaTotal',
+        type: 'GananciasPorProducto',
         userId: id,
       };
-      try {
-        await this.prisma.report.create({
-          data: reportdto,
-        });
-      } catch {
-        await this.awsService.deleteFile(key);
-      }
-      return report;
+      await this.prisma.report.create({
+        data: reportdto,
+      });
+
+      return url;
     } catch (e) {
-      throw new Error(e.message);
+      const message = this.i18n.t('messages.reportNotCreated') + e.message;
+      return new Error(message);
     }
   }
 }

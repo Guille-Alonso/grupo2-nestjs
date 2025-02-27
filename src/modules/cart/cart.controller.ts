@@ -11,7 +11,7 @@ import { PaginationDto2 } from 'src/utils/pagination/dto/pagination.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth('access-token')
-@Roles(RoleEnum.USER)
+@Roles(RoleEnum.USER, RoleEnum.SUPERADMIN)
 @Controller('cart')
 export class CartController {
   constructor(private readonly cartService: CartService) {}

@@ -75,5 +75,8 @@
     "messageActionProfile":"actualizar o crear perfil de usuario",
     "opConfirm": "operación exitosa",
     "prod": "producto",
-    "notAvailable": "not disponible"
+    "notAvailable": "not disponible",
+    "salesNotFound": "No se encontraron ventas",
+    "fileNotUploaded": "Ubo un error al subir el archivo: ",
+    "reportNotCreated": "Ubo un error al crear el reporte: "
 }

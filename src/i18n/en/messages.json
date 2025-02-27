@@ -75,5 +75,8 @@
   "messageActionProfile":"update or create user profile",
   "opConfirm": "successful operation ",
   "prod": "product",
-  "notAvailable": "not available"
+  "notAvailable": "not available",
+  "salesNotFound": "No sales found",
+  "fileNotUploaded": "There was an error uploading the file: ",
+  "reportNotCreated": "There was an error creating the report: "
 }

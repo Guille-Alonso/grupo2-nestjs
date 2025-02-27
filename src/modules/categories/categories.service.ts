@@ -21,12 +21,11 @@ export class CategoriesService {
           name: createCategoryDto.name,
         },
       });
-      const message = this.i18n.t('messages.categoryCreated')+
-      category;
+      const message = this.i18n.t('messages.categoryCreated')+ '\n' + JSON.stringify(category, null, 2);
       return message;
     } catch (error) {
       const message = this.i18n.t('messages.categoryNotCreated')+error.message;
-      throw new Error(message);
+      return new Error(message);
     }
   }
 
