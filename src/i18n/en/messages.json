@@ -78,5 +78,6 @@
   "notAvailable": "not available",
   "salesNotFound": "No sales found",
   "fileNotUploaded": "There was an error uploading the file: ",
-  "reportNotCreated": "There was an error creating the report: "
+  "reportNotCreated": "There was an error creating the report: ",
+  "cartProductNoExist":"the following product is out of stock"
 }

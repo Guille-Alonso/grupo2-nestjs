@@ -1,51 +1,199 @@
 import type { StyleDictionary, TDocumentDefinitions } from 'pdfmake/interfaces';
-const styles: StyleDictionary = {
-  header: {
-    fontSize: 16,
-    bold: true,
-    color: '#525659',
-  },
-  subheader: {
-    fontSize: 10,
-    bold: true,
-    color: '#525659',
-  },
-};
 
-export const generatePDF = async (): Promise<TDocumentDefinitions> => {
-  return {
-    defaultStyle: {
-      fontSize: 10,
-      font: 'Arial',
-      characterSpacing: -0.7,
-      color: '#43484C',
+const styles: StyleDictionary ={
+    header:{
+        fontSize: 22,
+        bold: true,
+        color:'#521651',
     },
-    pageSize: 'A4',
-    pageMargins: [30, 25],
-    content: [
-      {
-        text: 'Reporte de Compras',
-        style: 'header',
-        margin: [0, 0, 0, 20],
-      },
-      {
-        columns: [
-          { stack: ['Fecha: 2021-10-10', 'Hora: 12:00:00'], width: 'auto' },
-          { text: 'Hora: 12:00:00', width: 'auto' },
-        ],
-      },
-      {
-        table: {
-          body: [['Producto', 'Cantidad', 'Subtotal']],
+    subHeader:{
+        fontSize:12,
+        bold:true,
+        color:'#525659'
+    },
+    productDetail:{
+        fontSize:12,
+        font:'Roboto',
+        color:'#0a0a0a'
+    }
+}
+interface TableContent {
+    widths: string[];
+    body: any[][]; 
+    layout: string;
+}
+
+interface ContentItem {
+    text?: string;
+    style?: string;
+    marginBottom?: number;
+    table?: TableContent; 
+    alignment?: string;
+    marginTop?: number;
+}
+
+export const CarritoConfirmPdf = async (Carrito:any):Promise<TDocumentDefinitions>=>{
+
+    const user = Carrito.user;
+    const product = Carrito.cartLine;
+    const fecha = `${Carrito.updatedAt.getDate()} / ${Carrito.updatedAt.getMonth()} / ${Carrito.updatedAt.getFullYear()}`
+
+    
+    const tableBody =[
+        [
+        {text:'Producto',
+        style:'tableHeader'
+         },
+         {text:'Cantidad',
+        style:'tableHeader'
         },
-        layout: 'lightHorizontalLines',
-      },
-      {
-        text: 'La siguiente gráfica muestra el monto total de compras por fecha:',
-        style: 'subheader',
-        margin: [0, 0, 0, 10],
-      },
-    ],
-    styles: styles,
-  };
-};
+        {text:'Precio Unitario',
+         style: 'tableHeader'
+        },
+        {text:'total',
+         style:'tableHeader'
+        }
+        ]
+    ];
+    for (const elem of product) {
+        const precioUnitario = elem.product.price;
+        const cantidad = elem.quantity;
+        const total = elem.total_price
+
+        tableBody.push([
+            { text: `${elem.product.name}, detalle: ${elem.product.description}`, style: 'tableCell' },
+            { text: cantidad.toString(), style: 'tableCell' },
+            { text: precioUnitario.toString(), style: 'tableCell' },
+            { text: total.toString(), style: 'tableCell' }
+        ]);
+        }
+    const contenido: ContentItem[] = [
+        {
+        text: '¡Gracias por tu compra!',
+        style: 'header',
+        marginBottom: 5
+        },
+        {
+            text:`fecha: ${fecha} `,
+            style:'subHeader',
+            marginBottom:2
+        },
+        {
+            text:`estimad@ ${user.name}, tu compra fue confirmada.`,
+            style:'subHeader',
+            marginBottom:2
+        },
+        {
+            text:'detalle:',
+            marginTop:5,
+            marginBottom:10
+        },
+        {
+            table: {
+                widths: ['*', 'auto', 'auto', 'auto'],
+                body: tableBody,
+                layout: 'lightHorizontalLines',
+            }
+        },
+        {
+            text: `total General ${Carrito.totalAmount}`,
+            alignment: 'right',
+            marginTop:10,
+            style: 'subHeader'
+        }
+    ]
+
+    return{
+        defaultStyle: {
+            fontSize: 12,
+            font: 'Arial',
+            characterSpacing: -0.7,
+            color: '#43484C',
+          },
+          pageSize: 'A4',
+          pageMargins: [30, 25],
+          content: contenido as any,
+          styles: styles
+        };
+}
+export const detalleCompra = async (purchases:any):Promise<TDocumentDefinitions>=>{
+
+    const user = purchases.user;
+    const lineproduct = purchases.products;
+    const total = purchases.total;
+    const fecha = `${purchases.createdAt.getDate()}/${purchases.createdAt.getMonth()}/${purchases.createdAt.getFullYear()}`
+
+    
+    const tableBody =[
+        [
+        {text:'Producto',
+        style:'tableHeader'
+         },
+         {text:'Cantidad',
+        style:'tableHeader'
+        },
+        {text:'Precio Unitario',
+         style: 'tableHeader'
+        }
+        ]
+    ];
+    for (const elem of lineproduct) {
+        const precioUnitario = elem.product.price;
+        const cantidad = elem.quantity;
+
+        tableBody.push([
+            { text: `${elem.product.name}, detalle: ${elem.product.description}`, style: 'tableCell' },
+            { text: cantidad.toString(), style: 'tableCell' },
+            { text: precioUnitario.toString(), style: 'tableCell' },
+            ]);
+        }
+    const contenido: ContentItem[] = [
+        {
+        text: 'Compra exitosa',
+        style: 'header',
+        marginBottom: 5
+        },
+        {
+            text:`fecha: ${fecha} `,
+            style:'subHeader',
+            marginBottom:2
+        },
+        {
+            text:`Administrador: ${user.name} ${user.lastName}`,
+            style:'subHeader',
+            marginBottom:2
+        },
+        {
+            text:'Compró',
+            marginTop:5,
+            marginBottom:10
+        },
+        {
+            table: {
+                widths: ['*', 'auto', 'auto'],
+                body: tableBody,
+                layout: 'lightHorizontalLines',
+            }
+        },
+        {
+            text: `total: ${total}`,
+            alignment: 'right',
+            marginTop:10,
+            style: 'subHeader'
+        }
+    ]
+
+    return{
+        defaultStyle: {
+            fontSize: 12,
+            font: 'Arial',
+            characterSpacing: -0.7,
+            color: '#43484C',
+          },
+          pageSize: 'A4',
+          pageMargins: [30, 25],
+          content: contenido as any,
+          styles: styles
+        };
+}
+
