@@ -5,6 +5,7 @@ import { RecoverPasswordDto, ResetPasswordDto } from './dto/auth.dto';
 import { JwtAuthGuard } from './guards/jwt.guard';
 import { RegisterUserDto } from './dto/register.dto';
 import { ApiCustomOperation } from 'src/common/decorators/swagger.decorator';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('auth')
 export class AuthController {
@@ -43,6 +44,7 @@ export class AuthController {
     return await this.authService.recoveryPassword(recoverDto);
   }
 
+  @ApiBearerAuth('access-token')
   @ApiCustomOperation({
     summary: 'Reset Password',
     bodyType: ResetPasswordDto,
