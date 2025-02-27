@@ -11,7 +11,6 @@ import { ValidationsErrorExceptionFilter } from './common/middlewares';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors(corsOptions);
-  app.setGlobalPrefix('api/v0');
   app.useGlobalPipes(
     new I18nValidationPipe({
       whitelist: true,
@@ -43,5 +42,7 @@ async function bootstrap() {
     );
     Logger.log(`Current environment: ${NODE_ENV}`, NestApplication.name);
   });
+  console.log("hola");
+  
 }
 bootstrap();
