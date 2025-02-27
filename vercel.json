@@ -6,11 +6,14 @@
             "use": "@vercel/node"
         }
     ],
-    "routes": [
-        {
-            "src": "/(.*)",
-            "dest": "dist/main.js",
-            "methods": ["GET", "POST", "PUT","PATCH", "HEAD" ,"DELETE","OPTIONS"]
-        }
-    ]
+   "routes": [
+    {
+      "src": "/api/v0/(.*)",
+      "dest": "dist/main.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "dist/main.js"
+    }
+  ]
 }
