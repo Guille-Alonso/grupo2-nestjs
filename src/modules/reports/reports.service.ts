@@ -172,7 +172,7 @@ export class ReportsService {
         path: '',
       };
 
-      const { url } = await this.awsService.uploadFile(file, id);
+      const { url, key } = await this.awsService.uploadFile(file, id);
 
       if (!url) {
         throw new Error(this.i18n.t('messages.fileNotUploaded'));
@@ -184,9 +184,16 @@ export class ReportsService {
         userId: id,
       };
 
-      await this.prisma.report.create({
-        data: reportdto,
-      });
+      try {
+        await this.prisma.report
+        .create({
+          data: reportdto,
+        })
+      }catch(error) {
+          await this.awsService.deleteFile(key);
+          const message = this.i18n.t('messages.reportNotCreated') + error.message;
+          return message;
+        };
       return url;
     } catch (e) {
       const message = this.i18n.t('messages.reportNotCreated') + e.message;
@@ -352,7 +359,7 @@ export class ReportsService {
         path: '',
       };
 
-      const { url } = await this.awsService.uploadFile(file, id);
+      const { url,key } = await this.awsService.uploadFile(file, id);
 
       if (!url) {
         return new Error(this.i18n.t('messages.fileNotUploaded'));
@@ -364,9 +371,16 @@ export class ReportsService {
         userId: id,
       };
 
-      await this.prisma.report.create({
-        data: reportdto,
-      });
+      try {
+        await this.prisma.report
+        .create({
+          data: reportdto,
+        })
+      }catch(error) {
+          await this.awsService.deleteFile(key);
+          const message = this.i18n.t('messages.reportNotCreated') + error.message;
+          return message;
+        };
 
       return url;
     } catch (e) {
@@ -441,7 +455,7 @@ export class ReportsService {
         path: '',
       };
 
-      const { url } = await this.awsService.uploadFile(file, id);
+      const { url,key } = await this.awsService.uploadFile(file, id);
 
       if (!url) throw new Error(this.i18n.t('messages.reportNotCreated'));
 
@@ -451,9 +465,17 @@ export class ReportsService {
         type: 'GananciasPorProducto',
         userId: id,
       };
-      await this.prisma.report.create({
-        data: reportdto,
-      });
+
+      try {
+        await this.prisma.report
+        .create({
+          data: reportdto,
+        })
+      }catch(error) {
+          await this.awsService.deleteFile(key);
+          const message = this.i18n.t('messages.reportNotCreated') + error.message;
+          return message;
+        };
 
       return url;
     } catch (e) {
