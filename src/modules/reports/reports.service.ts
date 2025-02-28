@@ -185,15 +185,15 @@ export class ReportsService {
       };
 
       try {
-        await this.prisma.report
-        .create({
+        await this.prisma.report.create({
           data: reportdto,
-        })
-      }catch(error) {
-          await this.awsService.deleteFile(key);
-          const message = this.i18n.t('messages.reportNotCreated') + error.message;
-          return message;
-        };
+        });
+      } catch (error) {
+        await this.awsService.deleteFile(key);
+        const message =
+          this.i18n.t('messages.reportNotCreated') + error.message;
+        return message;
+      }
       return url;
     } catch (e) {
       const message = this.i18n.t('messages.reportNotCreated') + e.message;
@@ -278,15 +278,15 @@ export class ReportsService {
       };
 
       try {
-        await this.prisma.report
-        .create({
+        await this.prisma.report.create({
           data: reportdto,
-        })
-      }catch(error) {
-          await this.awsService.deleteFile(key);
-          const message = this.i18n.t('messages.reportNotCreated') + error.message;
-          return message;
-        };
+        });
+      } catch (error) {
+        await this.awsService.deleteFile(key);
+        const message =
+          this.i18n.t('messages.reportNotCreated') + error.message;
+        return message;
+      }
       return url;
     } catch (e) {
       const message = this.i18n.t('messages.reportNotCreated') + e.message;
@@ -359,7 +359,7 @@ export class ReportsService {
         path: '',
       };
 
-      const { url,key } = await this.awsService.uploadFile(file, id);
+      const { url, key } = await this.awsService.uploadFile(file, id);
 
       if (!url) {
         return new Error(this.i18n.t('messages.fileNotUploaded'));
@@ -372,15 +372,15 @@ export class ReportsService {
       };
 
       try {
-        await this.prisma.report
-        .create({
+        await this.prisma.report.create({
           data: reportdto,
-        })
-      }catch(error) {
-          await this.awsService.deleteFile(key);
-          const message = this.i18n.t('messages.reportNotCreated') + error.message;
-          return message;
-        };
+        });
+      } catch (error) {
+        await this.awsService.deleteFile(key);
+        const message =
+          this.i18n.t('messages.reportNotCreated') + error.message;
+        return message;
+      }
 
       return url;
     } catch (e) {
@@ -455,7 +455,7 @@ export class ReportsService {
         path: '',
       };
 
-      const { url,key } = await this.awsService.uploadFile(file, id);
+      const { url, key } = await this.awsService.uploadFile(file, id);
 
       if (!url) throw new Error(this.i18n.t('messages.reportNotCreated'));
 
@@ -466,17 +466,14 @@ export class ReportsService {
         userId: id,
       };
 
-      try {
-        await this.prisma.report
-        .create({
+      await this.prisma.report.create({
           data: reportdto,
-        })
-      }catch(error) {
+        }).catch(async (e) => {
           await this.awsService.deleteFile(key);
-          const message = this.i18n.t('messages.reportNotCreated') + error.message;
-          return message;
-        };
-
+          const message = (this.i18n.t('messages.reportNotCreated'),e.message);
+          throw new Error(message);
+        });
+        
       return url;
     } catch (e) {
       const message = this.i18n.t('messages.reportNotCreated') + e.message;

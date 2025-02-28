@@ -34,13 +34,13 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 export class ImagesController {
   constructor(private readonly imagesService: ImagesService) {}
 
-  @Roles(RoleEnum.SUPERADMIN)
+  /*@Roles(RoleEnum.SUPERADMIN)
   @ApiOperation({ summary: 'Create image' })
   @ApiBody({ type: CreateImageDto })
   @Post()
   create(@Body() createImageDto: CreateImageDto) {
     return this.imagesService.create(createImageDto);
-  }
+  }*/
 
   @Roles(RoleEnum.SUPERADMIN)
   @ApiOperation({ summary: 'Get all images' })
@@ -64,12 +64,12 @@ export class ImagesController {
     return this.imagesService.update(id, updateImageDto);
   }
 
-  @Roles(RoleEnum.SUPERADMIN)
+  /*@Roles(RoleEnum.SUPERADMIN)
   @ApiOperation({ summary: 'Delete image' })
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.imagesService.remove(id);
-  }
+  }*/
 
   @Roles(RoleEnum.SUPERADMIN)
   @ApiOperation({ summary: 'Assign image to product' })
