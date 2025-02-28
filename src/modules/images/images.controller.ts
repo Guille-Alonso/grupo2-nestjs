@@ -56,14 +56,14 @@ export class ImagesController {
     return this.imagesService.findOne(id);
   }
 
-  @Roles(RoleEnum.SUPERADMIN)
+  /*@Roles(RoleEnum.SUPERADMIN)
   @ApiOperation({ summary: 'Update image' })
   @ApiBody({ type: UpdateImageDto })
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateImageDto: UpdateImageDto) {
     return this.imagesService.update(id, updateImageDto);
   }
-
+*/
   /*@Roles(RoleEnum.SUPERADMIN)
   @ApiOperation({ summary: 'Delete image' })
   @Delete(':id')

@@ -67,8 +67,18 @@ export class ImagesService {
         pageSize,
       );
     } catch (error) {
-      const message = this.i18n.t('messages.imagesNotFound');
-      throw new Error(message + error.message);
+      if (error instanceof CustomError) {
+        throw error;
+      }
+      const messageActionRegister = this.i18n.t('messages.errorImageNotFound');
+      const message = this.i18n.t('messages.genericError', {
+        args: { action:messageActionRegister },
+      });
+   
+      throw new CustomError(
+        error?.message || message,
+        HttpStatus.INTERNAL_SERVER_ERROR, // 500
+      );
     }
   }
 
@@ -79,14 +89,28 @@ export class ImagesService {
           id,
         },
       });
+      if (!image) {
+        const message = this.i18n.t('messages.imageNotFound');
+        throw new CustomError(message, HttpStatus.NOT_FOUND); // 404
+      }
       return image;
     } catch (error) {
-      const message = this.i18n.t('messages.imageNotFound');
-      throw new Error(message + error.message);
+      if (error instanceof CustomError) {
+        throw error;
+      }
+      const messageActionRegister = this.i18n.t('messages.errorImageNotFound');
+      const message = this.i18n.t('messages.genericError', {
+        args: { action:messageActionRegister },
+      });
+   
+      throw new CustomError(
+        error?.message || message,
+        HttpStatus.INTERNAL_SERVER_ERROR, // 500
+      );
     }
   }
 
-  async update(id: string, updateImageDto: UpdateImageDto) {
+  /*async update(id: string, updateImageDto: UpdateImageDto) {
     try {
       const image = await this.prisma.image.update({
         where: {
@@ -100,7 +124,7 @@ export class ImagesService {
       const message = this.i18n.t('messages.imageNotUpdated');
       throw new Error(message + error.message);
     }
-  }
+  }*/
 
   /*async remove(id: string) {
     //ver si no hay que eliminarla
