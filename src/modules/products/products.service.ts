@@ -11,6 +11,7 @@ import { ExcelColumn } from 'src/common/interfaces';
 import { FilterProductsDto } from './dto/filter-product.dto';
 import { AwsService } from '../aws/aws.service';
 import CustomError from 'src/utils/custom.error';
+import { Transform } from 'class-transformer';
 @Injectable()
 export class ProductsService {
   constructor(
@@ -542,13 +543,22 @@ if (error instanceof CustomError) {
       for (let index = 0; index < products.length; index++) {
         const product = products[index];
         console.log(product);
+
+        const images: string[] = product.images.replace(/"/g, '').split(',')
+        const categorys: string[] = product.categorys.replace(/"/g, '').split(',')
+        
+        console.log('imagen'+images);
+        console.log('category'+categorys);
+        
         const productNew: CreateProductDto = {
-          name: product.name,
-          description: product.description,
+          name: product.name.toString(),
+          description: product.description.toString(),
           price: parseFloat(product.price),
-          stock: product.stock,
-          barcode: product.barcode,
+          stock: parseInt(product.stock),
+          barcode: product.barcode.toString(),
           sku: product.sku.toString(),
+          images: images,
+          categoryIds:  categorys,
         };
         console.log(productNew);
 
@@ -593,7 +603,7 @@ if (error instanceof CustomError) {
         where: {
           isDeleted: false,
         },
-        include: { categorys: { include: { category: true } }, images: true },
+        include: { categorys: { select: { category: { select: {id: true, name: true }} } }, images: {select: { colection: true }} },
       });
 
       const columns: ExcelColumn[] = [
@@ -611,20 +621,7 @@ if (error instanceof CustomError) {
         columns,
         'Productos',
       );
-      /*const buffer = await Buffer.from(await workbook.xlsx.writeBuffer());
-      const file: Express.Multer.File = {
-        fieldname: 'file',
-        originalname: 'productos.xlsx',
-        encoding: '7bit',
-        mimetype:
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        size: buffer.length,
-        buffer: buffer,
-        destination: '',
-        filename: '',
-        path: '',
-        stream: null,
-      };*/
+
       return this.excelService.exportToResponse(
         res,
         workbook,

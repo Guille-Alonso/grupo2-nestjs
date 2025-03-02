@@ -21,9 +21,9 @@ import { RoleEnum } from 'src/common/constants';
 import { Response } from 'express';
 import { PaginationDto2 } from 'src/utils/pagination/dto/pagination.dto';
 
-//@UseGuards(JwtAuthGuard, RolesGuard)
-//@Roles(RoleEnum.SUPERADMIN)
-//@ApiBearerAuth('access-token')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(RoleEnum.SUPERADMIN)
+@ApiBearerAuth('access-token')
 @ApiTags('Reports')
 @Controller('reports')
 export class ReportsController {
