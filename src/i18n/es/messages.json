@@ -93,5 +93,8 @@
     "errorReportNotDeleted":"error al eliminar el reporte",
     "reportNotFound": "No se encontro el reporte",
     "errorReportNotCreated":"error al actualizar el reporte",
-    "errorCategoryNotFound":"encotrar la categoria"
+    "errorCategoryNotFound":"encotrar la categoria",
+    "productBarcodeExist": "el codigo de barra ya existe",
+    "imageNotAssigned2": "Ubo un error al asignar la imagen",
+    "productSkuExist": "el sku ya existe"
 }

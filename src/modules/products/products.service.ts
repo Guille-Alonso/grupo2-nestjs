@@ -11,7 +11,7 @@ import { ExcelColumn } from 'src/common/interfaces';
 import { FilterProductsDto } from './dto/filter-product.dto';
 import { AwsService } from '../aws/aws.service';
 import CustomError from 'src/utils/custom.error';
-import { exit } from 'process';
+
 
 @Injectable()
 export class ProductsService {
@@ -26,6 +26,23 @@ export class ProductsService {
   async create(newProduct: CreateProductDto) {
     try {
       const { categoryIds, images, ...productData } = newProduct;
+      const existsku = await this.prisma.product.findMany({
+        where: {
+          sku: productData.sku,
+        }
+      })
+      if(existsku){
+        const message = this.i18n.t('messages.productSkuExist');
+        throw new CustomError(message, HttpStatus.BAD_REQUEST);
+      }
+      const existbarcode = await this.prisma.product.findUnique({
+        where: {
+          barcode: productData.barcode,
+        }
+      });
+      if(existbarcode){
+        const message = this.i18n.t('messages.productBarcodeExist');
+        throw new CustomError(message, HttpStatus.BAD_REQUEST);}
 
       const exitnames = await this.prisma.product.findUnique({
         where: {
@@ -164,6 +181,45 @@ export class ProductsService {
   async update(id: string, updateProductDto: UpdateProductDto) {
     try {
       const { categoryIds, images, ...productData } = updateProductDto;
+
+      if(productData.sku){
+        const existsku = await this.prisma.product.findMany({
+          where: {
+            sku: productData.sku,
+          }
+        })
+        
+        if(existsku){
+          const message = this.i18n.t('messages.productSkuExist');
+          throw new CustomError(message, HttpStatus.BAD_REQUEST);
+        }
+      }
+      
+      if(productData.barcode){
+        const existbarcode = await this.prisma.product.findUnique({
+          where: {
+            barcode: productData.barcode,
+          }
+        }
+        );
+  
+        if(existbarcode){
+          const message = this.i18n.t('messages.productBarcodeExist');
+          throw new CustomError(message, HttpStatus.BAD_REQUEST);}  
+      }
+
+      if (productData.name){
+        const exitnames = await this.prisma.product.findUnique({
+          where: {
+            name: productData.name,
+          }
+        });
+
+        if(exitnames){
+          const message = this.i18n.t('messages.productNameExist');
+          throw new CustomError(message, HttpStatus.BAD_REQUEST);}
+      }
+      
       
       const categorys = this.prisma.category.findMany({
         where: {
