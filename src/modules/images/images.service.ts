@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { BadRequestException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateImageDto } from './dto/create-image.dto';
 import { UpdateImageDto } from './dto/update-image.dto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -16,7 +16,7 @@ export class ImagesService {
     private readonly i18n: I18nService,
     private readonly awsService: AwsService,
   ) {}
-  async create(createImageDto: CreateImageDto) {
+  /*async create(createImageDto: CreateImageDto) {
     try {
       const product = await this.prisma.product.findUnique({
         where: { id: createImageDto.productId, isDeleted: false },
@@ -35,7 +35,7 @@ export class ImagesService {
       const message = this.i18n.t('messages.imageNotCreated') + error.message;
       throw new Error(message);
     }
-  }
+  }*/
 
   async findAll(paginationDto: PaginationDto2) {
     try {
@@ -67,8 +67,18 @@ export class ImagesService {
         pageSize,
       );
     } catch (error) {
-      const message = this.i18n.t('messages.imagesNotFound');
-      throw new Error(message + error.message);
+      if (error instanceof CustomError) {
+        throw error;
+      }
+      const messageActionRegister = this.i18n.t('messages.errorImageNotFound');
+      const message = this.i18n.t('messages.genericError', {
+        args: { action:messageActionRegister },
+      });
+   
+      throw new CustomError(
+        error?.message || message,
+        HttpStatus.INTERNAL_SERVER_ERROR, // 500
+      );
     }
   }
 
@@ -79,14 +89,28 @@ export class ImagesService {
           id,
         },
       });
+      if (!image) {
+        const message = this.i18n.t('messages.imageNotFound');
+        throw new CustomError(message, HttpStatus.NOT_FOUND); // 404
+      }
       return image;
     } catch (error) {
-      const message = this.i18n.t('messages.imageNotFound');
-      throw new Error(message + error.message);
+      if (error instanceof CustomError) {
+        throw error;
+      }
+      const messageActionRegister = this.i18n.t('messages.errorImageNotFound');
+      const message = this.i18n.t('messages.genericError', {
+        args: { action:messageActionRegister },
+      });
+   
+      throw new CustomError(
+        error?.message || message,
+        HttpStatus.INTERNAL_SERVER_ERROR, // 500
+      );
     }
   }
 
-  async update(id: string, updateImageDto: UpdateImageDto) {
+  /*async update(id: string, updateImageDto: UpdateImageDto) {
     try {
       const image = await this.prisma.image.update({
         where: {
@@ -100,9 +124,9 @@ export class ImagesService {
       const message = this.i18n.t('messages.imageNotUpdated');
       throw new Error(message + error.message);
     }
-  }
+  }*/
 
-  async remove(id: string) {
+  /*async remove(id: string) {
     //ver si no hay que eliminarla
     try {
       const deleteImage = await this.prisma.product.update({
@@ -118,12 +142,20 @@ export class ImagesService {
     } catch (error) {
       throw new Error(error);
     }
-  }
+  }*/
 
   async assignImage(files: Express.Multer.File[], productId: string) {
     try {
-      console.log(files);
-      console.log(productId);
+      if (!files) {
+        const message = this.i18n.t('messages.imagesNotFound');
+        throw new CustomError(message, HttpStatus.BAD_REQUEST);
+      }
+
+      files.forEach(file => {
+        if (!['image/png', 'image/jpeg'].includes(file.mimetype)) {
+          throw new BadRequestException(`El archivo ${file.originalname} no es un PNG o JPG válido`);
+        }
+      });
       for (const file of files) {
         const { url, key } = await this.awsService.uploadFile(file, productId);
         this.prisma.image
@@ -145,8 +177,18 @@ export class ImagesService {
         return message;
       }
     } catch (error) {
-      const message = this.i18n.t('messages.imageNotAssigned') + error.message;
-      throw new Error(message);
+      if (error instanceof CustomError) {
+        throw error;
+      }
+      const messageActionRegister = this.i18n.t('messages.imageNotAssigned');
+      const message = this.i18n.t('messages.genericError', {
+        args: { action:messageActionRegister },
+      });
+   
+      throw new CustomError(
+        error?.message || message,
+        HttpStatus.INTERNAL_SERVER_ERROR, // 500
+      );
     }
   }
 }

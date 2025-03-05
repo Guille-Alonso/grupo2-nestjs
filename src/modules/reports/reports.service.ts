@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { UpdateReportDto } from './dto/update-report.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { ChartService } from '../chart/chart.service';
@@ -9,7 +9,7 @@ import { Readable } from 'stream';
 import { I18nService } from 'nestjs-i18n';
 import { PaginationService } from 'src/utils/pagination/pagination.service';
 import { PaginationDto2 } from 'src/utils/pagination/dto/pagination.dto';
-import e from 'express';
+import CustomError from 'src/utils/custom.error';
 
 @Injectable()
 export class ReportsService {
@@ -20,7 +20,7 @@ export class ReportsService {
     private readonly i18n: I18nService,
     private readonly paginationService: PaginationService,
   ) {}
-  async create(createReportDto: CreateReportDto) {
+  /*async create(createReportDto: CreateReportDto) {
     try {
       const report = await this.prisma.report.create({
         data: createReportDto,
@@ -31,7 +31,7 @@ export class ReportsService {
       const message = this.i18n.t('messages.reportNotCreated') + error.message;
       throw new Error(message);
     }
-  }
+  }*/
 
   async findAll(paginationDto2: PaginationDto2) {
     try {
@@ -63,8 +63,18 @@ export class ReportsService {
         pageSize,
       );
     } catch (error) {
-      const message = this.i18n.t('messages.productsNotFound') + error;
-      throw new Error(message);
+      if (error instanceof CustomError) {
+        throw error;
+      }
+      const messageActionRegister = this.i18n.t('messages.errorreportNotFound');
+      const message = this.i18n.t('messages.genericError', {
+        args: { action:messageActionRegister },
+      });
+   
+      throw new CustomError(
+        error?.message || message,
+        HttpStatus.INTERNAL_SERVER_ERROR, // 500
+      );
     }
   }
 
@@ -75,16 +85,30 @@ export class ReportsService {
           id,
         },
       });
+      if (!report) {
+        const message = this.i18n.t('messages.reportNotFound');
+        throw new CustomError(message, HttpStatus.NOT_FOUND); // 404
+      }
       return report;
     } catch (error) {
-      const message = this.i18n.t('messages.reportNotFound') + error;
-      throw new Error(message);
+      if (error instanceof CustomError) {
+        throw error;
+      }
+      const messageActionRegister = this.i18n.t('messages.errorreportNotFound');
+      const message = this.i18n.t('messages.genericError', {
+        args: { action:messageActionRegister },
+      });
+   
+      throw new CustomError(
+        error?.message || message,
+        HttpStatus.INTERNAL_SERVER_ERROR, // 500
+      );
     }
   }
   //eliminar
-  async update(id: number, updateReportDto: UpdateReportDto) {
+  /*async update(id: number, updateReportDto: UpdateReportDto) {
     return `This action${updateReportDto} updates a #${id} report`;
-  }
+  }*/
 
   async remove(id: string) {
     try {
@@ -96,15 +120,34 @@ export class ReportsService {
           isDeleted: true,
         },
       });
+      if (!deleteReport) {
+        const message = this.i18n.t('messages.reportIdNotFound');
+        throw new CustomError(message, HttpStatus.NOT_FOUND); // 404
+      }
       return { message: this.i18n.t('messages.reportDeleted'), deleteReport };
     } catch (error) {
-      const message = this.i18n.t('messages.reportNotDeleted') + error;
-      return new Error(message);
+      if (error instanceof CustomError) {
+        throw error;
+      }
+      const messageActionRegister = this.i18n.t('messages.errorReportNotDeleted');
+      const message = this.i18n.t('messages.genericError', {
+        args: { action:messageActionRegister },
+      });
+   
+      throw new CustomError(
+        error?.message || message,
+        HttpStatus.INTERNAL_SERVER_ERROR, // 500
+      );
     }
   }
 
   async salesReport(id: string) {
     try {
+      const idexist = await this.prisma.user.findUnique({where: {id,isDeleted: false}});
+      if (!idexist) {
+        const message = this.i18n.t('messages.userNotFound');
+        throw new CustomError(message, HttpStatus.NOT_FOUND);
+      }
       const sales = await this.prisma.cart.findMany({
         where: {
           state: 'CONFIRMED',
@@ -114,8 +157,9 @@ export class ReportsService {
         },
       });
 
-      if (sales.length === 0) {
-        return new Error(this.i18n.t('messages.cartsNotFound'));
+      if (!sales || sales.length === 0) {
+        const message = this.i18n.t('messages.salesNotFound');
+        throw new CustomError(message, HttpStatus.NOT_FOUND);
       }
 
       const salesByDate = await sales.reduce((acc, cart) => {
@@ -175,7 +219,8 @@ export class ReportsService {
       const { url, key } = await this.awsService.uploadFile(file, id);
 
       if (!url) {
-        throw new Error(this.i18n.t('messages.fileNotUploaded'));
+        const message = this.i18n.t('messages.reportNotCreated');
+        return message;
       }
 
       const reportdto: CreateReportDto = {
@@ -183,26 +228,39 @@ export class ReportsService {
         type: 'VentaTotal',
         userId: id,
       };
+      const reporte = await this.prisma.report.create({
+        data: reportdto,
+    }) 
 
-      try {
-        await this.prisma.report
-        .create({
-          data: reportdto,
-        })
-      }catch(error) {
-          await this.awsService.deleteFile(key);
-          const message = this.i18n.t('messages.reportNotCreated') + error.message;
-          return message;
-        };
+    if (!reporte) {
+      await this.awsService.deleteFile(key);
+      const message = this.i18n.t('messages.reportNotCreated');
+      throw new CustomError(message, HttpStatus.NOT_FOUND);
+    }
       return url;
-    } catch (e) {
-      const message = this.i18n.t('messages.reportNotCreated') + e.message;
-      return new Error(message);
+    } catch (error) {
+      if (error instanceof CustomError) {
+        throw error;
+      }
+      const messageActionRegister = this.i18n.t('messages.errorReportNotCreated');
+      const message = this.i18n.t('messages.genericError', {
+        args: { action:messageActionRegister },
+      });
+   
+      throw new CustomError(
+        error?.message || message,
+        HttpStatus.INTERNAL_SERVER_ERROR, // 500
+      );
     }
   }
 
   async productsReport(id: string) {
     try {
+      const idexist = await this.prisma.user.findUnique({where: {id,isDeleted: false}});
+      if (!idexist) {
+        const message = this.i18n.t('messages.userNotFound');
+        throw new CustomError(message, HttpStatus.NOT_FOUND);
+      }
       const carts = await this.prisma.cart.findMany({
         where: {
           state: 'CONFIRMED',
@@ -211,8 +269,9 @@ export class ReportsService {
           cartLine: { include: { product: true } },
         },
       });
-      if (carts.length === 0) {
-        return new Error(this.i18n.t('messages.cartsNotFound'));
+      if (!carts || carts.length === 0) {
+        const message = this.i18n.t('messages.cartsNotFound');
+        throw new CustomError(message, HttpStatus.NOT_FOUND);
       }
       const productsBySales = await carts.reduce((acc, cart) => {
         cart.cartLine.forEach(async (line) => {
@@ -268,7 +327,8 @@ export class ReportsService {
 
       const { url, key } = await this.awsService.uploadFile(file, id);
       if (!url) {
-        return new Error(this.i18n.t('messages.fileNotUploaded'));
+        const message = this.i18n.t('messages.reportNotCreated');
+        throw new CustomError(message, HttpStatus.NOT_FOUND);
       }
 
       const reportdto: CreateReportDto = {
@@ -277,25 +337,40 @@ export class ReportsService {
         userId: id,
       };
 
-      try {
-        await this.prisma.report
-        .create({
-          data: reportdto,
-        })
-      }catch(error) {
-          await this.awsService.deleteFile(key);
-          const message = this.i18n.t('messages.reportNotCreated') + error.message;
-          return message;
-        };
+      const reporte = await this.prisma.report.create({
+        data: reportdto,
+    }) 
+
+    if (!reporte) {
+      await this.awsService.deleteFile(key);
+      const message = this.i18n.t('messages.reportNotCreated');
+      throw new CustomError(message, HttpStatus.NOT_FOUND);
+    }
       return url;
-    } catch (e) {
-      const message = this.i18n.t('messages.reportNotCreated') + e.message;
-      return new Error(message);
+    } catch (error) {
+      if (error instanceof CustomError) {
+        throw error;
+      }
+      const messageActionRegister = this.i18n.t('messages.errorReportNotCreated');
+      const message = this.i18n.t('messages.genericError', {
+        args: { action:messageActionRegister },
+      });
+   
+      throw new CustomError(
+        error?.message || message,
+        HttpStatus.INTERNAL_SERVER_ERROR, // 500
+      );
     }
   }
 
   async earningsReport(id: string) {
     try {
+      const idexist = await this.prisma.user.findUnique({where: {id,isDeleted: false}});
+      if (!idexist) {
+        const message = this.i18n.t('messages.userNotFound');
+        throw new CustomError(message, HttpStatus.NOT_FOUND);
+      }
+
       const sales = await this.prisma.cart.findMany({
         where: {
           state: 'CONFIRMED',
@@ -304,9 +379,11 @@ export class ReportsService {
           },
         },
       });
-      if (sales.length === 0) {
-        return new Error(this.i18n.t('messages.cartsNotFound'));
+      if (!sales || sales.length === 0) {
+        const message = this.i18n.t('messages.salesNotFound');
+        throw new CustomError(message, HttpStatus.NOT_FOUND);
       }
+
       const salesByDate = await sales.reduce((acc, cart) => {
         const date = cart.createdAt.toISOString().split('T')[0];
         if (!acc[date]) {
@@ -359,10 +436,11 @@ export class ReportsService {
         path: '',
       };
 
-      const { url,key } = await this.awsService.uploadFile(file, id);
+      const { url, key } = await this.awsService.uploadFile(file, id);
 
       if (!url) {
-        return new Error(this.i18n.t('messages.fileNotUploaded'));
+        const message = this.i18n.t('messages.reportNotCreated');
+        throw new CustomError(message, HttpStatus.NOT_FOUND);
       }
 
       const reportdto: CreateReportDto = {
@@ -371,26 +449,40 @@ export class ReportsService {
         userId: id,
       };
 
-      try {
-        await this.prisma.report
-        .create({
-          data: reportdto,
-        })
-      }catch(error) {
-          await this.awsService.deleteFile(key);
-          const message = this.i18n.t('messages.reportNotCreated') + error.message;
-          return message;
-        };
 
+      const reporte = await this.prisma.report.create({
+        data: reportdto,
+    }) 
+
+    if (!reporte) {
+      await this.awsService.deleteFile(key);
+      const message = this.i18n.t('messages.reportNotCreated');
+      throw new CustomError(message, HttpStatus.NOT_FOUND);
+    }
       return url;
-    } catch (e) {
-      const message = this.i18n.t('messages.reportNotCreated') + e.message;
-      return new Error(message);
+    } catch (error) {
+      if (error instanceof CustomError) {
+        throw error;
+      }
+      const messageActionRegister = this.i18n.t('messages.errorReportNotCreated');
+      const message = this.i18n.t('messages.genericError', {
+        args: { action:messageActionRegister },
+      });
+   
+      throw new CustomError(
+        error?.message || message,
+        HttpStatus.INTERNAL_SERVER_ERROR, // 500
+      );
     }
   }
 
   async earningsByProductReport(id: string) {
     try {
+     const idexist = await this.prisma.user.findUnique({where: {id,isDeleted: false}});
+      if (!idexist) {
+        const message = this.i18n.t('messages.userNotFound');
+        throw new CustomError(message, HttpStatus.NOT_FOUND);
+      }
       const carts = await this.prisma.cart.findMany({
         where: {
           state: 'CONFIRMED',
@@ -399,8 +491,9 @@ export class ReportsService {
           cartLine: { include: { product: true } },
         },
       });
-      if (carts.length === 0) {
-        return new Error(this.i18n.t('messages.salesNotFound'));
+      if (!carts || carts.length === 0) {
+        const message = this.i18n.t('messages.salesNotFound');
+        throw new CustomError(message, HttpStatus.NOT_FOUND);
       }
 
       const productsBySales = await carts.reduce((acc, cart) => {
@@ -455,32 +548,42 @@ export class ReportsService {
         path: '',
       };
 
-      const { url,key } = await this.awsService.uploadFile(file, id);
+      const { url, key } = await this.awsService.uploadFile(file, id);
 
-      if (!url) throw new Error(this.i18n.t('messages.reportNotCreated'));
+      if (!url) {
+        const message = this.i18n.t('messages.reportNotCreated');
+        throw new CustomError(message, HttpStatus.NOT_FOUND);
+      }
 
-      console.log(url);
       const reportdto: CreateReportDto = {
         content: url,
         type: 'GananciasPorProducto',
         userId: id,
       };
 
-      try {
-        await this.prisma.report
-        .create({
-          data: reportdto,
-        })
-      }catch(error) {
-          await this.awsService.deleteFile(key);
-          const message = this.i18n.t('messages.reportNotCreated') + error.message;
-          return message;
-        };
+      const reporte = await this.prisma.report.create({
+        data: reportdto,
+    }) 
 
+    if (!reporte) {
+      await this.awsService.deleteFile(key);
+      const message = this.i18n.t('messages.reportNotCreated');
+      throw new CustomError(message, HttpStatus.NOT_FOUND);
+    }
       return url;
-    } catch (e) {
-      const message = this.i18n.t('messages.reportNotCreated') + e.message;
-      return new Error(message);
+    } catch (error) {
+      if (error instanceof CustomError) {
+        throw error;
+      }
+      const messageActionRegister = this.i18n.t('messages.errorReportNotCreated');
+      const message = this.i18n.t('messages.genericError', {
+        args: { action:messageActionRegister },
+      });
+   
+      throw new CustomError(
+        error?.message || message,
+        HttpStatus.INTERNAL_SERVER_ERROR, // 500
+      );
     }
   }
 }
