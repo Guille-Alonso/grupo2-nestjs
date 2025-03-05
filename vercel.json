@@ -2,7 +2,7 @@
     "version": 2,
     "builds": [
         {
-            "src": "package.json",
+            "src": "dist/main.js",
             "use": "@vercel/node"
         }
     ],
@@ -12,8 +12,5 @@
             "dest": "dist/main.js",
             "methods": ["GET", "POST", "PUT","PATCH", "HEAD" ,"DELETE","OPTIONS"]
         }
-    ],
-    "env": {
-        "NODE_VERSION": "20"
-    }
+    ]
 }
