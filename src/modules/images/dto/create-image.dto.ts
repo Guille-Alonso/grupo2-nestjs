@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsNotEmpty, IsOptional, IsString, IsUrl, Matches } from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsString, IsUrl } from 'class-validator';
 import { i18nValidationMessage } from 'nestjs-i18n';
 
 export class CreateImageDto {

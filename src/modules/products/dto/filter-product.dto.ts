@@ -27,7 +27,7 @@ export class FilterProductsDto extends PartialType(PaginationDto2) {
   @IsOptional()
   @Type(() => Number)
   @IsNumber({}, { message: i18nValidationMessage('errors.isNumber') })
-  @Min(0)
+  @Min(0, { message: i18nValidationMessage('errors.min',{constraint1:0}) })
   minPrice?: number;
 
   @ApiProperty({
@@ -38,7 +38,7 @@ export class FilterProductsDto extends PartialType(PaginationDto2) {
   @IsOptional()
   @Type(() => Number)
   @IsNumber({}, { message: i18nValidationMessage('errors.isNumber') })
-  @Min(0, { message: i18nValidationMessage('errors.min') })
+  @Min(0, { message: i18nValidationMessage('errors.min',{constraint1:0}) })
   maxPrice?: number;
 
   @ApiProperty({
