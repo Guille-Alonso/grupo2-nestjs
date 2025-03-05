@@ -91,6 +91,9 @@
   "errorReportNotFound":"finding the report",
   "errorReportNotDeleted":"error deleting the report",
   "reportNotFound": "No report found",
-  "errorReportNotCreated":"error updating the report"
+  "errorReportNotCreated":"error updating the report",
+  "productBarcodeExist":"barcode product already exists",
+  "imageNotAssigned2":"error assigning the image",
+  "productSkuExist":"sku product already exists"
   
 }

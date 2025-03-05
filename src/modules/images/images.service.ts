@@ -157,7 +157,11 @@ export class ImagesService {
         }
       });
       for (const file of files) {
+        
         const { url, key } = await this.awsService.uploadFile(file, productId);
+        console.log('url: '+url);
+        console.log( 'key: '+key);
+
         this.prisma.image
           .update({
             where: {
@@ -171,7 +175,8 @@ export class ImagesService {
           })
           .catch(async () => {
             await this.awsService.deleteFile(key);
-            console.log('error');
+            const message = this.i18n.t('messages.imageNotAssigned2');
+            throw new CustomError(message, HttpStatus.BAD_REQUEST);
           });
         const message = this.i18n.t('messages.imageAssigned');
         return message;
