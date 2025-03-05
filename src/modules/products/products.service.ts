@@ -11,7 +11,8 @@ import { ExcelColumn } from 'src/common/interfaces';
 import { FilterProductsDto } from './dto/filter-product.dto';
 import { AwsService } from '../aws/aws.service';
 import CustomError from 'src/utils/custom.error';
-import { Transform } from 'class-transformer';
+import { exit } from 'process';
+
 @Injectable()
 export class ProductsService {
   constructor(
@@ -177,6 +178,7 @@ export class ProductsService {
           id,
           isDeleted: false,
         },
+        include: { categorys: { include: { category: true } }, images: true },
       })
 
       if (!existproduct) {
@@ -198,13 +200,15 @@ export class ProductsService {
               colection: images,
             },
           },
-          categorys: existingCategoryIds
-            ? {
-                create: existingCategoryIds.map((id) => ({
-                  category: { connect: { id } },
-                })),
-              }
-            : undefined,
+          categorys: categoryIds ? {
+            deleteMany: {
+              productId: id,
+            },
+            create: existingCategoryIds.map((id) => ({
+              category: { connect: { id } },
+            })),
+          }: {
+          },
         },
         include: { categorys: true },
       });
