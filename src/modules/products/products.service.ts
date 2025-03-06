@@ -36,7 +36,7 @@ export class ProductsService {
         const message = this.i18n.t('messages.productBarcodeExist');
         throw new CustomError(message, HttpStatus.BAD_REQUEST);}
 
-      const exitnames = await this.prisma.product.findFirst({
+      const exitnames = await this.prisma.product.findUnique({
         where: {
           name: productData.name,
         }
@@ -206,7 +206,7 @@ export class ProductsService {
       }
 
       if (productData.name){
-        const exitnames = await this.prisma.product.findFirst({
+        const exitnames = await this.prisma.product.findUnique({
           where: {
             name: productData.name,
           }

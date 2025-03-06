@@ -66,7 +66,7 @@ export class PurchasesService {
                     }
                   })
 
-                  tx.productPurchase.create({
+                 await tx.productPurchase.create({
                     data:{
                       purchaseId: purchase.id,
                       productId: newProduct.id,
