@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import {
   IsArray,
   IsInt,
@@ -7,6 +8,7 @@ import {
   IsOptional,
   IsPositive,
   IsString,
+  IsUrl,
   IsUUID,
   Length,
   Matches,
@@ -18,6 +20,15 @@ export class CreateProductDto {
   @ApiProperty({ description: 'Name of the product', example: 'Product 1' })
   @IsNotEmpty({ message: i18nValidationMessage('errors.isNotEmpty') })
   @IsString({ message: i18nValidationMessage('errors.isString') })
+  @Transform(({ value }) =>
+    typeof value === 'string'
+      ? value
+          .toLowerCase()
+          .split(' ')
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ')
+      : value,
+  )
   name: string;
 
   @ApiProperty({
@@ -28,6 +39,11 @@ export class CreateProductDto {
   @IsString({
     message: i18nValidationMessage('errors.isString'),
   })
+  @Transform(({ value }) =>
+    typeof value === 'string'
+      ? value.charAt(0).toUpperCase() + value.slice(1).toLowerCase()
+      : value,
+  )
   description: string;
 
   @ApiProperty({ description: 'Price of the product', example: 100 })
@@ -99,7 +115,8 @@ export class CreateProductDto {
   })
   @IsOptional()
   @IsArray({ message: i18nValidationMessage('errors.isArrayString') })
-  @IsString({ each: true, message: i18nValidationMessage('errors.isString') })
+  @IsUrl({}, { each: true, message: i18nValidationMessage('errors.isUrl') })
+  @IsNotEmpty({ each: true, message: i18nValidationMessage('errors.isNotEmpty') })
   images?: string[];
 
   @ApiProperty({
@@ -110,6 +127,7 @@ export class CreateProductDto {
     ],
   })
   @IsOptional()
+  @IsNotEmpty({ message: i18nValidationMessage('errors.isNotEmpty') })
   @IsArray({ message: i18nValidationMessage('errors.isArrayUUID') })
   @IsUUID('4', {
     each: true,

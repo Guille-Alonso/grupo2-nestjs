@@ -21,35 +21,38 @@ import { RoleEnum } from 'src/common/constants';
 import { Response } from 'express';
 import { PaginationDto2 } from 'src/utils/pagination/dto/pagination.dto';
 
-//@UseGuards(JwtAuthGuard, RolesGuard)
-//@Roles(RoleEnum.SUPERADMIN)
-//@ApiBearerAuth('access-token')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(RoleEnum.SUPERADMIN)
+@ApiBearerAuth('access-token')
 @ApiTags('Reports')
 @Controller('reports')
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
 
-  @ApiOperation({ summary: 'Create report' })
+  /*@ApiOperation({ summary: 'Create report' })
   @Post()
   create(@Body() createReportDto: CreateReportDto) {
     return this.reportsService.create(createReportDto);
-  }
+  }*/
 
+  @ApiOperation({ summary: 'Get all reports' })
   @Get()
   findAll(@Query() paginationDto2: PaginationDto2) {
     return this.reportsService.findAll(paginationDto2);
   }
 
+  @ApiOperation({ summary: 'Get report by id' })
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.reportsService.findOne(id);
   }
 
-  @Patch(':id')
+  /*@Patch(':id')
   update(@Param('id') id: string, @Body() updateReportDto: UpdateReportDto) {
     return this.reportsService.update(+id, updateReportDto);
-  }
+  }*/
 
+  @ApiOperation({ summary: 'Delete report' })
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.reportsService.remove(id);

@@ -105,7 +105,7 @@ export class ProductsController {
     return this.productsService.assignCategoriesToProduct(productId, names);
   }
 
-  @ApiOperation({ summary: 'Upload images to a product' })
+ /* @ApiOperation({ summary: 'Upload images to a product' })
   @ApiBody({
     schema: {
       type: 'object',
@@ -128,7 +128,7 @@ export class ProductsController {
     @Body('images') images: string[],
   ) {
     return this.productsService.uploadImages(productId, images);
-  }
+  }*/
 
   @ApiOperation({ summary: 'Delete categories from a product' })
   @ApiBody({
@@ -190,7 +190,7 @@ export class ProductsController {
   @Post('upload/excel')
   @UseInterceptors(FileInterceptor('file'))
   async uploadProducts(@UploadedFile() file: Express.Multer.File) {
-    const data = await this.productsService.uploadProducts(file.buffer);
+    const data = await this.productsService.uploadProducts(file);
     return data;
   }
 
