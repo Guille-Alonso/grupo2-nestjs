@@ -403,7 +403,7 @@ export class UsersService {
       const profileData = {
         address: createProfileDto.address,
         phone: createProfileDto.phone,
-        ...(uploadResult ? { photo: uploadResult.url } : {}),
+        photo: uploadResult?.url || null,
       };
   
       if (!existingProfile) {
