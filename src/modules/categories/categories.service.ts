@@ -97,6 +97,13 @@ export class CategoriesService {
 
   async findOne(id: string) {
     try {
+      if (!id) {
+        const message = this.i18n.t('messages.categoryIdNotFound');
+        throw new CustomError(
+         message,
+          HttpStatus.NOT_FOUND, // 404
+        );}
+
       const category = await this.prisma.category.findUnique({
         where: {
           id,
@@ -128,6 +135,34 @@ export class CategoriesService {
 
   async update(id: string, updateCategoryDto: UpdateCategoryDto) {
     try {
+      if (!id) {
+        const message = this.i18n.t('messages.categoryIdNotFound');
+        throw new CustomError(
+         message,
+          HttpStatus.NOT_FOUND, // 404
+        );}
+
+        const existid = await this.prisma.category.findUnique({
+          where: {
+            id,
+          },
+        })
+        if(!existid){
+          const message = this.i18n.t('messages.categoryIdNotFound');
+          throw new CustomError(message, HttpStatus.NOT_FOUND);
+        }
+
+        const existname = await this.prisma.category.findFirst({
+          where: {
+            name: updateCategoryDto.name,
+          },
+        })
+
+        if(existname){
+          const message = this.i18n.t('messages.categoryNameExist');
+          throw new CustomError(message, HttpStatus.BAD_REQUEST);
+        }
+
       const category = await this.prisma.category.update({
         where: {
           id,
@@ -163,6 +198,13 @@ if (error instanceof CustomError) {
 
   async remove(id: string) {
     try {
+      if (!id) {
+        const message = this.i18n.t('messages.categoryIdNotFound');
+        throw new CustomError(
+         message,
+          HttpStatus.NOT_FOUND, // 404
+        );}
+
       const category = await this.prisma.category.update({
         where: {
           id,
@@ -200,6 +242,13 @@ if (error instanceof CustomError) {
 
   async findProducts(id: string) {
     try {
+      if (!id) {
+        const message = this.i18n.t('messages.categoryIdNotFound');
+        throw new CustomError(
+         message,
+          HttpStatus.NOT_FOUND, // 404
+        );}
+
       const category = await this.prisma.category.findUnique({
         where: { id },
         include: {
@@ -235,10 +284,19 @@ if (error instanceof CustomError) {
 
   async assignProductsToCategory(categoryId: string, productIds: string[]) {
     try {
+      if (!categoryId) {
+        const message = this.i18n.t('messages.categoryIdNotFound');
+        throw new CustomError(
+         message,
+          HttpStatus.NOT_FOUND, // 404
+        );
+      }
+
       if (!productIds || productIds.length === 0) {
         const message = this.i18n.t('messages.productsNotFound');
         throw new CustomError(message, HttpStatus.NOT_FOUND);
       }
+
       const category = await this.prisma.category.update({
         where: { id: categoryId },
         data: {

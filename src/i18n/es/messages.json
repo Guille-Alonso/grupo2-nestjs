@@ -96,5 +96,7 @@
     "errorCategoryNotFound":"encotrar la categoria",
     "productBarcodeExist": "el codigo de barra ya existe",
     "imageNotAssigned2": "Ubo un error al asignar la imagen",
-    "productSkuExist": "el sku ya existe"
+    "productSkuExist": "el sku ya existe",
+    "reportIdNotFound": "el id del reporte no fue encontrado",
+    "categoryError": "hubo un error al crear la categoria"
 }
