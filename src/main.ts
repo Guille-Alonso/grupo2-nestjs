@@ -16,6 +16,7 @@ async function bootstrap() {
     new I18nValidationPipe({
       whitelist: true,
       forbidNonWhitelisted: true,
+      transform:true,
     }),
   );
 
@@ -43,5 +44,7 @@ async function bootstrap() {
     );
     Logger.log(`Current environment: ${NODE_ENV}`, NestApplication.name);
   });
+  console.log("hola");
+  
 }
 bootstrap();

@@ -9,7 +9,7 @@
     "categorysNotAssigned": "asignar las categorias",
     "imagesUploaded": "Imagenes cargadas con exito",
     "imagesNotUploaded": " cargar las imagenes",
-    "productNotFound": "Producto no encontrado",
+    "productNotFound": "Producto no encontrado en base de datos",
     "productsNotFound": "No se encontraron productos",
     "notNewCategorys": "Todas las categorías ya fueron asignadas",
     "notNewImages": "Todas las imagenes ya fueron asignadas",

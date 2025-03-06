@@ -7,9 +7,8 @@ export class ValidationsErrorExceptionFilter extends I18nValidationExceptionFilt
     super({
       detailedErrors: true,
       responseBodyFormatter: (_, exception, formattedErrors) => {
-        const errorMessages = (formattedErrors as ValidationError[]).flatMap(
-          (error) => Object.values(error.constraints),
-        );
+        const errorMessages = this.extractValidationErrors(formattedErrors as ValidationError[]);
+
 
         return {
           statusCode: exception.getStatus(),
@@ -17,5 +16,20 @@ export class ValidationsErrorExceptionFilter extends I18nValidationExceptionFilt
         };
       },
     });
+  }
+
+  private extractValidationErrors(errors: ValidationError[]): string[] {
+    let messages: string[] = [];
+    errors.forEach(error => {
+      console.log(error);
+      
+      if (error.constraints) {
+        messages = messages.concat(Object.values(error.constraints));
+      }
+      if (error.children && error.children.length > 0) {
+        messages = messages.concat(this.extractValidationErrors(error.children));
+      }
+    });
+    return messages;
   }
 }

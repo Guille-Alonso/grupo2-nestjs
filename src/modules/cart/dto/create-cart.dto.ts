@@ -16,6 +16,7 @@ export class CreaterCartLineDTO {
   },)
  quantity: number;
  
+ 
  @IsNotEmpty({
   message: i18nValidationMessage('errors.isNotEmpty'),
 })
@@ -26,13 +27,6 @@ export class CreaterCartLineDTO {
 }
 
 export class CreateCartDto {
-@ApiProperty({ description: 'id of User', example: 'b5e0211f-0105-4ae1-ba67-9edqw9a9b4f1' })
-@IsNotEmpty({message: i18nValidationMessage('errors.isNotEmpty')})
-@IsString({
-  message: i18nValidationMessage('errors.isString'),
-})
-userId: string;
-
 
 @ApiProperty({
     description: 'Productos añadidos al carrito',
