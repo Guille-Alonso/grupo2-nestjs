@@ -98,5 +98,8 @@
     "imageNotAssigned2": "Ubo un error al asignar la imagen",
     "productSkuExist": "el sku ya existe",
     "reportIdNotFound": "el id del reporte no fue encontrado",
-    "categoryError": "hubo un error al crear la categoria"
+    "categoryError": "hubo un error al crear la categoria",
+    "categorysNotFound": "No se encontraron categorias",
+    "categoryIdNotFound": "el id de la categoria no fue encontrado"
+    
 }

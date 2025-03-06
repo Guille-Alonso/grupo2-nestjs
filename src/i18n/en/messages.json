@@ -96,6 +96,8 @@
   "imageNotAssigned2":"error assigning the image",
   "productSkuExist":"sku product already exists",
   "reportIdNotFound":"report id not found",
-  "categoryError":"there was an error creating the category"
+  "categoryError":"there was an error creating the category",
+  "categorysNotFound":"No categories found",
+  "categoryIdNotFound":"category id not found"
   
 }

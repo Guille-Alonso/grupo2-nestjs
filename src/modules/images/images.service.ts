@@ -56,6 +56,15 @@ export class ImagesService {
           skip,
           take,
           orderBy,
+        }).catch((error) => {
+          const messageActionRegister = this.i18n.t('messages.errorImageNotFound');
+          const message = this.i18n.t('messages.genericError', {
+          args: { action:messageActionRegister },
+           });
+          throw new CustomError(
+            message,
+            HttpStatus.INTERNAL_SERVER_ERROR, // 500
+          );
         }),
         this.prisma.image.count(),
       ]);
@@ -92,6 +101,7 @@ export class ImagesService {
       const image = await this.prisma.product.findUnique({
         where: {
           id,
+          isDeleted: false,
         },
       });
       if (!image) {
@@ -159,6 +169,7 @@ export class ImagesService {
       const product = await this.prisma.product.findUnique({
         where: {
           id: productId,
+          isDeleted: false,
         },
       });
       if (!product) {
