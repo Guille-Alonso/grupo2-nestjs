@@ -9,7 +9,7 @@
   "categorysNotAssigned": "There was an error assigning the categories: ",
   "imagesUploaded": "Images uploaded successfully",
   "imagesNotUploaded": "There was an error uploading the images: ",
-  "productNotFound": "Product not found",
+  "productNotFound": "Product not found in to data base",
   "productsNotFound": "No products found",
   "notNewCategorys": "All categories have already been assigned",
   "notNewImages": "All images have already been uploaded",
