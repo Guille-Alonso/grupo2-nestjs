@@ -16,7 +16,6 @@ export class CreaterCartLineDTO {
   },)
  quantity: number;
  
- 
  @IsNotEmpty({
   message: i18nValidationMessage('errors.isNotEmpty'),
 })

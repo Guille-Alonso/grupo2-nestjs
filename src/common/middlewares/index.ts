@@ -9,7 +9,6 @@ export class ValidationsErrorExceptionFilter extends I18nValidationExceptionFilt
       responseBodyFormatter: (_, exception, formattedErrors) => {
         const errorMessages = this.extractValidationErrors(formattedErrors as ValidationError[]);
 
-
         return {
           statusCode: exception.getStatus(),
           errorMessages: errorMessages,
@@ -21,8 +20,6 @@ export class ValidationsErrorExceptionFilter extends I18nValidationExceptionFilt
   private extractValidationErrors(errors: ValidationError[]): string[] {
     let messages: string[] = [];
     errors.forEach(error => {
-      console.log(error);
-      
       if (error.constraints) {
         messages = messages.concat(Object.values(error.constraints));
       }

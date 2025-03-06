@@ -56,70 +56,65 @@ export class CartService {
     return cartData;
   }
 
-  async create(cart: CreateCartDto, userId) {
+  async create(cart: CreateCartDto,userId) {
     try {
-        let subtotal = 0;
+      let subtotal = 0;
 
-        for (const product of cart.cartLine) {
-          let position = 1;
-            const prod = await this.prisma.product.findUnique({
-                where: {
-                    id: product.productId,
-                },
-            });
-            if (!prod) {
-                throw new Error(
-                    this.i18n.t('messages.productNotFound')
-                );
-            }
-            position++;
-
-            const total = product.quantity * prod.price;
-            subtotal = subtotal + total;
+      for (const product of cart.cartLine) {
+        const prod = await this.prisma.product.findUnique({
+          where: {
+            id: product.productId,
+          },
+        });
+        if (!prod) {
+          throw new Error(
+            this.i18n.t('messages.productNotFound'),
+          );
         }
-        console.log(subtotal);
+        const total = product.quantity * prod.price;
+        subtotal = subtotal + total;
+      }
+      console.log(subtotal);
 
-        const newCart = await this.prisma.$transaction(async (tx) => {
-            const carrito = await tx.cart.create({
-                data: {
-                    userId: userId,
-                    totalAmount: subtotal,
-                },
-            });
-
-            for (const product of cart.cartLine) {
-                const exist = await tx.product.findUnique({
-                    where: {
-                        id: product.productId,
-                    },
-                });
-                console.log("antes del if exist", exist);
-                
-                if (!exist) {
-                    throw new Error(
-                        this.i18n.t('messages.productNotFound')
-                    );
-                }
-                
-                let totalPrice = product.quantity * exist.price;
-                await tx.cartLine.create({
-                    data: {
-                        cartId: carrito.id,
-                        productId: product.productId,
-                        quantity: product.quantity,
-                        unit_price: exist.price,
-                        total_price: totalPrice,
-                    },
-                });
-            }
-            return carrito;
+      const newCart = await this.prisma.$transaction(async (tx) => {
+        const carrito = await tx.cart.create({
+          data: {
+            userId: userId,
+            totalAmount: subtotal,
+          },
         });
 
-        return { newCart };
+        for (const product of cart.cartLine) {
+          const exist = await tx.product.findUnique({
+            where: {
+              id: product.productId,
+            },
+          });
+          if (!exist) {
+            throw new Error(
+              this.i18n.t('messages.productNotFound'),
+            );
+          }
+          // eslint-disable-next-line prefer-const
+          let totalPrice = product.quantity * exist.price;
+          await tx.cartLine.create({
+            data: {
+              cartId: carrito.id,
+              productId: product.productId,
+              quantity: product.quantity,
+              unit_price: exist.price,
+              total_price: totalPrice,
+            },
+          });
+        }
+        return carrito;
+      });
+
+      return { newCart };
     } catch (e) {
       throw new BadRequestException(e.message);
     }
-}
+  }
 
   async findAll(userId, paginationDto2) {
     try {
