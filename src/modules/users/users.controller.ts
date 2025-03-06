@@ -26,7 +26,7 @@ import { Roles } from 'src/common/decorators/roles.decorators';
 import CustomError from 'src/utils/custom.error';
 import { I18nService } from 'nestjs-i18n';
 import { CreateProfileDto } from './dto/create-profile.dto';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation } from '@nestjs/swagger';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(RoleEnum.SUPERADMIN)
@@ -114,11 +114,15 @@ export class UsersController {
     return await this.usersService.exportAllExcel(res);
   }
 
-  @ApiCustomOperation({
-    summary: 'Upload users from excel',
-    responseStatus: 200,
-    responseDescription: 'Imported users',
+ @ApiOperation({ summary: 'Upload a excel file' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: { file: { type: 'string', format: 'binary' } },
+    },
   })
+  @ApiOperation({ summary: 'Upload a excel file' })
   @Post('upload/excel')
   @UseInterceptors(FileInterceptor('file'))
   async uploadUsers(@UploadedFile() file: Express.Multer.File) {
