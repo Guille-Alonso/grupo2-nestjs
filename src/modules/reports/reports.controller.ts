@@ -35,11 +35,13 @@ export class ReportsController {
     return this.reportsService.create(createReportDto);
   }*/
 
+  @ApiOperation({ summary: 'Get all reports' })
   @Get()
   findAll(@Query() paginationDto2: PaginationDto2) {
     return this.reportsService.findAll(paginationDto2);
   }
 
+  @ApiOperation({ summary: 'Get report by id' })
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.reportsService.findOne(id);
@@ -50,6 +52,7 @@ export class ReportsController {
     return this.reportsService.update(+id, updateReportDto);
   }*/
 
+  @ApiOperation({ summary: 'Delete report' })
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.reportsService.remove(id);

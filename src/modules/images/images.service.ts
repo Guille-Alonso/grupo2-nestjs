@@ -56,6 +56,15 @@ export class ImagesService {
           skip,
           take,
           orderBy,
+        }).catch((error) => {
+          const messageActionRegister = this.i18n.t('messages.errorImageNotFound');
+          const message = this.i18n.t('messages.genericError', {
+          args: { action:messageActionRegister },
+           });
+          throw new CustomError(
+            message,
+            HttpStatus.INTERNAL_SERVER_ERROR, // 500
+          );
         }),
         this.prisma.image.count(),
       ]);
@@ -84,9 +93,15 @@ export class ImagesService {
 
   async findOne(id: string) {
     try {
+      if(!id) {
+        const message = this.i18n.t('messages.imageNotFound');
+        throw new BadRequestException(message);
+      }
+
       const image = await this.prisma.product.findUnique({
         where: {
           id,
+          isDeleted: false,
         },
       });
       if (!image) {
@@ -146,6 +161,22 @@ export class ImagesService {
 
   async assignImage(files: Express.Multer.File[], productId: string) {
     try {
+      if (!productId) {
+        const message = this.i18n.t('messages.productIdNotFound');
+        throw new CustomError(message, HttpStatus.BAD_REQUEST);
+      }
+
+      const product = await this.prisma.product.findUnique({
+        where: {
+          id: productId,
+          isDeleted: false,
+        },
+      });
+      if (!product) {
+        const message = this.i18n.t('messages.productNotFound');
+        throw new CustomError(message, HttpStatus.BAD_REQUEST);
+      }
+
       if (!files) {
         const message = this.i18n.t('messages.imagesNotFound');
         throw new CustomError(message, HttpStatus.BAD_REQUEST);
@@ -159,8 +190,6 @@ export class ImagesService {
       for (const file of files) {
         
         const { url, key } = await this.awsService.uploadFile(file, productId);
-        console.log('url: '+url);
-        console.log( 'key: '+key);
 
         this.prisma.image
           .update({

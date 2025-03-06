@@ -26,15 +26,7 @@ export class ProductsService {
   async create(newProduct: CreateProductDto) {
     try {
       const { categoryIds, images, ...productData } = newProduct;
-      const existsku = await this.prisma.product.findMany({
-        where: {
-          sku: productData.sku,
-        }
-      })
-      if(existsku){
-        const message = this.i18n.t('messages.productSkuExist');
-        throw new CustomError(message, HttpStatus.BAD_REQUEST);
-      }
+      
       const existbarcode = await this.prisma.product.findUnique({
         where: {
           barcode: productData.barcode,
@@ -119,6 +111,15 @@ export class ProductsService {
           skip,
           take,
           orderBy,
+        }).catch((error) => {
+          const messageActionRegister = this.i18n.t('messages.productsNotFound');
+          const message = this.i18n.t('messages.genericError', {
+          args: { action:messageActionRegister },
+           });
+          throw new CustomError(
+            message,
+            HttpStatus.INTERNAL_SERVER_ERROR, // 500
+          );
         }),
         this.prisma.product.count(),
       ]);
@@ -147,6 +148,13 @@ export class ProductsService {
 
   async findOne(id: string) {
     try {
+      if (!id) {
+        const message = this.i18n.t('messages.productNotFound');
+        throw new CustomError(
+         message,
+          HttpStatus.NOT_FOUND, // 404
+        );
+      }
       const product = await this.prisma.product.findUnique({
         where: {
           id,
@@ -182,18 +190,7 @@ export class ProductsService {
     try {
       const { categoryIds, images, ...productData } = updateProductDto;
 
-      if(productData.sku){
-        const existsku = await this.prisma.product.findMany({
-          where: {
-            sku: productData.sku,
-          }
-        })
-        
-        if(existsku){
-          const message = this.i18n.t('messages.productSkuExist');
-          throw new CustomError(message, HttpStatus.BAD_REQUEST);
-        }
-      }
+
       
       if(productData.barcode){
         const existbarcode = await this.prisma.product.findUnique({
@@ -290,6 +287,21 @@ export class ProductsService {
 
   async remove(id: string) {
     try {
+      const existproduct = await this.prisma.product.findUnique({
+        where: {
+          id,
+          isDeleted: false,
+        },
+      })
+
+      if (!existproduct) {
+        const message = this.i18n.t('messages.productNotFound');
+        throw new CustomError(
+         message,
+          HttpStatus.NOT_FOUND, // 404
+        );
+      }
+
       const deleteProduct = await this.prisma.product.update({
         where: {
           id,
@@ -303,6 +315,7 @@ export class ProductsService {
           },
         },
       });
+      
       return { message: this.i18n.t('messages.productDeleted'), deleteProduct };
     } catch (error) {
       if (error instanceof CustomError) {
@@ -403,6 +416,16 @@ export class ProductsService {
   }
   async assignCategoriesToProduct(productId: string, names: string[]) {
     try {
+      if(!names){const messageActionRegister = this.i18n.t('messages.categorysNotAssigned');
+        const message = this.i18n.t('messages.genericError', {
+          args: { action:messageActionRegister },
+        });
+     
+        throw new CustomError(
+          message,
+          HttpStatus.INTERNAL_SERVER_ERROR, // 500
+        );}
+
       const existproduct = await this.prisma.product.findUnique({
         where: {
           id: productId,
@@ -523,10 +546,27 @@ export class ProductsService {
 
   async deleteCategories(productId: string, categorys: string[]) {
     try {
+      if(!productId||productId.length === 0) throw new Error(this.i18n.t('messages.productIdNotFound'))
+      if(!categorys||categorys.length === 0) throw new Error(this.i18n.t('messages.categorysNotFound'))
+
       categorys.forEach((category) => {
         category.charAt(0).toUpperCase();
         category.slice(1).toLowerCase();
       })
+      const productexist = await this.prisma.product.findUnique({
+        where: {
+          id: productId,
+          isDeleted: false,
+        },
+      })
+
+      if (!productexist) {
+        const message = this.i18n.t('messages.productNotFound');
+        throw new CustomError(
+         message,
+          HttpStatus.NOT_FOUND, // 404
+        );
+      }
       
       await this.prisma.productOnCategory.deleteMany({
         where: {
@@ -553,9 +593,23 @@ export class ProductsService {
 
   async deteleImages(productId: string, images: string[]) {
     try {
-      if(!productId) throw new Error(this.i18n.t('messages.productIdNotFound'))
-      if(!images) throw new Error(this.i18n.t('messages.imagesNotFound'))
+      if(!productId||productId.length === 0) throw new Error(this.i18n.t('messages.productIdNotFound'))
+      if(!images||images.length === 0) throw new Error(this.i18n.t('messages.imagesNotFound'))
       
+        const productexist = await this.prisma.product.findUnique({
+          where: {
+            id: productId,
+            isDeleted: false,
+          },
+        })
+  
+        if (!productexist) {
+          const message = this.i18n.t('messages.productNotFound');
+          throw new CustomError(
+           message,
+            HttpStatus.NOT_FOUND, // 404
+          );
+        }
     const colection = await this.prisma.image.findUnique({
       where: { productId },
       select: { colection: true },
@@ -597,7 +651,6 @@ if (error instanceof CustomError) {
       if (mimetype !== 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
         throw new Error(this.i18n.t('messages.wrongFileFormat'));
       }
-      //validar los datos antes de importarlos
       const products = await this.excelService.readExcel(buffer);
 
       for (let index = 0; index < products.length; index++) {
@@ -607,8 +660,6 @@ if (error instanceof CustomError) {
         const images: string[] = product.images.replace(/"/g, '').split(',')
         const categorys: string[] = product.categorys.replace(/"/g, '').split(',')
         
-        console.log('imagen'+images);
-        console.log('category'+categorys);
         
         const productNew: CreateProductDto = {
           name: product.name.toString(),
@@ -627,13 +678,20 @@ if (error instanceof CustomError) {
             barcode: productNew.barcode,
           },
         })
-        console.log(producto);
+
         if (producto.length === 0) {
           try {
             await this.create(productNew);
           } catch (error) {
             if (error instanceof CustomError) {
-              throw error;
+            const messageActionRegister = this.i18n.t('messages.productsNotCreated');
+            const message = this.i18n.t('messages.genericError', {
+            args: { action:messageActionRegister },
+            });
+              throw new CustomError(
+                message,
+                HttpStatus.INTERNAL_SERVER_ERROR,
+              );
           }}
         }else{
           

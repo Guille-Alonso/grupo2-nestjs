@@ -94,6 +94,10 @@
   "errorReportNotCreated":"error updating the report",
   "productBarcodeExist":"barcode product already exists",
   "imageNotAssigned2":"error assigning the image",
-  "productSkuExist":"sku product already exists"
+  "productSkuExist":"sku product already exists",
+  "reportIdNotFound":"report id not found",
+  "categoryError":"there was an error creating the category",
+  "categorysNotFound":"No categories found",
+  "categoryIdNotFound":"category id not found"
   
 }

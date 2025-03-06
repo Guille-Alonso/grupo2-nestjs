@@ -52,6 +52,16 @@ export class ReportsService {
           skip,
           take,
           orderBy,
+        })
+        .catch((error) => {
+          const messageActionRegister = this.i18n.t('messages.errorreportNotFound');
+          const message = this.i18n.t('messages.genericError', {
+          args: { action:messageActionRegister },
+           });
+          throw new CustomError(
+            message,
+            HttpStatus.INTERNAL_SERVER_ERROR, // 500
+          );
         }),
         this.prisma.report.count(),
       ]);
@@ -80,6 +90,10 @@ export class ReportsService {
 
   async findOne(id: string) {
     try {
+      if (!id) {
+        const message = this.i18n.t('messages.reportIdNotFound');
+        throw new CustomError(message, HttpStatus.NOT_FOUND); // 404
+      }
       const report = await this.prisma.report.findUnique({
         where: {
           id,
@@ -112,6 +126,15 @@ export class ReportsService {
 
   async remove(id: string) {
     try {
+      if (!id) {
+        const message = this.i18n.t('messages.reportIdNotFound');
+        throw new CustomError(message, HttpStatus.NOT_FOUND); // 404
+      }
+      const exitid= await this.prisma.report.findUnique({where: {id,isDeleted: false}});
+      if(!exitid){
+        const message = this.i18n.t('messages.reportIdNotFound');
+        throw new CustomError(message, HttpStatus.NOT_FOUND); // 404
+      }
       const deleteReport = await this.prisma.report.update({
         where: {
           id,
@@ -143,6 +166,10 @@ export class ReportsService {
 
   async salesReport(id: string) {
     try {
+      if (!id) {
+        const message = this.i18n.t('messages.userNotFound');
+        throw new CustomError(message, HttpStatus.NOT_FOUND);
+      }
       const idexist = await this.prisma.user.findUnique({where: {id,isDeleted: false}});
       if (!idexist) {
         const message = this.i18n.t('messages.userNotFound');
@@ -256,6 +283,10 @@ export class ReportsService {
 
   async productsReport(id: string) {
     try {
+      if (!id) {
+        const message = this.i18n.t('messages.userNotFound');
+        throw new CustomError(message, HttpStatus.NOT_FOUND);
+      }
       const idexist = await this.prisma.user.findUnique({where: {id,isDeleted: false}});
       if (!idexist) {
         const message = this.i18n.t('messages.userNotFound');
@@ -365,6 +396,10 @@ export class ReportsService {
 
   async earningsReport(id: string) {
     try {
+      if (!id) {
+        const message = this.i18n.t('messages.userNotFound');
+        throw new CustomError(message, HttpStatus.NOT_FOUND);
+      }
       const idexist = await this.prisma.user.findUnique({where: {id,isDeleted: false}});
       if (!idexist) {
         const message = this.i18n.t('messages.userNotFound');
@@ -478,6 +513,10 @@ export class ReportsService {
 
   async earningsByProductReport(id: string) {
     try {
+      if (!id) {
+        const message = this.i18n.t('messages.userNotFound');
+        throw new CustomError(message, HttpStatus.NOT_FOUND);
+      }
      const idexist = await this.prisma.user.findUnique({where: {id,isDeleted: false}});
       if (!idexist) {
         const message = this.i18n.t('messages.userNotFound');
