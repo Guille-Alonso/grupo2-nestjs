@@ -66,7 +66,7 @@ export class PurchasesService {
                     }
                   })
 
-                  tx.productPurchase.create({
+                  await tx.productPurchase.create({
                     data:{
                       purchaseId: purchase.id,
                       productId: newProduct.id,
@@ -84,7 +84,6 @@ export class PurchasesService {
               }, 
               include:{user:true, products:{include:{product:true}}}
             })
-
             const pdfDetail = await detalleCompra(purchset);
             const pdfDoc = await this.printerService.createPdf(pdfDetail);
             return pdfDoc
