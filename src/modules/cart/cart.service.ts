@@ -56,7 +56,7 @@ export class CartService {
     return cartData;
   }
 
-  async create(cart: CreateCartDto) {
+  async create(cart: CreateCartDto,userId) {
     try {
       let subtotal = 0;
 
@@ -66,6 +66,11 @@ export class CartService {
             id: product.productId,
           },
         });
+        if (!prod) {
+          throw new Error(
+            this.i18n.t('messages.productNotFound'),
+          );
+        }
         const total = product.quantity * prod.price;
         subtotal = subtotal + total;
       }
@@ -74,7 +79,7 @@ export class CartService {
       const newCart = await this.prisma.$transaction(async (tx) => {
         const carrito = await tx.cart.create({
           data: {
-            userId: cart.userId,
+            userId: userId,
             totalAmount: subtotal,
           },
         });
@@ -87,7 +92,7 @@ export class CartService {
           });
           if (!exist) {
             throw new Error(
-              this.i18n.t('messages.productNotFound') + HttpStatus.BAD_REQUEST,
+              this.i18n.t('messages.productNotFound'),
             );
           }
           // eslint-disable-next-line prefer-const
@@ -107,7 +112,7 @@ export class CartService {
 
       return { newCart };
     } catch (e) {
-      throw new Error(e.message + HttpStatus.BAD_REQUEST);
+      throw new BadRequestException(e.message);
     }
   }
 

@@ -26,8 +26,9 @@ export class CartController {
       responseDescription: 'Cart created',
     })
   @Post()
-  create(@Body() createCartDto: CreateCartDto) {
-    return this.cartService.create(createCartDto);
+  create(@Req() req,@Body() createCartDto: CreateCartDto) {
+    const {userId}= req.user;
+    return this.cartService.create(createCartDto, userId);
   }
 
   

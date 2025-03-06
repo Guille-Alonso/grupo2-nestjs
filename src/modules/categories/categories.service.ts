@@ -17,7 +17,7 @@ export class CategoriesService {
 
   async create(createCategoryDto: CreateCategoryDto) {
     try {
-      const existCategory=await this.prisma.category.findFirst({
+      const existCategory=await this.prisma.category.findUnique({
         where: {
           name: createCategoryDto.name,
         },
