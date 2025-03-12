@@ -87,11 +87,34 @@ export class UsersController {
     return await this.usersService.remove(id);
   }
 
-  @ApiCustomOperation({
-    summary: 'Update/Created user profile',
-    bodyType: CreateProfileDto,
-    responseStatus: 200,
-    responseDescription: 'Updated user profile',
+  @ApiOperation({ summary: 'Update/Create user profile' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'Profile picture (optional)',
+        },
+        address: {
+          type: 'string',
+          description: 'User Address',
+          example: '47 street',
+          minLength: 5,
+          maxLength: 60,
+        },
+        phone: {
+          type: 'string',
+          description: 'User Phone',
+          example: '3816587452',
+          minLength: 5,
+          maxLength: 15,
+        },
+      },
+      required: ['address', 'phone'],
+    },
   })
   @Post('update/profile')
   @UseInterceptors(FileInterceptor('file'))
@@ -122,7 +145,6 @@ export class UsersController {
       properties: { file: { type: 'string', format: 'binary' } },
     },
   })
-  @ApiOperation({ summary: 'Upload a excel file' })
   @Post('upload/excel')
   @UseInterceptors(FileInterceptor('file'))
   async uploadUsers(@UploadedFile() file: Express.Multer.File) {
