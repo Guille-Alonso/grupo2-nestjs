@@ -398,6 +398,8 @@ export class UsersService {
         }
   
         uploadResult = await this.awsService.uploadFile(file, id);
+      }else{
+        uploadResult = {url:existingProfile?.photo};
       }
   
       const profileData = {
