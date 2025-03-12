@@ -11,6 +11,11 @@ import { ValidationsErrorExceptionFilter } from './common/middlewares';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors(corsOptions);
+  // app.enableCors({
+  //   origin: 'http://localhost:5173', // no poner la barra al final
+  //   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  //   credentials: true, 
+  // });
   app.setGlobalPrefix('api/v0');
   app.useGlobalPipes(
     new I18nValidationPipe({
